@@ -1,0 +1,31 @@
+{% extends "base.html" %} 
+{% load static %}
+
+{% block title %}RPI{% endblock %}
+
+{% block content %}
+
+<form method="post">
+    {% csrf_token %}
+
+    <h2>Dados Principais</h2>
+    <div class="form-section">
+        {{ form.as_p }}
+    </div>
+
+    <h2>Pessoas Envolvidas</h2>
+    <div class="form-section">
+        {{ envolvido_formset.management_form }} 
+        {% for form_envolvido in envolvido_formset %}
+            <div class="envolvido-item">
+                {{ form_envolvido.as_p }} 
+            </div>
+            <hr>
+        {% endfor %}
+        <p>Preencha os campos e use o botão "Salvar" no final.</p>
+    </div>
+
+    <button type="submit" class="btn btn-success btn-md shadow-sm me-3">Salvar Ocorrência</button>
+    <a href="{% url 'ocorrencia_list' %}">Cancelar</a>
+</form>
+{% endblock content %}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="pt-BR" class="h-100"> {# ADICIONADO: class="h-100" para que a tag html ocupe 100% da altura #}
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}RPI{% endblock %}</title>
+
+    {# Bootstrap CSS #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+    {# Bootstrap Icons #}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    {# Opcional: Font Awesome para ícones de redes sociais (se estiver usando no footer) #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'alunos/css/rodape.css' %}">
+
+
+    {# Bloco para CSS e outras coisas específicas do head que templates filhos podem adicionar #}
+    {% block extra_head_css %}
+      
+    {% endblock %} 
+
+</head>
+<body>
+    <header class="bg-primary text-white p-3 mb-4 shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="{% url 'ocorrencia_list' %}" class="text-white text-decoration-none h4">
+                Relatório Periódico de Inteligência (RPI)
+            </a>
+            <nav>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'ocorrencia_create' %}" class="btn btn-warning btn-sm me-2">Cadastrar Nova</a>
+                    <span class="me-2 text-white-50">Olá, {{ user.username }}!</span>
+                    <a href="{% url 'admin:index' %}" class="btn btn-secondary btn-sm me-2">Admin</a>
+                    <a href="#" class="btn btn-danger btn-sm">Sair</a> 
+                {% else %}
+                    <a href="#" class="btn btn-light btn-sm">Entrar</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mb-5">
+        {% block content %}
+        {% endblock content %}
+    </main>
+
+    <footer class="bg-light text-center p-3 mt-auto border-top">
+        <div class="container">
+            <small>&copy; {{ "now"|date:"Y" }} Sistema de Ocorrências. Desenvolvido em Django.</small>
+        </div>
+    </footer>
+
+    <script 
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fRVH7eK2Kk9B6Z/P7F0I/BfGv7X2Fz3T9/y7v6pA" 
+        crossorigin="anonymous"
+    ></script>
+    
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>
