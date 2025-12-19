@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rpi",
+    "widget_tweaks",
 ]
 
 MIDDLEWARE = [
@@ -122,3 +123,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+LOGIN_URL = "/admin/login/"  # Ou a URL da sua página de login customizada
+LOGIN_REDIRECT_URL = "/"  # Para onde ir após logar

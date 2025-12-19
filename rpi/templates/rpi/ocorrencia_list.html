@@ -5,25 +5,134 @@
 
 {% block content %} 
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>Lista de Ocorrências Registradas</h1>
-        <a href="{% url 'ocorrencia_create' %}" class="btn btn-primary">➕ Cadastrar Nova Ocorrência</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Ocorrências Registradas</h1>
+        <a href="{% url 'ocorrencia_create' %}" class="btn btn-primary shadow-sm">
+            ➕ Cadastrar Nova Ocorrência
+        </a>
     </div>
+
+    {% if relatorio_atual %}
+    <div class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm border-warning mb-4">
+        
+        <div>
+            <h5 class="mb-0">📋 Relatório em andamento: 
+                <strong>{{ relatorio_atual.nr_relatorio }}/{{ relatorio_atual.ano_criacao }}</strong>
+            </h5>
+            <small class="text-muted">Iniciado em: {{ relatorio_atual.data_inicio|date:"d/m/Y H:i" }}</small>
+        </div>
+        
+        <form method="post" action="{% url 'finalizar_relatorio' relatorio_atual.pk %}" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" 
+                    class="btn btn-danger"> 
+                🛑 Finalizar Relatório
+            </button>
+        </form>
+        
+    </div>
+    {% endif %}
 
     <hr>
 
+<div class="row">
     {% for ocorrencia in ocorrencias %}
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title"><strong>{{ ocorrencia.natureza.nome }} - {{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}</strong></h5>
-                <p class="card-text">
-                    <strong>Aspecto:</strong> <span class="badge {% if ocorrencia.natureza.tipo_impacto == 'P' %}text-bg-success{% else %}text-bg-danger{% endif %}">{{ ocorrencia.natureza.get_tipo_impacto_display }}</span> |
-                    <strong>OPM:</strong> {{ ocorrencia.opm.sigla }} ({{ ocorrencia.opm.municipio.nome }})
-                </p>
+        <div class="col-12">
+            <div class="card mb-3 shadow-sm border-start border-4 {% if ocorrencia.natureza.tipo_impacto == 'P' %}border-success{% else %}border-danger{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="card-title mb-1">
+                                <strong>{{ ocorrencia.natureza.nome }}</strong>
+                                <span class="text-muted float-end" style="font-size: 0.9rem;">
+                                    ID: {{ ocorrencia.pk }} - {{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}
+                                </span>
+                            </h5>
+                            <p class="card-text mb-0">
+                                <strong>Aspecto:</strong> 
+                                <span class="badge {% if ocorrencia.natureza.tipo_impacto == 'P' %}text-bg-success{% else %}text-bg-danger{% endif %}">
+                                    {{ ocorrencia.natureza.get_tipo_impacto_display }}
+                                </span> 
+                                <span class="mx-2 text-muted">|</span>
+                                <strong>OPM:</strong> {{ ocorrencia.opm.sigla }} 
+                                <small class="text-muted">({{ ocorrencia.opm.municipio.nome }})</small>
+                            </p>
+                            <small class="text-secondary mt-1 d-block">{{ ocorrencia.resumo_cabecalho }}</small>
+                        </div>
+
+                        <div class="btn-group btn-group-sm ms-3" role="group">
+                            <a href="{% url 'ocorrencia_detail' ocorrencia.pk %}" class="btn btn-outline-info" title="Visualizar Detalhes">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'ocorrencia_update' ocorrencia.pk %}" class="btn btn-outline-warning" title="Editar Ocorrência">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" 
+                                class="btn btn-outline-danger btn-delete-modal" 
+                                title="Excluir Ocorrência"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteConfirmModal"
+                                data-delete-url="{% url 'ocorrencia_delete' ocorrencia.pk %}"
+                                data-ocorrencia-id="{{ ocorrencia.pk }}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+            </div>
         </div>
     {% empty %}
-        <div class="alert alert-info">Nenhuma ocorrência registrada.</div>
-    {% endfor %}
+        {% endfor %}
+</div>
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteConfirmModalLabel">Confirmação de Exclusão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Você tem certeza que deseja excluir a ocorrência <strong id="ocorrenciaIdPlaceholder"></strong>?</p>
+        <p class="text-danger">Esta ação é **irreversível** e removerá a ocorrência do relatório.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form method="post" id="deleteForm">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash-alt"></i> Excluir Definitivamente
+            </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% block extra_js %}
+<script>
+    // 1. Obtém a referência do modal
+    var deleteModal = document.getElementById('deleteConfirmModal');
+    
+    // 2. Adiciona um Listener para o evento de 'show' (mostrando) do modal
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            
+            // Botão que disparou o modal (o botão da lixeira)
+            var button = event.relatedTarget;
+            
+            // 3. Pega a URL de exclusão e o ID dos atributos data-*
+            var deleteUrl = button.getAttribute('data-delete-url');
+            var ocorrenciaId = button.getAttribute('data-ocorrencia-id');
+
+            // 4. Atualiza o atributo 'action' do formulário dentro do modal
+            var deleteForm = document.getElementById('deleteForm');
+            deleteForm.setAttribute('action', deleteUrl);
+
+            // 5. Atualiza o texto do modal com o ID da ocorrência
+            var modalPlaceholder = document.getElementById('ocorrenciaIdPlaceholder');
+            modalPlaceholder.textContent = '#' + ocorrenciaId;
+        });
+    }
+</script>
+{% endblock extra_js %}
 
 {% endblock content %}

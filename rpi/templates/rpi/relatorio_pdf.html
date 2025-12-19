@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}</title>
+    <style>
+        /* Estilos CSS para formatar o PDF */
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            margin: 0.5in; /* Margens */
+        }
+        .ocorrencia {
+            margin-bottom: 20px;
+            page-break-inside: avoid; /* Evita quebras de página dentro da ocorrência */
+        }
+        .titulo {
+            font-weight: bold;
+            font-size: 11pt;
+            margin-bottom: 5px;
+        }
+        .historico {
+            text-align: justify; /* Alinhamento justificado */
+            line-height: 1.5;
+            text-indent: 1.5em; /* Recuo na primeira linha (opcional) */
+        }
+        /* Exemplo futuro para imagens */
+        .imagem-ocorrencia {
+            max-width: 100%; 
+            height: auto; 
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <p>ESTADO DO RIO GRANDE DO SUL</p>
+    <p>SECRETARIA DA SEGURANÇA PÚBLICA</p>
+    <p>BRIGADA MILITAR - SISTEMA DE INTELIGÊNCIA</p>
+    <h1>RELATÓRIO PERIÓDICO DE INTELIGÊNCIA Nº {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}/ARI SUL - {{ relatorio.data_inicio|date:"d/m/Y" }}</h1>
+</header>
+<br>
+    <h2>SUMÁRIO</h2>
+    <p>PERÍODO: DE {{ relatorio.data_inicio|date:"dmY" }} A {{ relatorio.data_fim|date:"dmY" }}</p>
+
+    {% for item in ocorrencias %}
+        <p>
+            {{ forloop.counter }}. {{ item.ocorrencia.natureza.nome|upper }} - 
+            {{ item.ocorrencia.opm.municipio.nome|upper }} ({{ item.sigla_opm_limpa|upper }})
+        </p>
+    {% endfor %}
+
+    <div style="page-break-before: always;"></div>
+    
+    <body>
+    {% for item in ocorrencias %}
+        {% with ocorrencia=item.ocorrencia %}
+        <div class="ocorrencia">
+            {% with nr_ocorrencia=forloop.counter %}
+            
+            <p class="titulo">
+                {{ nr_ocorrencia }}. {{ ocorrencia.natureza.nome|upper }} – 
+                {{ ocorrencia.opm.municipio.nome|upper }} ({{ item.sigla_opm_limpa|upper }})
+            </p>
+
+            <p class="historico">
+                <strong>Em {{ ocorrencia.data_hora_bruta }},</strong>
+                
+                na {{ ocorrencia.rua }}, n° {{ ocorrencia.numero }}, bairro {{ ocorrencia.bairro }}, na cidade de {{ ocorrencia.opm.municipio.nome }},
+                
+                {{ ocorrencia.relato_historico }}
+            </p>
+
+            {% endwith %}
+        </div>
+        {% endwith %}
+    {% empty %}
+        <p>Este relatório não possui ocorrências.</p>
+    {% endfor %}
+
+</body>
+</html>
+

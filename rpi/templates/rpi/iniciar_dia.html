@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Relatório Diário{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Abertura de Relatório Diário</h4>
+                </div>
+                <div class="card-body text-center">
+                    {% if relatorio %}
+                        <div class="alert alert-success">
+                            <h5>Relatório Ativo: {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}</h5>
+                            <p>Você já possui um relatório aberto para o dia de hoje.</p>
+                            <a href="{% url 'ocorrencia_create' %}" class="btn btn-success btn-lg">
+                                Ir para Cadastro de Ocorrência
+                            </a>
+                        </div>
+                    {% else %}
+                        <p class="lead">Nenhum relatório aberto para o seu usuário nas últimas 24h.</p>
+                        <p>Para registrar novas ocorrências, você deve iniciar o relatório do dia.</p>
+                        
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                🚀 Iniciar Relatório Diário
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-muted text-center">
+                    Sistema RPI - {{ now|date:"d/m/Y" }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

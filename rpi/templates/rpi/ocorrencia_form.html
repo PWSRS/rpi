@@ -1,31 +1,235 @@
 {% extends "base.html" %} 
 {% load static %}
 
-{% block title %}RPI{% endblock %}
+{% block title %}Cadastro de Ocorrência{% endblock %}
 
 {% block content %}
 
-<form method="post">
+<h1 class="mb-4">
+    {% if form.instance.pk %}
+        <i class="fas fa-edit"></i> Editar Ocorrência ID: {{ form.instance.pk }}
+    {% else %}
+        <i class="fas fa-plus-circle"></i> Cadastrar Nova Ocorrência
+    {% endif %}
+</h1>
+<hr>
+
+<form method="post" class="needs-validation" novalidate>
     {% csrf_token %}
 
-    <h2>Dados Principais</h2>
-    <div class="form-section">
-        {{ form.as_p }}
-    </div>
-
-    <h2>Pessoas Envolvidas</h2>
-    <div class="form-section">
-        {{ envolvido_formset.management_form }} 
-        {% for form_envolvido in envolvido_formset %}
-            <div class="envolvido-item">
-                {{ form_envolvido.as_p }} 
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informações da Ocorrência</h5>
+        </div>
+        <div class="card-body">
+            
+            <div class="row">
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <label for="{{ form.natureza.id_for_label }}" class="form-label required">Natureza/Tipo:</label>
+                    {{ form.natureza }}
+                </div>
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <label for="{{ form.opm.id_for_label }}" class="form-label required">OPM Responsável:</label>
+                    {{ form.opm }}
+                </div>
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <label for="{{ form.data_hora_bruta.id_for_label }}" class="form-label required">Data/Hora Militar (DDHHMMMESAA):</label>
+                    {{ form.data_hora_bruta }}
+                </div>
             </div>
-            <hr>
-        {% endfor %}
-        <p>Preencha os campos e use o botão "Salvar" no final.</p>
+
+            <div class="row">
+                <div class="col-md-12 col-lg-6 mb-3">
+                    <label for="{{ form.rua.id_for_label }}" class="form-label">Rua/Via do Fato:</label>
+                    {{ form.rua }}
+                </div>
+                <div class="col-md-6 col-lg-2 mb-3">
+                    <label for="{{ form.numero.id_for_label }}" class="form-label">Número:</label>
+                    {{ form.numero }}
+                </div>
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <label for="{{ form.bairro.id_for_label }}" class="form-label">Bairro:</label>
+                    {{ form.bairro }}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <label for="{{ form.tipo_acao.id_for_label }}" class="form-label">Ação (Consumado/Tentado):</label>
+                    {{ form.tipo_acao }}
+                </div>
+                <div class="col-md-6 col-lg-9 mb-3">
+                    <label for="{{ form.resumo_cabecalho.id_for_label }}" class="form-label required">Resumo/Título (máx. 255 caracteres):</label>
+                    {{ form.resumo_cabecalho }}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="{{ form.relato_historico.id_for_label }}" class="form-label required">Relato Histórico Detalhado:</label>
+                    {{ form.relato_historico }}
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="fas fa-users"></i> Pessoas Envolvidas</h5>
+        </div>
+        <div class="card-body">
+            
+            {{ envolvido_formset.management_form }}
+            
+            <div id="envolvidos-container">
+                {% for form_envolvido in envolvido_formset %}
+                    {% include "rpi/includes/envolvido_form.html" with form_envolvido=form_envolvido %}
+                {% endfor %}
+            </div>
+
+            <div id="empty-form-template" style="display: none;">
+                {% include "rpi/includes/envolvido_form.html" with form_envolvido=envolvido_formset.empty_form %}
+            </div>
+
+            <button type="button" id="add-envolvido-btn" class="btn btn-outline-primary mt-3">
+                <i class="fas fa-user-plus"></i> Adicionar Participante
+            </button>
+            
+        </div>
     </div>
 
-    <button type="submit" class="btn btn-success btn-md shadow-sm me-3">Salvar Ocorrência</button>
-    <a href="{% url 'ocorrencia_list' %}">Cancelar</a>
+    <div class="mt-4 pt-3 border-top">
+        <button type="submit" class="btn btn-success btn-lg shadow-sm me-3">
+            <i class="fas fa-save"></i> Salvar Ocorrência
+        </button>
+        <a href="{% url 'ocorrencia_list' %}" class="btn btn-outline-secondary btn-lg">
+            <i class="fas fa-times-circle"></i> Cancelar
+        </a>
+    </div>
 </form>
+
 {% endblock content %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    // ===============================================
+    // VARIÁVEIS DE INICIALIZAÇÃO E CONTROLE
+    // ===============================================
+    const FORMSET_PREFIX = '{{ envolvido_formset.prefix }}';
+    const totalForms = $(`#id_${FORMSET_PREFIX}-TOTAL_FORMS`);
+    const container = $('#envolvidos-container');
+    
+    // CORREÇÃO DE EXTRAÇÃO: Garante que o templateHtml não seja nulo e seja uma string limpa.
+    const templateHtml = $('#empty-form-template').html().trim(); 
+
+    let formIdx = parseInt(totalForms.val()); 
+
+
+    // ===============================================
+    // FUNÇÕES AUXILIARES DE FORMSET
+    // ===============================================
+
+    // 1. Inicialização Select2
+    function initializeSelect2(selector = 'form') {
+        $(selector).find('select').select2({
+            theme: "bootstrap-5",
+        });
+    }
+
+    // 2. Lógica de Indexação
+    function updateElementIndex(el, index) {
+        const idRegex = new RegExp(`(${FORMSET_PREFIX}-\\d+|${FORMSET_PREFIX}-__prefix__)`);
+        const replacement = `${FORMSET_PREFIX}-${index}`;
+
+        if (el.attr('for')) {
+            el.attr('for', el.attr('for').replace(idRegex, replacement));
+        }
+        if (el.attr('id')) {
+            el.attr('id', el.attr('id').replace(idRegex, replacement));
+        }
+        if (el.attr('name')) {
+            el.attr('name', el.attr('name').replace(idRegex, replacement));
+        }
+    }
+
+    function reindexForms() {
+        container.children('.envolvido-form').each(function(index) {
+            $(this).find(':input, label').each(function() {
+                updateElementIndex($(this), index);
+            });
+            // Atualiza o marcador de índice no cabeçalho
+            $(this).find('.form-index').text(index + 1);
+            $(this).attr('data-form-index', index);
+        });
+    }
+
+    // ===============================================
+    // EXECUÇÃO E EVENTOS
+    // ===============================================
+
+    $(document).ready(function() {
+        // Tenta executar o JS. Se falhar, pelo menos o botão de submit do HTML ainda funcionará.
+        try {
+            initializeSelect2(); 
+            reindexForms();
+        } catch (e) {
+            console.error("Erro na inicialização do Select2/Formset:", e);
+        }
+    });
+
+    // Evento: Adicionar Novo Envolvido
+    $('#add-envolvido-btn').click(function() {
+        try {
+            // 1. Substitui os prefixos
+            const newFormHtml = templateHtml
+                .replace(/__prefix__/g, formIdx)
+                .replace(/__REPLACE_ME__/g, formIdx + 1); 
+                
+            const newForm = $(newFormHtml);
+            
+            // 2. Anexa o novo formulário
+            container.append(newForm);
+
+            // 3. Inicializa o Select2
+            initializeSelect2(newForm); 
+            
+            // 4. Atualiza o índice visual e a contagem total
+            newForm.find('.form-index').text(formIdx + 1);
+            formIdx++;
+            totalForms.val(formIdx);
+            
+            // Opcional: Rolar para o novo formulário
+            $('html, body').animate({
+                scrollTop: newForm.offset().top - 100
+            }, 500);
+
+        } catch (e) {
+            console.error("Erro ao adicionar novo envolvido:", e);
+            alert("Erro ao adicionar participante. Verifique o console para detalhes.");
+        }
+    });
+
+    // Evento: Remover Envolvido
+    container.on('click', '.remove-envolvido-btn', function() {
+        const formToRemove = $(this).closest('.envolvido-form');
+        
+        // Marca o campo DELETE como true
+        const deleteInput = formToRemove.find(`[name$="-DELETE"]`);
+        if (deleteInput.length) {
+            deleteInput.val('on');
+        }
+        
+        // Esconde o formulário
+        formToRemove.hide(200, function() {
+             // Opcional: Reindexar para manter a numeração visual sequencial após a exclusão lógica
+             reindexForms();
+        });
+        
+    });
+
+</script>
+{% endblock %}

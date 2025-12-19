@@ -1,0 +1,63 @@
+{% extends "base.html" %} 
+{% block title %}Detalhes da Ocorrência{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Detalhes da Ocorrência #{{ ocorrencia.pk }}</h2>
+    <p>
+        <a href="{% url 'ocorrencia_update' ocorrencia.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Editar Ocorrência
+        </a>
+        <a href="{% url 'ocorrencia_list' %}" class="btn btn-secondary">Voltar à Lista</a>
+    </p>
+    <hr>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">Informações Principais</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><strong>Data/Hora Militar:</strong> {{ ocorrencia.data_hora_bruta }}</li>
+                    <li class="list-group-item"><strong>Natureza:</strong> {{ ocorrencia.natureza }}</li>
+                    <li class="list-group-item"><strong>OPM:</strong> {{ ocorrencia.opm }}</li>
+                    <li class="list-group-item"><strong>Ação:</strong> {{ ocorrencia.get_tipo_acao_display }}</li>
+                    <li class="list-group-item"><strong>Resumo (Sumário):</strong> {{ ocorrencia.resumo_cabecalho }}</li>
+                </ul>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header">Localização</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><strong>Rua/Via:</strong> {{ ocorrencia.rua|default:"N/A" }}</li>
+                    <li class="list-group-item"><strong>Número:</strong> {{ ocorrencia.numero|default:"S/N" }}</li>
+                    <li class="list-group-item"><strong>Bairro:</strong> {{ ocorrencia.bairro|default:"N/A" }}</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">Histórico Detalhado</div>
+                <div class="card-body">
+                    <p>{{ ocorrencia.relato_historico|linebreaksbr }}</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Envolvidos ({{ envolvidos.count }})</div>
+                <ul class="list-group list-group-flush">
+                    {% for envolvido in envolvidos %}
+                    <li class="list-group-item">
+                        <strong>{{ envolvido.get_tipo_participante_display }}:</strong> {{ envolvido.nome }} ({{ envolvido.idade }} anos)
+                        <br>
+                        <small>Antecedentes: {{ envolvido.get_antecedentes_display }}</small>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">Nenhum envolvido cadastrado.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -1,21 +1,50 @@
-# SeuApp/forms.py
-
 from django import forms
-from .models import Ocorrencia, Envolvido  # Importe todos os modelos necessários
+from .models import Ocorrencia, Envolvido, RelatorioDiario
+from django.forms import DateTimeInput, TextInput, Textarea
+
+
+class RelatorioDiarioForm(forms.ModelForm):
+    """Formulário para abrir o dia/serviço"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs["class"] = "form-control"
+
+    class Meta:
+        model = RelatorioDiario
+        fields = ["nr_relatorio", "ano_criacao", "data_inicio", "data_fim"]
+        widgets = {
+            "data_inicio": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "data_fim": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
 
 
 class OcorrenciaForm(forms.ModelForm):
-
-    # Sobrescreve o construtor __init__ para aplicar 'form-control' automaticamente
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Itera sobre todos os campos e adiciona a classe Bootstrap
+        # 1. Aplica a classe 'form-control' se o widget NÃO for um Select ou Hidden Input
         for field_name, field in self.fields.items():
-            # A classe 'form-control' não deve ser aplicada a Checkboxes ou outros tipos específicos
-            # Mas é ideal para TextInputs, Selects, Textareas (que são os tipos padrão do ModelForm)
-            if field_name not in ["algum_checkbox_se_existir"]:
-                field.widget.attrs["class"] = "form-control"
+            widget = field.widget
+
+            # Condição para aplicar 'form-control'
+            is_select = isinstance(widget, forms.Select) or isinstance(
+                widget, forms.SelectMultiple
+            )
+            is_hidden = isinstance(widget, forms.HiddenInput)
+
+            if not is_select and not is_hidden:
+                # Aplica 'form-control' a TextInputs, Textareas, etc.
+                current_classes = widget.attrs.get("class", "")
+                if "form-control" not in current_classes:
+                    widget.attrs["class"] = current_classes + " form-control"
+
+            elif is_select:
+                # 2. Aplica a classe 'form-select' (necessário para Bootstrap 5 e Select2)
+                current_classes = widget.attrs.get("class", "")
+                if "form-select" not in current_classes:
+                    widget.attrs["class"] = current_classes + " form-select"
 
     class Meta:
         model = Ocorrencia
@@ -23,36 +52,46 @@ class OcorrenciaForm(forms.ModelForm):
             "data_hora_bruta",
             "natureza",
             "opm",
+            "rua",
+            "numero",
+            "bairro",
+            "tipo_acao",
             "relato_historico",
             "resumo_cabecalho",
-            "relatorio_diario",
         ]
 
+        # Os widgets que você já definiu estão OK, mas garantimos as classes via __init__
         widgets = {
-            # O Textarea precisa de um widget específico para definir 'rows',
-            # mas o __init__ adicionará 'form-control'
-            "relato_historico": forms.Textarea(attrs={"rows": 6}),
-            # O data_hora_bruta usa TextInput (padrão) e adicionamos o placeholder/class
-            "data_hora_bruta": forms.TextInput(
+            "relato_historico": forms.Textarea(
                 attrs={
-                    "placeholder": "Ex: 151435DEZ25"
-                }  # 'form-control' será adicionado no __init__
+                    "rows": 6,
+                    "placeholder": "Descreva detalhadamente o fato ocorrido...",
+                }
             ),
+            "data_hora_bruta": forms.TextInput(
+                attrs={"placeholder": "Ex: 151435DEZ25", "maxlength": "11"}
+            ),
+            "resumo_cabecalho": forms.TextInput(
+                attrs={"placeholder": "Título curto da ocorrência"}
+            ),
+            # Não é necessário definir 'natureza', 'opm' e 'tipo_acao' aqui,
+            # pois eles já são Selects e o __init__ cuidará da classe 'form-select'.
         }
 
         labels = {
-            "data_hora_bruta": "Data/Hora (Ex: 151435DEZ25)",
+            "data_hora_bruta": "Data/Hora Militar (DDHHMMMESAA)",
+            "natureza": "Natureza do Fato",
+            "opm": "Unidade Responsável (OPM)",
+            "rua": "Rua/Via do Fato",
+            "numero": "Número",
+            "bairro": "Bairro",
+            "tipo_acao": "Ação (Consumado/Tentado)",
             "relato_historico": "Relato Detalhado",
-            "resumo_cabecalho": "Resumo para Sumário",
+            "resumo_cabecalho": "Resumo para o Sumário",
         }
 
 
-# --- Formulário para o Modelo Envolvido ---
-
-
 class EnvolvidoForm(forms.ModelForm):
-
-    # Aplica 'form-control' em todos os campos do Formset
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
@@ -60,8 +99,22 @@ class EnvolvidoForm(forms.ModelForm):
 
     class Meta:
         model = Envolvido
-        exclude = ("ocorrencia",)
+        # O campo 'ocorrencia' fica de fora
+        # Excluímos o campo de antecedente para usarmos o `fields`
+        fields = (
+            "nome",
+            "tipo_participante",
+            "idade",
+            "antecedentes",  # <--- NOVO CAMPO
+        )
+
+        widgets = {
+            "idade": forms.NumberInput(attrs={"min": 0, "max": 150}),
+        }
+
         labels = {
-            "nome": "Nome do Envolvido",
-            "tipo_participante": "Participação",
+            "nome": "Nome Completo",
+            "tipo_participante": "Tipo de Envolvimento",
+            "idade": "Idade (Anos)",
+            "antecedentes": "Antecedentes Criminais",  # Novo Label
         }
