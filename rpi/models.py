@@ -249,3 +249,56 @@ class Envolvido(models.Model):
     class Meta:
         verbose_name = "Envolvido"
         verbose_name_plural = "Envolvidos"
+
+
+# NO SEU rpi/models.py
+
+
+# --- TABELA AUXILIAR PARA TIPOS DE MATERIAIS ---
+class MaterialApreendidoTipo(models.Model):
+    # Ex: 'Pistola', 'Maconha', 'Munição Cal .40'
+    nome = models.CharField(
+        max_length=255, unique=True, verbose_name="Tipo de Material"
+    )
+
+    def __str__(self):
+        return self.nome
+
+    class Meta:
+        verbose_name = "Tipo de Material Apreendido"
+        verbose_name_plural = "Tipos de Materiais Apreendidos"
+
+
+# --- ENTIDADE DE RELACIONAMENTO (APREENSÃO) ---
+class Apreensao(models.Model):
+    ocorrencia = models.ForeignKey(
+        "Ocorrencia", on_delete=models.CASCADE, related_name="apreensoes"
+    )
+    material_tipo = models.ForeignKey(
+        MaterialApreendidoTipo,
+        on_delete=models.PROTECT,
+        verbose_name="Material Apreendido",
+    )
+    quantidade = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Quantidade",
+        help_text="Use vírgula para separar (Ex: 10.50 ou 1)",
+        default=1,
+    )
+
+    # Exemplo: 'unidades', 'gramas', 'metros', 'reais'
+    unidade_medida = models.CharField(
+        max_length=50, blank=True, verbose_name="Unidade de Medida"
+    )
+
+    def __str__(self):
+        return f"{self.quantidade} {self.unidade_medida} de {self.material_tipo.nome}"
+
+    class Meta:
+        verbose_name = "Apreensão"
+        verbose_name_plural = "Apreensões"
+        unique_together = (
+            "ocorrencia",
+            "material_tipo",
+        )  # Evita cadastrar o mesmo item duas vezes na mesma ocorrência

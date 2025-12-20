@@ -1,6 +1,46 @@
 from django import forms
-from .models import Ocorrencia, Envolvido, RelatorioDiario
+from .models import (
+    Ocorrencia,
+    Envolvido,
+    RelatorioDiario,
+    Apreensao,
+    MaterialApreendidoTipo,
+)
 from django.forms import DateTimeInput, TextInput, Textarea
+
+
+class ApreensaoForm(forms.ModelForm):
+    class Meta:
+        model = Apreensao
+        fields = ["material_tipo", "quantidade", "unidade_medida"]
+
+        widgets = {
+            # Adicionando 'form-control' no campo quantidade
+            "quantidade": forms.TextInput(
+                attrs={
+                    "placeholder": "1.00 ou 100",
+                    "class": "form-control",  # CLASSE ADICIONADA AQUI
+                }
+            ),
+            # Adicionando 'form-control' no campo unidade_medida
+            "unidade_medida": forms.TextInput(
+                attrs={
+                    "placeholder": "Un, g, Kg, Pés, R$...",
+                    "class": "form-control",  # CLASSE ADICIONADA AQUI
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Itera sobre os campos para adicionar a classe 'form-control' ao Select (material_tipo)
+        # e a qualquer outro campo que tenha sido esquecido.
+        for field_name, field in self.fields.items():
+            if field_name not in ["quantidade", "unidade_medida"] and field.widget:
+                # O campo 'material_tipo' (Select) será pego aqui
+                current_classes = field.widget.attrs.get("class", "")
+                field.widget.attrs["class"] = current_classes + " form-control"
 
 
 class RelatorioDiarioForm(forms.ModelForm):
@@ -65,7 +105,7 @@ class OcorrenciaForm(forms.ModelForm):
             "relato_historico": forms.Textarea(
                 attrs={
                     "rows": 6,
-                    "placeholder": "Descreva detalhadamente o fato ocorrido...",
+                    "placeholder": "Descrição do fato...",
                 }
             ),
             "data_hora_bruta": forms.TextInput(
@@ -79,15 +119,15 @@ class OcorrenciaForm(forms.ModelForm):
         }
 
         labels = {
-            "data_hora_bruta": "Data/Hora Militar (DDHHMMMESAA)",
-            "natureza": "Natureza do Fato",
-            "opm": "Unidade Responsável (OPM)",
-            "rua": "Rua/Via do Fato",
+            "data_hora_bruta": "Data/Hora (DDHHMMMESAA)",
+            "natureza": "Natureza da Ocorrência",
+            "opm": "(OPM)",
+            "rua": "Endere",
             "numero": "Número",
             "bairro": "Bairro",
-            "tipo_acao": "Ação (Consumado/Tentado)",
+            "tipo_acao": "Tipo do Fato (Consumado/Tentado)",
             "relato_historico": "Relato Detalhado",
-            "resumo_cabecalho": "Resumo para o Sumário",
+            "resumo_cabecalho": "Título Sumário",
         }
 
 
@@ -114,7 +154,7 @@ class EnvolvidoForm(forms.ModelForm):
 
         labels = {
             "nome": "Nome Completo",
-            "tipo_participante": "Tipo de Envolvimento",
+            "tipo_participante": "Tipo de Participação",
             "idade": "Idade (Anos)",
             "antecedentes": "Antecedentes Criminais",  # Novo Label
         }

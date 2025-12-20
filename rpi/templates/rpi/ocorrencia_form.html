@@ -9,7 +9,7 @@
     {% if form.instance.pk %}
         <i class="fas fa-edit"></i> Editar Ocorrência ID: {{ form.instance.pk }}
     {% else %}
-        <i class="fas fa-plus-circle"></i> Cadastrar Nova Ocorrência
+        <i class="fas fa-plus-circle"></i> Registro de Ocorrência
     {% endif %}
 </h1>
 <hr>
@@ -19,28 +19,28 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informações da Ocorrência</h5>
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Dados Básicos</h5>
         </div>
         <div class="card-body">
             
             <div class="row">
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <label for="{{ form.natureza.id_for_label }}" class="form-label required">Natureza/Tipo:</label>
+                    <label for="{{ form.natureza.id_for_label }}" class="form-label required">Natureza da Ocorrência:</label>
                     {{ form.natureza }}
                 </div>
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <label for="{{ form.opm.id_for_label }}" class="form-label required">OPM Responsável:</label>
+                    <label for="{{ form.opm.id_for_label }}" class="form-label required">OPM:</label>
                     {{ form.opm }}
                 </div>
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <label for="{{ form.data_hora_bruta.id_for_label }}" class="form-label required">Data/Hora Militar (DDHHMMMESAA):</label>
+                    <label for="{{ form.data_hora_bruta.id_for_label }}" class="form-label required">Data/Hora (DDHHMMMESAA):</label>
                     {{ form.data_hora_bruta }}
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-12 col-lg-6 mb-3">
-                    <label for="{{ form.rua.id_for_label }}" class="form-label">Rua/Via do Fato:</label>
+                    <label for="{{ form.rua.id_for_label }}" class="form-label">Endereço:</label>
                     {{ form.rua }}
                 </div>
                 <div class="col-md-6 col-lg-2 mb-3">
@@ -55,18 +55,18 @@
             
             <div class="row">
                 <div class="col-md-6 col-lg-3 mb-3">
-                    <label for="{{ form.tipo_acao.id_for_label }}" class="form-label">Ação (Consumado/Tentado):</label>
+                    <label for="{{ form.tipo_acao.id_for_label }}" class="form-label">Tipo do Fato (Consumado/Tentado):</label>
                     {{ form.tipo_acao }}
                 </div>
                 <div class="col-md-6 col-lg-9 mb-3">
-                    <label for="{{ form.resumo_cabecalho.id_for_label }}" class="form-label required">Resumo/Título (máx. 255 caracteres):</label>
+                    <label for="{{ form.resumo_cabecalho.id_for_label }}" class="form-label required">Título Sumário:</label>
                     {{ form.resumo_cabecalho }}
                 </div>
             </div>
             
             <div class="row">
                 <div class="col-12 mb-3">
-                    <label for="{{ form.relato_historico.id_for_label }}" class="form-label required">Relato Histórico Detalhado:</label>
+                    <label for="{{ form.relato_historico.id_for_label }}" class="form-label required">Histórico da Ocorrência:</label>
                     {{ form.relato_historico }}
                 </div>
             </div>
@@ -76,7 +76,7 @@
     
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0"><i class="fas fa-users"></i> Pessoas Envolvidas</h5>
+            <h5 class="mb-0"><i class="fas fa-users"></i> Participantes</h5>
         </div>
         <div class="card-body">
             
@@ -88,9 +88,9 @@
                 {% endfor %}
             </div>
 
-            <div id="empty-form-template" style="display: none;">
+            <template id="empty-envolvido-template">
                 {% include "rpi/includes/envolvido_form.html" with form_envolvido=envolvido_formset.empty_form %}
-            </div>
+            </template>
 
             <button type="button" id="add-envolvido-btn" class="btn btn-outline-primary mt-3">
                 <i class="fas fa-user-plus"></i> Adicionar Participante
@@ -98,6 +98,86 @@
             
         </div>
     </div>
+
+    <section class="card mb-4 shadow-sm border-info">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">📦 Materiais Apreendidos</h5>
+    </div>
+    <div class="card-body">
+        
+        {{ apreensao_formset.management_form }} 
+
+        <div id="apreensoes-formset-container">
+            {% for form_apreensao in apreensao_formset %}
+                <div class="form-row form-apreensao-item mb-3 p-3 border rounded" style="background-color: #f8f9fa;">
+                    
+                    {% for hidden in form_apreensao.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+                    
+                    <div class="row">
+                        <div class="col-md-5">
+                            <label class="form-label">{{ form_apreensao.material_tipo.label }}</label>
+                            {{ form_apreensao.material_tipo }}
+                            <div class="text-danger">{{ form_apreensao.material_tipo.errors }}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form_apreensao.quantidade.label }}</label>
+                            {{ form_apreensao.quantidade }}
+                            <div class="text-danger">{{ form_apreensao.quantidade.errors }}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form_apreensao.unidade_medida.label }}</label>
+                            {{ form_apreensao.unidade_medida }}
+                            <div class="text-danger">{{ form_apreensao.unidade_medida.errors }}</div>
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-formset-row" data-formset-prefix="apreensoes" title="Remover Material">
+                                <i class="fas fa-minus-circle"></i>
+                            </button>
+                            <div class="d-none">{{ form_apreensao.DELETE }}</div> 
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <template id="empty-apreensao-template">
+            <div class="form-row form-apreensao-item mb-3 p-3 border rounded" style="background-color: #f8f9fa;">
+                
+                {% for hidden in apreensao_formset.empty_form.hidden_fields %}
+                    {{ hidden }}
+                {% endfor %}
+                
+                <div class="row">
+                    <div class="col-md-5">
+                        <label class="form-label">{{ apreensao_formset.empty_form.material_tipo.label }}</label>
+                        {{ apreensao_formset.empty_form.material_tipo }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">{{ apreensao_formset.empty_form.quantidade.label }}</label>
+                        {{ apreensao_formset.empty_form.quantidade }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">{{ apreensao_formset.empty_form.unidade_medida.label }}</label>
+                        {{ apreensao_formset.empty_form.unidade_medida }}
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-formset-row" data-formset-prefix="apreensoes" title="Remover Material">
+                            <i class="fas fa-minus-circle"></i>
+                        </button>
+                        <div class="d-none">{{ apreensao_formset.empty_form.DELETE }}</div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        
+        <button type="button" class="btn btn-sm btn-secondary mt-3" id="add-apreensao-row" data-formset-prefix="apreensoes">
+            ➕ Adicionar Material Apreendido
+        </button>
+
+    </div>
+    </section>
 
     <div class="mt-4 pt-3 border-top">
         <button type="submit" class="btn btn-success btn-lg shadow-sm me-3">
@@ -117,119 +197,124 @@
 
 <script>
     // ===============================================
-    // VARIÁVEIS DE INICIALIZAÇÃO E CONTROLE
-    // ===============================================
-    const FORMSET_PREFIX = '{{ envolvido_formset.prefix }}';
-    const totalForms = $(`#id_${FORMSET_PREFIX}-TOTAL_FORMS`);
-    const container = $('#envolvidos-container');
-    
-    // CORREÇÃO DE EXTRAÇÃO: Garante que o templateHtml não seja nulo e seja uma string limpa.
-    const templateHtml = $('#empty-form-template').html().trim(); 
-
-    let formIdx = parseInt(totalForms.val()); 
-
-
-    // ===============================================
-    // FUNÇÕES AUXILIARES DE FORMSET
+    // FUNÇÕES AUXILIARES DE FORMSET (Refatoradas para aceitar o prefixo)
     // ===============================================
 
-    // 1. Inicialização Select2
-    function initializeSelect2(selector = 'form') {
-        $(selector).find('select').select2({
+    // 1. Inicialização Select2 (Chama em todos os selects do formulário)
+    function initializeSelect2(containerSelector) {
+        $(containerSelector).find('select').select2({
             theme: "bootstrap-5",
         });
     }
 
     // 2. Lógica de Indexação
-    function updateElementIndex(el, index) {
-        const idRegex = new RegExp(`(${FORMSET_PREFIX}-\\d+|${FORMSET_PREFIX}-__prefix__)`);
-        const replacement = `${FORMSET_PREFIX}-${index}`;
+    function updateElementIndex(el, prefix, index) {
+        // Regex agora usa o prefixo variável
+        const idRegex = new RegExp(`(${prefix}-\\d+|${prefix}-__prefix__)`);
+        const replacement = `${prefix}-${index}`;
 
-        if (el.attr('for')) {
-            el.attr('for', el.attr('for').replace(idRegex, replacement));
-        }
-        if (el.attr('id')) {
-            el.attr('id', el.attr('id').replace(idRegex, replacement));
-        }
-        if (el.attr('name')) {
-            el.attr('name', el.attr('name').replace(idRegex, replacement));
-        }
-    }
-
-    function reindexForms() {
-        container.children('.envolvido-form').each(function(index) {
-            $(this).find(':input, label').each(function() {
-                updateElementIndex($(this), index);
-            });
-            // Atualiza o marcador de índice no cabeçalho
-            $(this).find('.form-index').text(index + 1);
-            $(this).attr('data-form-index', index);
+        // Atualiza 'for', 'id' e 'name'
+        ['for', 'id', 'name'].forEach(attr => {
+            if (el.attr(attr)) {
+                el.attr(attr, el.attr(attr).replace(idRegex, replacement));
+            }
         });
     }
 
+    function reindexForms(prefix) {
+    // CORREÇÃO: Define o ID do contêiner com base no prefixo.
+    const containerId = (prefix === 'envolvidos') ? 'envolvidos-container' : `${prefix}-formset-container`;
+    const container = $(`#${containerId}`);
+    
+    // Note que estamos usando .envolvido-form ou .form-apreensao-item
+    const formClass = (prefix === 'envolvidos') ? 'envolvido-form' : 'form-apreensao-item'; 
+    
+    container.children(`.${formClass}`).each(function(index) {
+        // ... (o resto da função updateElementIndex é mantido)
+        $(this).find(':input, label').each(function() {
+            updateElementIndex($(this), prefix, index);
+        });
+        // ...
+    });
+}
+
     // ===============================================
-    // EXECUÇÃO E EVENTOS
+    // FUNÇÃO PRINCIPAL: ADICIONAR LINHA
+    // ===============================================
+
+    function addFormsetRow(prefix, templateHtml) {
+    // CORREÇÃO: Define o ID do contêiner com base no prefixo.
+    const containerId = (prefix === 'envolvidos') ? 'envolvidos-container' : `${prefix}-formset-container`;
+    
+    // O TOTAL_FORMS SEMPRE SEGUE O PADRÃO Django: id_<prefix>-TOTAL_FORMS
+    const totalFormsInput = $(`#id_${prefix}-TOTAL_FORMS`);
+    
+    let formIdx = parseInt(totalFormsInput.val()); 
+    const container = $(`#${containerId}`); // Usa o ID corrigido
+    
+    try {
+        // ... (resto da lógica de substituição de prefixo é mantida)
+
+        const newFormHtml = templateHtml
+            .replace(/__prefix__/g, formIdx)
+            .replace(/__REPLACE_ME__/g, formIdx + 1);
+
+        const newForm = $(newFormHtml);
+        
+        // 2. Anexa o novo formulário
+        container.append(newForm);
+
+        // ... (o resto da função é mantido)
+
+    } catch (e) {
+        console.error(`Erro ao adicionar nova linha (${prefix}):`, e);
+        alert(`Erro ao adicionar item. Verifique o console para detalhes.`);
+    }
+}
+
+    // ===============================================
+    // EVENTOS
     // ===============================================
 
     $(document).ready(function() {
-        // Tenta executar o JS. Se falhar, pelo menos o botão de submit do HTML ainda funcionará.
-        try {
-            initializeSelect2(); 
-            reindexForms();
-        } catch (e) {
-            console.error("Erro na inicialização do Select2/Formset:", e);
-        }
-    });
+        // ... (Inicializações e Reindexações) ...
 
-    // Evento: Adicionar Novo Envolvido
-    $('#add-envolvido-btn').click(function() {
-        try {
-            // 1. Substitui os prefixos
-            const newFormHtml = templateHtml
-                .replace(/__prefix__/g, formIdx)
-                .replace(/__REPLACE_ME__/g, formIdx + 1); 
-                
-            const newForm = $(newFormHtml);
-            
-            // 2. Anexa o novo formulário
-            container.append(newForm);
+        // Evento: Adicionar Novo Envolvido 
+        $('#add-envolvido-btn').click(function() {
+            // CORREÇÃO: Pega o HTML do template <template id="empty-envolvido-template">
+            const emptyHtml = $('#empty-envolvido-template').html().trim(); 
+            addFormsetRow('envolvidos', emptyHtml);
+        });
 
-            // 3. Inicializa o Select2
-            initializeSelect2(newForm); 
-            
-            // 4. Atualiza o índice visual e a contagem total
-            newForm.find('.form-index').text(formIdx + 1);
-            formIdx++;
-            totalForms.val(formIdx);
-            
-            // Opcional: Rolar para o novo formulário
-            $('html, body').animate({
-                scrollTop: newForm.offset().top - 100
-            }, 500);
-
-        } catch (e) {
-            console.error("Erro ao adicionar novo envolvido:", e);
-            alert("Erro ao adicionar participante. Verifique o console para detalhes.");
-        }
-    });
-
-    // Evento: Remover Envolvido
-    container.on('click', '.remove-envolvido-btn', function() {
-        const formToRemove = $(this).closest('.envolvido-form');
-        
-        // Marca o campo DELETE como true
-        const deleteInput = formToRemove.find(`[name$="-DELETE"]`);
-        if (deleteInput.length) {
-            deleteInput.val('on');
-        }
-        
-        // Esconde o formulário
-        formToRemove.hide(200, function() {
-             // Opcional: Reindexar para manter a numeração visual sequencial após a exclusão lógica
-             reindexForms();
+        // Evento: Adicionar Nova Apreensão 
+        $('#add-apreensao-row').click(function() {
+            // Pega o HTML do template <template id="empty-apreensao-template">
+            const emptyHtml = $('#empty-apreensao-template').html().trim(); 
+            addFormsetRow('apreensoes', emptyHtml);
         });
         
-    });
+        // Evento: Remover Item (Unificado para ambos os formsets)
+        $(document).on('click', '.remove-formset-row, .remove-envolvido-btn', function() {
+            const isEnvolvido = $(this).hasClass('remove-envolvido-btn');
 
+            // 1. Encontra o formulário pai
+            const formToRemove = $(this).closest('.envolvido-form, .form-apreensao-item');
+            
+            // 2. Define o prefixo correto
+            const prefix = isEnvolvido ? 'envolvidos' : $(this).data('formset-prefix');
+            
+            // 1. Marca o campo DELETE como true
+            const deleteInput = formToRemove.find(`[name$="-DELETE"]`);
+            if (deleteInput.length) {
+                deleteInput.val('on');
+            }
+            
+            // 2. Esconde o formulário
+            formToRemove.hide(200, function() {
+                // 3. Reindexa (opcional, mas bom para manter a ordem visual)
+                reindexForms(prefix); 
+            });
+        });
+    });
 </script>
 {% endblock %}

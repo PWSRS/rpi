@@ -7,18 +7,20 @@ from django.views.generic import (
     DeleteView,
 )
 from django.urls import reverse_lazy
-from django.forms import modelformset_factory
+from django.forms import modelformset_factory, inlineformset_factory
 from django.utils import timezone
 from django.contrib import messages  # Importante para dar feedback ao usuário
 
-from .models import Ocorrencia, Envolvido, RelatorioDiario
-from .forms import OcorrenciaForm, EnvolvidoForm
+from .models import Ocorrencia, Envolvido, RelatorioDiario, RelatorioDiario, Apreensao
+from .forms import OcorrenciaForm, EnvolvidoForm, ApreensaoForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
 from weasyprint import HTML, CSS
 from django.http import HttpResponse
 from django.db.models import F, Prefetch
+from django.urls import reverse
+from datetime import datetime
 
 # --- GERENCIAMENTO DO RELATÓRIO ---
 
@@ -32,7 +34,6 @@ def finalizar_relatorio(request, pk):
 
     if request.method == "POST":
 
-        # 🚨 CORREÇÃO: Usamos a Queryset direta Ocorrencia.objects.filter() para maior robustez.
         ocorrencias_do_relatorio = Ocorrencia.objects.filter(relatorio_diario=relatorio)
 
         if not ocorrencias_do_relatorio.exists():
@@ -47,23 +48,46 @@ def finalizar_relatorio(request, pk):
         relatorio.data_fim = timezone.now()
         relatorio.save()
 
-        # 2. MENSAGEM DE SUCESSO DO BANCO DE DADOS
-        messages.success(
-            request,
-            f"Relatório {relatorio.nr_relatorio} finalizado no banco de dados. Tentando gerar PDF...",
-        )
-
-        # 3. Tenta chamar a função WeasyPrint (Descomente este bloco APÓS testar a finalização)
+        # 🚨 ALTERAÇÃO CRÍTICA AQUI 🚨
         try:
-            return gerar_pdf_relatorio_weasyprint(relatorio)
+            # 2. Tenta gerar e retornar o PDF (Download)
+            pdf_response = gerar_pdf_relatorio_weasyprint(relatorio)
+
+            # Se a geração for bem-sucedida, o download é iniciado.
+            # Nenhuma mensagem de sucesso é necessária aqui, pois o download é a confirmação.
+            return pdf_response
 
         except Exception as e:
-            # Se houver falha na geração do PDF, captura o erro e redireciona
+            # Se houver falha na geração do PDF, captura o erro e continua o fluxo de redirecionamento.
             messages.error(
                 request,
                 f"ERRO CRÍTICO NA GERAÇÃO DO PDF! O relatório foi finalizado, mas o PDF FALHOU. Erro: {e}",
             )
-            return redirect("ocorrencia_list")
+            # 🚨 Não precisa de "return redirect" aqui, pois o fluxo cairá no redirecionamento final.
+            print(f"ERRO DE PDF NO CONSOLE: {e}")  # Debugging no console do servidor
+
+        # 3. REDIRECIONAMENTO COM CACHE BUSTER
+        # Este redirecionamento é alcançado se o PDF falhou (o 'except' foi executado).
+        # Ele garante que o status do relatório (agora finalizado) seja atualizado.
+
+        # 🚨 MENSAGEM DE SUCESSO (SÓ É EXIBIDA se NÃO HOUVE EXCEÇÃO, mas queremos que ela apareça)
+        # Se você chegou aqui e não houve erro no PDF, a intenção era redirecionar.
+        # Adicione uma mensagem de sucesso aqui caso não tenha havido erro de PDF
+        if not messages.get_messages(
+            request
+        ):  # Verifica se já existe uma mensagem (de erro)
+            messages.success(
+                request,
+                f"Relatório {relatorio.nr_relatorio} finalizado com sucesso. Por favor, verifique o download do PDF.",
+            )
+
+        # Configura o Cache Buster
+        url_destino = reverse("ocorrencia_list")
+        url_destino_com_cache_buster = (
+            f"{url_destino}?refresh={datetime.now().timestamp()}"
+        )
+
+        return redirect(url_destino_com_cache_buster)
 
     # Requisição GET ou outra: apenas redireciona
     return redirect("ocorrencia_list")
@@ -133,46 +157,69 @@ class OcorrenciaCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
-        # Passamos o relatório atual para o template exibir no título (ex: "Relatório 05/2024")
         data["relatorio"] = self.relatorio_atual
 
-        EnvolvidoFormSet = modelformset_factory(
-            Envolvido, form=EnvolvidoForm, extra=0, can_delete=True
+        # --- ENVOLVIDO FORMSET ---
+        EnvolvidoFormSet = inlineformset_factory(
+            self.model, Envolvido, form=EnvolvidoForm, extra=1, can_delete=True
+        )
+
+        # 🚨 NOVO: APREENSÃO FORMSET 🚨
+        ApreensaoFormSet = inlineformset_factory(
+            self.model, Apreensao, form=ApreensaoForm, extra=0, can_delete=True
         )
 
         if self.request.POST:
+            # Popula com dados do POST
+            # Não é necessário o 'queryset=...' aqui
             data["envolvido_formset"] = EnvolvidoFormSet(
                 self.request.POST, prefix="envolvidos"
             )
+            data["apreensao_formset"] = ApreensaoFormSet(
+                self.request.POST, prefix="apreensoes"
+            )
         else:
+            # Popula com QuerySets vazias (ou vazia para inline)
+            # Para CreateView, a instância é None, mas o inlineformset lida com isso.
+            # É melhor criar um objeto vazio para satisfazer o inlineformset
+            OcorrenciaEmpty = self.model()
+
             data["envolvido_formset"] = EnvolvidoFormSet(
-                prefix="envolvidos", queryset=Envolvido.objects.none()
+                instance=OcorrenciaEmpty, prefix="envolvidos"
+            )
+            data["apreensao_formset"] = ApreensaoFormSet(
+                instance=OcorrenciaEmpty, prefix="apreensoes"
             )
         return data
 
     def form_valid(self, form):
         context = self.get_context_data()
         envolvido_formset = context["envolvido_formset"]
+        apreensao_formset = context["apreensao_formset"]
 
-        if envolvido_formset.is_valid():
-            # 2. VINCULAÇÃO AUTOMÁTICA:
-            # Define o relatório atual na ocorrência antes de salvar no banco
+        # 🚨 Verifica a validade de AMBOS os formsets
+        if envolvido_formset.is_valid() and apreensao_formset.is_valid():
+
+            # 1. Salva a Ocorrência principal (sem commit=False)
             self.object = form.save(commit=False)
             self.object.relatorio_diario = self.relatorio_atual
             self.object.save()
 
-            # Salva os envolvidos
-            instances = envolvido_formset.save(commit=False)
-            for instance in instances:
-                instance.ocorrencia = self.object
-                instance.save()
+            # 2. Salva os Envolvidos e Apreensões (O inlineformset_factory FAZ O LOOP E VINCULA A FK)
+            # Você precisa atribuir a instância principal ANTES do save()
+            envolvido_formset.instance = self.object
+            envolvido_formset.save()
 
-            # Limpa envolvidos deletados se houver
-            for obj in envolvido_formset.deleted_objects:
-                obj.delete()
+            apreensao_formset.instance = self.object
+            apreensao_formset.save()
 
+            messages.success(
+                self.request, "Ocorrência e materiais cadastrados com sucesso!"
+            )
             return redirect(self.get_success_url())
         else:
+            # Se algum formset for inválido, renderiza novamente
+            # O get_context_data já popula os formsets com os dados do POST
             return self.render_to_response(self.get_context_data(form=form))
 
 
@@ -192,7 +239,7 @@ class OcorrenciaDetailView(LoginRequiredMixin, DetailView):
 
 
 class OcorrenciaUpdateView(LoginRequiredMixin, UpdateView):
-    """Permite editar uma ocorrência existente, incluindo os involvedos."""
+    """Permite editar uma ocorrência existente, incluindo os involvedos e apreensões."""
 
     model = Ocorrencia
     form_class = OcorrenciaForm
@@ -202,47 +249,74 @@ class OcorrenciaUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
 
-        # Configura o Formset de Envolvidos, mas agora com os dados existentes (instance=self.object)
+        # Configura o Formset de Envolvidos
         EnvolvidoFormSet = modelformset_factory(
             Envolvido, form=EnvolvidoForm, extra=0, can_delete=True
         )
 
+        # 🚨 NOVO: APREENSÃO FORMSET 🚨
+        ApreensaoFormSet = modelformset_factory(
+            Apreensao, form=ApreensaoForm, extra=1, can_delete=True
+        )
+
         if self.request.POST:
-            # Popula o formset com dados de POST
+            # Popula formsets com dados de POST
             data["envolvido_formset"] = EnvolvidoFormSet(
                 self.request.POST,
                 prefix="envolvidos",
-                queryset=self.object.envolvidos.all(),  # Busca os envolvidos existentes
+                queryset=self.object.envolvidos.all(),  # Dados existentes
+            )
+            data["apreensao_formset"] = ApreensaoFormSet(  # NOVO
+                self.request.POST,
+                prefix="apreensoes",
+                queryset=self.object.apreensoes.all(),  # Dados existentes
             )
         else:
-            # Popula o formset com os envolvidos da ocorrência (self.object)
+            # Popula formsets com dados existentes
             data["envolvido_formset"] = EnvolvidoFormSet(
                 prefix="envolvidos", queryset=self.object.envolvidos.all()
+            )
+            data["apreensao_formset"] = ApreensaoFormSet(  # NOVO
+                prefix="apreensoes", queryset=self.object.apreensoes.all()
             )
         return data
 
     def form_valid(self, form):
         context = self.get_context_data()
         envolvido_formset = context["envolvido_formset"]
+        apreensao_formset = context["apreensao_formset"]  # NOVO: Obtém o formset
 
-        # 1. Salva a Ocorrência principal
+        # 1. Salva a Ocorrência principal (sempre primeiro)
         self.object = form.save()
 
-        # 2. Salva os Envolvidos
-        if envolvido_formset.is_valid():
-            instances = envolvido_formset.save(commit=False)
-            for instance in instances:
+        # 🚨 Verifica a validade de AMBOS os formsets antes de salvar 🚨
+        if envolvido_formset.is_valid() and apreensao_formset.is_valid():
+
+            # 2. Salva os Envolvidos (e lida com exclusão)
+            instances_env = envolvido_formset.save(commit=False)
+            for instance in instances_env:
                 instance.ocorrencia = self.object
                 instance.save()
-
-            # Lida com exclusão de envolvidos
             for obj in envolvido_formset.deleted_objects:
                 obj.delete()
 
-            messages.success(self.request, "Ocorrência atualizada com sucesso!")
+            # 3. Salva as Apreensões (e lida com exclusão)
+            instances_apr = apreensao_formset.save(commit=False)
+            for instance in instances_apr:
+                instance.ocorrencia = self.object
+                instance.save()
+            for obj in apreensao_formset.deleted_objects:
+                obj.delete()
+
+            messages.success(
+                self.request, "Ocorrência e materiais atualizados com sucesso!"
+            )
             return redirect(self.get_success_url())
         else:
-            # Se o formset falhar na edição, renderiza novamente o formulário com erros
+            # Se algum formset falhar na edição, renderiza novamente o formulário com erros
+            messages.error(
+                self.request, "Erro na validação de envolvidos ou apreensões."
+            )
             return self.render_to_response(self.get_context_data(form=form))
 
 

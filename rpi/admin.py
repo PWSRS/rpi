@@ -6,17 +6,43 @@ from .models import (
     RelatorioDiario,
     Ocorrencia,
     Envolvido,
+    Apreensao,
+    MaterialApreendidoTipo,
 )
 
 # ----------------- 1. CONFIGURAÇÃO DE INLINES -----------------
 
 
-# Define como o modelo 'Envolvido' deve aparecer na página da 'Ocorrencia'
 class EnvolvidoInline(admin.TabularInline):
+    """
+    Inline para o modelo Envolvido. Usado dentro da OcorrenciaAdmin.
+    Configuração: Tabular, mínimo 1, campos detalhados.
+    """
+
     model = Envolvido
-    extra = 1  # Deixa 1 linha extra em branco para novo cadastro
-    fields = ("nome", "tipo_participante", "idade")
-    # Pode adicionar readonly_fields se quiser exibir campos que não podem ser alterados
+    extra = 0  # Não adiciona linhas extras vazias por padrão
+    min_num = 1  # Garante pelo menos um envolvido
+    # Campos que aparecerão no inline
+    fields = ("tipo_participacao", "nome", "cpf_cnpj", "contato", "observacoes")
+    # Campos de busca (para a FK de Pessoa, se houver)
+    # autocomplete_fields = ["nome"] # Descomente se 'nome' for uma FK para um modelo grande
+
+
+class ApreensaoInline(admin.TabularInline):
+    """
+    Inline para o modelo Apreensao. Usado dentro da OcorrenciaAdmin.
+    Configuração: Tabular, 1 linha extra por padrão.
+    """
+
+    model = Apreensao
+    extra = 1  # Adiciona 1 linha extra vazia por padrão
+    # Campos que aparecerão no inline
+    fields = ("material_tipo", "quantidade", "unidade_medida")
+    # Otimização para campo ForeignKey 'material_tipo'
+    autocomplete_fields = ["material_tipo"]
+
+
+# ----------------- 2. REGISTROS DE MODELOS AUXILIARES -----------------
 
 
 @admin.register(NaturezaOcorrencia)
@@ -37,7 +63,6 @@ class OPMAdmin(admin.ModelAdmin):
     list_display = ("sigla", "nome", "municipio")
     list_filter = ("municipio",)
     search_fields = ("sigla", "nome")
-    # Define os campos a serem exibidos no formulário de cadastro/edição
     fields = ("sigla", "nome", "municipio")
 
 
@@ -53,8 +78,6 @@ class RelatorioDiarioAdmin(admin.ModelAdmin):
     )
     list_filter = ("ano_criacao", "usuario_responsavel")
     search_fields = ("nr_relatorio",)
-    # Garante que o usuário responsável seja preenchido automaticamente
-    # readonly_fields = ('usuario_responsavel', 'data_criacao')
 
     # Preenche o campo 'usuario_responsavel' com o usuário logado ao salvar
     def save_model(self, request, obj, form, change):
@@ -63,7 +86,13 @@ class RelatorioDiarioAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-# SeuApp/admin.py (continuação)
+@admin.register(MaterialApreendidoTipo)
+class MaterialApreendidoTipoAdmin(admin.ModelAdmin):
+    list_display = ("nome",)
+    search_fields = ("nome",)
+
+
+# ----------------- 3. MODEL ADMIN PRINCIPAL (OCORRENCIA) -----------------
 
 
 @admin.register(Ocorrencia)
@@ -94,8 +123,8 @@ class OcorrenciaAdmin(admin.ModelAdmin):
             "Dados da Ocorrência",
             {
                 "fields": (
-                    "data_hora_fato",
-                    "data_hora_bruta",
+                    # Usando uma tupla para agrupar na mesma linha
+                    ("data_hora_fato", "data_hora_bruta"),
                     "natureza",
                     "opm",
                     "relatorio_diario",
@@ -105,19 +134,20 @@ class OcorrenciaAdmin(admin.ModelAdmin):
         (
             "Relato e Resumo",
             {
-                # Use 'wide' para campos longos
                 "fields": ("relato_historico", "resumo_cabecalho"),
-                "classes": ("wide",),
+                "classes": ("wide",),  # Ocupa a largura total
             },
         ),
+        # Você pode adicionar um fieldset para endereço, se for parte do modelo Ocorrencia
+        # ('Localização', {'fields': ('rua', 'numero', 'bairro')}),
     )
 
-    # Inclusão da tabela de pessoas envolvidas na mesma página
-    inlines = [EnvolvidoInline]
+    # Incluindo os inlines de Envolvido e Apreensão (MODIFICAÇÃO PRINCIPAL)
+    inlines = [EnvolvidoInline, ApreensaoInline]
 
     # ORDENAÇÃO: Ordena as ocorrências na listagem pela data mais recente
     ordering = ("-data_hora_fato",)
 
     # Otimização para campos ForeignKey (autocomplete)
-    # Isso transforma o campo FK em um campo de busca, essencial para OPMS ou Relatórios
+    # Garante que campos com muitas opções sejam de busca
     autocomplete_fields = ["opm", "relatorio_diario", "natureza"]

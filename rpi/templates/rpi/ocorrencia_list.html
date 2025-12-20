@@ -45,7 +45,7 @@
                             <h5 class="card-title mb-1">
                                 <strong>{{ ocorrencia.natureza.nome }}</strong>
                                 <span class="text-muted float-end" style="font-size: 0.9rem;">
-                                    ID: {{ ocorrencia.pk }} - {{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}
+                                    <!--ID: {{ ocorrencia.pk }} - --> Data: {{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}
                                 </span>
                             </h5>
                             <p class="card-text mb-0">
@@ -57,7 +57,6 @@
                                 <strong>OPM:</strong> {{ ocorrencia.opm.sigla }} 
                                 <small class="text-muted">({{ ocorrencia.opm.municipio.nome }})</small>
                             </p>
-                            <small class="text-secondary mt-1 d-block">{{ ocorrencia.resumo_cabecalho }}</small>
                         </div>
 
                         <div class="btn-group btn-group-sm ms-3" role="group">
