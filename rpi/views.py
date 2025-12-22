@@ -1,3 +1,6 @@
+from django.contrib.staticfiles.finders import find  # Para achar o arquivo estático
+import urllib.parse, urllib.request  # Para converter o caminho do sistema em uma URI (file:///)
+from django.conf import settings  # Para acessar a configuração STATIC_ROOT
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import (
     ListView,
@@ -93,6 +96,74 @@ def finalizar_relatorio(request, pk):
     return redirect("ocorrencia_list")
 
 
+# NOVO: Reverte o status de finalização do relatório para permitir a edição
+@login_required
+def reabrir_relatorio(request, pk):
+    """
+    Permite que um usuário reabra um relatório finalizado (finalizado=False)
+    para corrigir ou adicionar ocorrências.
+    """
+    # 🚨 Buscamos o objeto garantindo que o usuário seja o responsável
+    relatorio = get_object_or_404(
+        RelatorioDiario, pk=pk, usuario_responsavel=request.user
+    )
+
+    if request.method == "POST":
+        # 1. Reverte o estado de finalização
+        relatorio.finalizado = False
+        relatorio.data_fim = None  # Limpa a data de finalização
+        relatorio.save()
+
+        # 2. Mensagem e redirecionamento com Cache Buster (para atualizar o status na lista)
+        messages.warning(
+            request,
+            f"Relatório {relatorio.nr_relatorio} foi REABERTO para edição. Lembre-se de FINALIZAR novamente!",
+        )
+        url_destino = reverse("ocorrencia_list")
+        url_destino_com_cache_buster = (
+            f"{url_destino}?refresh={datetime.now().timestamp()}"
+        )
+
+        return redirect(url_destino_com_cache_buster)
+
+    # Se for GET, apenas redireciona
+    return redirect("ocorrencia_list")
+
+
+# NOVO: Permite reexportar o PDF mesmo que o relatório esteja finalizado
+@login_required
+def reexportar_pdf(request, pk):
+    """
+    Gera o PDF do Relatório Diário, ignorando o status 'finalizado'.
+    Retorna o HttpResponse do PDF para download.
+    """
+    relatorio = get_object_or_404(
+        RelatorioDiario, pk=pk, usuario_responsavel=request.user
+    )
+
+    # 1. Tenta gerar e retornar o PDF (Download)
+    try:
+        # A função gerar_pdf_relatorio_weasyprint já retorna o HttpResponse de download
+        pdf_response = gerar_pdf_relatorio_weasyprint(relatorio)
+        messages.info(request, "PDF reexportado com sucesso!")
+        return pdf_response
+
+    except Exception as e:
+        # Se houver falha na geração do PDF, captura o erro e redireciona
+        messages.error(
+            request,
+            f"Falha ao reexportar o PDF. O relatório foi reaberto e não finalizado. Erro: {e}",
+        )
+        print(f"ERRO DE REEXPORTAÇÃO DE PDF: {e}")
+
+        # Redireciona com cache-buster
+        url_destino = reverse("ocorrencia_list")
+        url_destino_com_cache_buster = (
+            f"{url_destino}?refresh={datetime.now().timestamp()}"
+        )
+        return redirect(url_destino_com_cache_buster)
+
+
 @login_required
 def iniciar_dia(request):
     relatorio_aberto = RelatorioDiario.obter_relatorio_atual(request.user)
@@ -131,10 +202,18 @@ class OcorrenciaListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # ESTA LINHA É A CHAVE: Ela busca se existe um relatório aberto agora
-        context["relatorio_atual"] = RelatorioDiario.obter_relatorio_atual(
-            self.request.user
-        )
+
+        # 🚨 CORREÇÃO CRÍTICA: Não use o método que filtra 'finalizado=False'.
+        # Busque o ÚLTIMO relatório do usuário, independentemente do status.
+        context["relatorio_atual"] = (
+            RelatorioDiario.objects.filter(usuario_responsavel=self.request.user)
+            .order_by("-data_inicio")
+            .first()
+        )  # <-- Apenas o mais recente, aberto ou fechado.
+
+        # O resto do template (que usa `{% if not relatorio_atual.finalizado %}` ou `{% else %}`)
+        # fará o trabalho de decidir qual alerta mostrar.
+
         return context
 
 
@@ -336,14 +415,8 @@ class OcorrenciaDeleteView(LoginRequiredMixin, DeleteView):
 
 
 def gerar_pdf_relatorio_weasyprint(relatorio_diario):
-    """
-    Gera um PDF completo do Relatório Diário usando WeasyPrint.
-    A função consulta todas as ocorrências (gerais) e as ocorrências CVLI consumadas separadamente,
-    pré-processando os dados para simplificar o template HTML.
-    """
 
     # 1. CONSULTA GERAL OTIMIZADA E ORDENADA
-    # Esta consulta busca TODAS as ocorrências do relatório, ordenadas por data para a numeração.
     ocorrencias_qs = (
         relatorio_diario.ocorrencias.select_related("natureza", "opm", "opm__municipio")
         .prefetch_related("envolvidos")
@@ -351,12 +424,10 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario):
     )
 
     # 2. CONSULTA CVLI CONSUMADO
-    # Esta consulta busca apenas os CVLIs consumados, prefetchando SOMENTE as vítimas (tipo_participante='V').
     cvli_qs = (
         Ocorrencia.objects.filter(
             relatorio_diario=relatorio_diario,
-            tipo_acao="C",  # Assumindo que 'C' = Consumado
-            # Ajuste a lista de naturezas se tiver nomes diferentes no seu banco de dados
+            tipo_acao="C",
             natureza__nome__in=[
                 "Homicídio Doloso",
                 "Latrocínio",
@@ -367,7 +438,6 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario):
         )
         .select_related("natureza", "opm", "opm__municipio")
         .prefetch_related(
-            # Prefetch especial que busca apenas as vítimas para a contagem da tabela
             Prefetch(
                 "envolvidos",
                 queryset=Envolvido.objects.filter(tipo_participante="V"),
@@ -377,43 +447,35 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario):
         .order_by("data_hora_fato")
     )
 
-    # 3. PRÉ-PROCESSAMENTO DE DADOS (AGORA MAIS ROBUSTO CONTRA VALORES NULOS)
+    # 3. PRÉ-PROCESSAMENTO DE DADOS (seu código)
     ocorrencias_com_dados = []
     for ocorrencia in ocorrencias_qs:
 
-        # 3.1. TRATAMENTO DA SIGLA OPM (Proteção contra ocorrencia.opm ser None)
-        sigla_opm_limpa = "OPM Não Definida"  # Valor Padrão
+        # 3.1. TRATAMENTO DA SIGLA OPM
+        sigla_opm_limpa = "OPM Não Definida"
         if ocorrencia.opm:
             try:
-                # Tenta split, se falhar (se ' - ' não existir), usa a sigla inteira.
                 sigla_opm_limpa = ocorrencia.opm.sigla.split(" - ")[0]
             except:
                 sigla_opm_limpa = ocorrencia.opm.sigla
 
-        # 3.2. TRATAMENTO DO PRIMEIRO ENVOLVIDO (Proteção contra Envolvido ser None)
+        # 3.2. TRATAMENTO DO PRIMEIRO ENVOLVIDO
         primeiro_envolvido_str = ""
         primeiro_envolvido = ocorrencia.envolvidos.first()
 
         if primeiro_envolvido:
-            # Proteção contra campos individuais serem None/Vazios
             nome = getattr(primeiro_envolvido, "nome", "NÃO INFORMADO")
             idade = getattr(primeiro_envolvido, "idade", "??")
-
-            # Pega a descrição de antecedentes de forma segura
             antecedentes_display = (
                 "sem antecedentes criminais"
                 if primeiro_envolvido.antecedentes == "N"
                 else "com antecedentes criminais"
             )
-
-            # Pega a descrição do tipo de participante (usa 'participante' se falhar)
             tipo_participante = (
                 primeiro_envolvido.get_tipo_participante_display().lower()
                 if primeiro_envolvido.tipo_participante
                 else "participante"
             )
-
-            # Monta a frase de forma segura
             primeiro_envolvido_str = (
                 f"uma guarnição durante patrulhamento motorizado, em contato com "
                 f"a {tipo_participante} "
@@ -431,11 +493,32 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario):
         )
 
     # 4. MONTAGEM DO CONTEXTO PARA O TEMPLATE
+
+    # 🚨 CORREÇÃO: CÓDIGO FALTANTE PARA DEFINIR LOGO_URI 🚨
+    # Obtém o caminho ABSOLUTO do logo e converte para URI (file:///)
+    logo_file_path = find("rpi/img/logo.png")
+    logo_uri = ""
+    if logo_file_path:
+        # Cria a URI no formato file:///
+        logo_uri = urllib.parse.urljoin(
+            "file:", urllib.request.pathname2url(logo_file_path)
+        )
+
+    # CÓDIGO EXISTENTE: Obtém o caminho ABSOLUTO do CSS e converte para URI (file:///)
+    css_file_path = find("rpi/css/rpi.css")
+    css_uri = ""
+    if css_file_path:
+        # Cria a URI no formato file:///
+        css_uri = urllib.parse.urljoin(
+            "file:", urllib.request.pathname2url(css_file_path)
+        )
+
     context = {
         "relatorio": relatorio_diario,
-        "ocorrencias": ocorrencias_com_dados,  # Ocorrências para o Sumário e Detalhes
-        "cvli_ocorrencias": cvli_qs,  # Ocorrências para a Tabela CVLI
-        # 'user': request.user # Pode ser útil para cabeçalhos (se o user não for acessível via relatorio_diario.usuario_responsavel)
+        "ocorrencias": ocorrencias_com_dados,
+        "cvli_ocorrencias": cvli_qs,
+        "logo_uri": logo_uri,  # <-- AGORA DEFINIDA!
+        "css_uri": css_uri,  # <-- AGORA DEFINIDA!
     }
 
     # 5. RENDERIZAÇÃO E GERAÇÃO DO PDF
@@ -443,13 +526,29 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario):
     # Renderiza o template HTML ('rpi/relatorio_pdf.html')
     html_string = render_to_string("rpi/relatorio_pdf.html", context)
 
-    # Gera o PDF
-    pdf_file = HTML(string=html_string).write_pdf()
+    # Obtém o STATIC_ROOT ou um fallback (necessário para resolver o CSS caso a URI falhe)
+    static_root = settings.STATIC_ROOT
+    if not static_root:
+        try:
+            # Tenta encontrar a raiz estática via um arquivo CSS
+            static_root = find("rpi/css/rpi.css").replace("rpi/css/rpi.css", "")
+        except:
+            static_root = None  # Se falhar, WeasyPrint pode ter problemas com o CSS
+
+    # Gera o PDF, usando o STATIC_ROOT como base_url (principalmente para o CSS)
+    pdf_file = HTML(
+        string=html_string,
+        base_url=static_root,
+    ).write_pdf()
 
     # 6. CONFIGURAÇÃO DA RESPOSTA HTTP (Força o download)
-    filename = (
-        f"Relatorio_{relatorio_diario.nr_relatorio}_{relatorio_diario.ano_criacao}.pdf"
-    )
+
+    # 1. Formata a data de início para o padrão DD.MM.AAAA
+    data_formatada = relatorio_diario.data_inicio.strftime("%d.%m.%Y")
+
+    # 2. Constrói o novo nome do arquivo
+    filename = f"RELATÓRIO PERIÓDICO DE INTELIGÊNCIA Nº {relatorio_diario.nr_relatorio} - ARI SUL - {data_formatada}.pdf"
+
     response = HttpResponse(pdf_file, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
 

@@ -3,36 +3,9 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <img src="{{ logo_uri }}" alt="Logo da Brigada Militar" class="logo">
     <title>Relatório {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}</title>
-    <style>
-        /* Estilos CSS para formatar o PDF */
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 10pt;
-            margin: 0.5in; /* Margens */
-        }
-        .ocorrencia {
-            margin-bottom: 20px;
-            page-break-inside: avoid; /* Evita quebras de página dentro da ocorrência */
-        }
-        .titulo {
-            font-weight: bold;
-            font-size: 11pt;
-            margin-bottom: 5px;
-        }
-        .historico {
-            text-align: justify; /* Alinhamento justificado */
-            line-height: 1.5;
-            text-indent: 1.5em; /* Recuo na primeira linha (opcional) */
-        }
-        /* Exemplo futuro para imagens */
-        .imagem-ocorrencia {
-            max-width: 100%; 
-            height: auto; 
-            display: block;
-            margin-top: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ css_uri }}">
 </head>
 <body>
 <header>
@@ -43,7 +16,7 @@
 </header>
 <br>
     <h2>SUMÁRIO</h2>
-    <p>PERÍODO: DE {{ relatorio.data_inicio|date:"dmY" }} A {{ relatorio.data_fim|date:"dmY" }}</p>
+    <p class="periodo">PERÍODO: DE {{ relatorio.data_inicio|date:"dmY" }} A {{ relatorio.data_fim|date:"dmY" }}</p>
 
     {% for item in ocorrencias %}
         <p>

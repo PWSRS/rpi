@@ -11,30 +11,62 @@
             ➕ Cadastrar Nova Ocorrência
         </a>
     </div>
-
+    
     {% if relatorio_atual %}
-    <div class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm border-warning mb-4">
-        
-        <div>
-            <h5 class="mb-0">📋 Relatório em andamento: 
-                <strong>{{ relatorio_atual.nr_relatorio }}/{{ relatorio_atual.ano_criacao }}</strong>
-            </h5>
-            <small class="text-muted">Iniciado em: {{ relatorio_atual.data_inicio|date:"d/m/Y H:i" }}</small>
-        </div>
-        
-        <form method="post" action="{% url 'finalizar_relatorio' relatorio_atual.pk %}" style="margin: 0;">
-            {% csrf_token %}
-            <button type="submit" 
-                    class="btn btn-danger"> 
-                🛑 Finalizar Relatório
-            </button>
-        </form>
-        
-    </div>
+        {% if not relatorio_atual.finalizado %}
+            <div class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm border-warning mb-4">
+                
+                <div>
+                    <h5 class="mb-0">📋 Relatório em andamento: 
+                        <strong>{{ relatorio_atual.nr_relatorio }}/{{ relatorio_atual.ano_criacao }}</strong>
+                    </h5>
+                    <small class="text-muted">Iniciado em: {{ relatorio_atual.data_inicio|date:"d/m/Y H:i" }}</small>
+                </div>
+                
+                <form method="post" action="{% url 'finalizar_relatorio' relatorio_atual.pk %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            class="btn btn-danger"> 
+                        🛑 Finalizar Relatório
+                    </button>
+                </form>
+                
+            </div>
+
+        {% else %}
+            <div class="alert alert-success d-flex justify-content-between align-items-center shadow-sm border-success mb-4">
+                
+                <div>
+                    <h5 class="mb-0">✅ Relatório **FINALIZADO**: 
+                        <strong>{{ relatorio_atual.nr_relatorio }}/{{ relatorio_atual.ano_criacao }}</strong>
+                    </h5>
+                    <small class="text-muted">Finalizado em: {{ relatorio_atual.data_fim|date:"d/m/Y H:i" }}</small>
+                    <p class="mb-0 mt-1">
+                        <small class="text-success">O relatório está pronto, mas pode ser reaberto ou reexportado.</small>
+                    </p>
+                </div>
+                
+                <div class="btn-group" role="group" aria-label="Ações Relatório Finalizado">
+                    
+                    <a href="{% url 'reexportar_pdf' relatorio_atual.pk %}" class="btn btn-info shadow-sm" title="Gerar PDF Novamente">
+                        <i class="fas fa-file-pdf"></i> Reexportar PDF
+                    </a>
+
+                    <form method="post" action="{% url 'reabrir_relatorio' relatorio_atual.pk %}" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" 
+                                class="btn btn-warning shadow-sm"> 
+                            <i class="fas fa-unlock-alt"></i> Reabrir Relatório
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+        {% endif %}
     {% endif %}
 
     <hr>
-
 <div class="row">
     {% for ocorrencia in ocorrencias %}
         <div class="col-12">
@@ -44,9 +76,6 @@
                         <div>
                             <h5 class="card-title mb-1">
                                 <strong>{{ ocorrencia.natureza.nome }}</strong>
-                                <span class="text-muted float-end" style="font-size: 0.9rem;">
-                                    <!--ID: {{ ocorrencia.pk }} - --> Data: {{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}
-                                </span>
                             </h5>
                             <p class="card-text mb-0">
                                 <strong>Aspecto:</strong> 
@@ -56,6 +85,9 @@
                                 <span class="mx-2 text-muted">|</span>
                                 <strong>OPM:</strong> {{ ocorrencia.opm.sigla }} 
                                 <small class="text-muted">({{ ocorrencia.opm.municipio.nome }})</small>
+                                <span class="text-muted" style="font-size: 0.9rem;">
+                                   | RPI Nº {{ ocorrencia.pk }} - Data: {{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}
+                                </span>
                             </p>
                         </div>
 

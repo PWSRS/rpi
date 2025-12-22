@@ -110,7 +110,9 @@ class RelatorioDiario(models.Model):
     nr_relatorio = models.PositiveIntegerField(verbose_name="Número do Relatório")
     ano_criacao = models.PositiveIntegerField(verbose_name="Ano de Criação")
     data_inicio = models.DateTimeField(verbose_name="Início do Período (24h)")
-    data_fim = models.DateTimeField(verbose_name="Fim do Período (24h)")
+    data_fim = models.DateTimeField(
+        null=True, blank=True, verbose_name="Fim do Período (24h)"
+    )
     data_criacao = models.DateTimeField(auto_now_add=True)
     finalizado = models.BooleanField(default=False, verbose_name="Relatório Finalizado")
     usuario_responsavel = models.ForeignKey(

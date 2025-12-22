@@ -29,4 +29,8 @@ urlpatterns = [
     ),
     # Iniciar Dia (EXISTENTE)
     path("iniciar/", views.iniciar_dia, name="iniciar_dia"),
+    path('relatorio/<int:pk>/reabrir/', views.reabrir_relatorio, name='reabrir_relatorio'),
+    path('relatorio/<int:pk>/reexportar/', views.reexportar_pdf, name='reexportar_pdf'),
+    # ...
+
 ]
