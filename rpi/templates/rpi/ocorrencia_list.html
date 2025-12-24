@@ -11,6 +11,16 @@
             ➕ Cadastrar Nova Ocorrência
         </a>
     </div>
+
+    {% if request.GET.download_id %}
+    <script>
+        // Abre o PDF em uma nova aba automaticamente
+        window.open("{% url 'download_pdf_relatorio' request.GET.download_id %}", '_blank');
+        
+        // Limpa a URL para não baixar de novo se o usuário der F5
+        window.history.replaceState({}, document.title, window.location.pathname);
+    </script>
+    {% endif %}
     
     {% if relatorio_atual %}
         {% if not relatorio_atual.finalizado %}

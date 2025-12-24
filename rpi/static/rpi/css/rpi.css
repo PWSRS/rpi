@@ -4,6 +4,38 @@ body {
     margin: 0; /* Margens */
     padding: 0;
 }
+/* Estilo para dar aparência de link ao sumário */
+.sumario-link {
+    text-decoration: underline; /* Adiciona o sublinhado */
+    color: #0000EE; /* Azul padrão de links (ou #003366 para um azul militar mais escuro) */
+    display: inline-block;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+/* Efeito opcional: mudar a cor quando o mouse passa por cima (visível no navegador) */
+.sumario-link:hover {
+    color: #0056b3;
+}
+
+/* Garante que o texto dentro do link herde o estilo */
+.sumario-link span {
+    color: inherit;
+}
+
+.voltar-link {
+    font-size: 10pt;
+    color: #0000EE;
+    text-decoration: none;
+    font-style: italic;
+    margin-left: 10px;
+}
+
+.voltar-link:hover {
+    text-decoration: underline;
+    color: #0056b3;
+}
+
 .ocorrencia {
     margin-bottom: 20px;
     page-break-inside: avoid; /* Evita quebras de página dentro da ocorrência */

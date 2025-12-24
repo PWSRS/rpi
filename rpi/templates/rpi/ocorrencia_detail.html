@@ -1,63 +1,109 @@
-{% extends "base.html" %} 
-{% block title %}Detalhes da Ocorrência{% endblock %}
+{% extends "base.html" %}
+{% block title %}Detalhes da Ocorrência #{{ ocorrencia.pk }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2>Detalhes da Ocorrência #{{ ocorrencia.pk }}</h2>
-    <p>
-        <a href="{% url 'ocorrencia_update' ocorrencia.pk %}" class="btn btn-warning">
-            <i class="fas fa-edit"></i> Editar Ocorrência
-        </a>
-        <a href="{% url 'ocorrencia_list' %}" class="btn btn-secondary">Voltar à Lista</a>
-    </p>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="fas fa-file-alt"></i> Detalhes da Ocorrência #{{ ocorrencia.pk }}</h2>
+        <div>
+            <a href="{% url 'ocorrencia_update' ocorrencia.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            <a href="{% url 'ocorrencia_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
     <hr>
 
     <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header">Informações Principais</div>
+        <div class="col-md-5">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white font-weight-bold text-uppercase">Informações Principais</div>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item"><strong>Data/Hora:</strong> {{ ocorrencia.data_hora_bruta }}</li>
-                    <li class="list-group-item"><strong>Natureza:</strong> {{ ocorrencia.natureza }}</li>
-                    <li class="list-group-item"><strong>OPM:</strong> {{ ocorrencia.opm }}</li>
+                    <li class="list-group-item"><strong>Natureza:</strong> {{ ocorrencia.natureza.nome }}</li>
+                    <li class="list-group-item"><strong>OPM:</strong> {{ ocorrencia.opm.sigla }}</li>
                     <li class="list-group-item"><strong>Tipo do Fato:</strong> {{ ocorrencia.get_tipo_acao_display }}</li>
-                    <li class="list-group-item"><strong>Título do Sumário:</strong> {{ ocorrencia.resumo_cabecalho }}</li>
+                    <li class="list-group-item"><strong>Título:</strong> {{ ocorrencia.resumo_cabecalho }}</li>
                 </ul>
             </div>
             
-            <div class="card mb-3">
-                <div class="card-header">Localização</div>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-dark text-white font-weight-bold text-uppercase">Localização</div>
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><strong>Endereço:</strong> {{ ocorrencia.rua|default:"N/A" }}</li>
-                    <li class="list-group-item"><strong>Número:</strong> {{ ocorrencia.numero|default:"S/N" }}</li>
+                    <li class="list-group-item"><strong>Endereço:</strong> {{ ocorrencia.rua|default:"N/A" }}, {{ ocorrencia.numero|default:"S/N" }}</li>
                     <li class="list-group-item"><strong>Bairro:</strong> {{ ocorrencia.bairro|default:"N/A" }}</li>
                 </ul>
             </div>
         </div>
         
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header">Histórico da Ocorrência</div>
+        <div class="col-md-7">
+            <div class="card mb-4 shadow-sm border-info">
+                <div class="card-header bg-info text-white font-weight-bold text-uppercase">Relato Histórico</div>
                 <div class="card-body">
-                    <p>{{ ocorrencia.relato_historico|linebreaksbr }}</p>
+                    <p class="text-justify" style="white-space: pre-wrap;">{{ ocorrencia.relato_historico }}</p>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">Participantes ({{ envolvidos.count }})</div>
-                <ul class="list-group list-group-flush">
-                    {% for envolvido in envolvidos %}
-                    <li class="list-group-item">
-                        <strong>{{ envolvido.get_tipo_participante_display }}:</strong> {{ envolvido.nome }} ({{ envolvido.idade }} anos)
-                        <br>
-                        <small>Antecedentes: {{ envolvido.get_antecedentes_display }}</small>
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item">Nenhum participante cadastrado.</li>
-                    {% endfor %}
-                </ul>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-secondary text-white font-weight-bold text-uppercase">
+                    Participantes ({{ envolvidos.count }})
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Nome</th>
+                                <th>Idade</th>
+                                <th>Ant.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for envolvido in envolvidos %}
+                            <tr>
+                                <td><span class="badge badge-outline-dark border text-dark">{{ envolvido.get_tipo_participante_display }}</span></td>
+                                <td class="font-weight-bold">{{ envolvido.nome }}</td>
+                                <td>{{ envolvido.idade|default:"-" }}</td>
+                                <td>{{ envolvido.get_antecedentes_display }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-3 text-muted">Nenhum participante cadastrado.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
-{% endblock content %}
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-danger text-white font-weight-bold text-uppercase">Objetos / Materiais Apreendidos</div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Material</th>
+                                <th class="text-center">Qtd</th>
+                                <th>Unidade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in apreensoes %}
+                            <tr>
+                                <td><strong>{{ item.material_tipo.nome }}</strong></td>
+                                <td class="text-center">{{ item.quantidade }}</td>
+                                <td>{{ item.unidade_medida|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-3 text-muted">Nenhum material registrado.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div> </div> </div> {% endblock content %}
