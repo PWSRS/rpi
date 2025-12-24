@@ -32,5 +32,6 @@ urlpatterns = [
     path('relatorio/<int:pk>/reabrir/', views.reabrir_relatorio, name='reabrir_relatorio'),
     path('relatorio/<int:pk>/reexportar/', views.reexportar_pdf, name='reexportar_pdf'),
     # ...
+    path('relatorio/<int:pk>/download/', views.download_pdf_relatorio, name='download_pdf_relatorio'),
 
 ]

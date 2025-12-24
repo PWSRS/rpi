@@ -4,317 +4,281 @@
 {% block title %}Cadastro de Ocorrência{% endblock %}
 
 {% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">
+        {% if form.instance.pk %}
+            <i class="fas fa-edit"></i> Editar Ocorrência ID: {{ form.instance.pk }}
+        {% else %}
+            <i class="fas fa-plus-circle"></i> Registro de Ocorrência
+        {% endif %}
+    </h1>
+    <hr>
 
-<h1 class="mb-4">
-    {% if form.instance.pk %}
-        <i class="fas fa-edit"></i> Editar Ocorrência ID: {{ form.instance.pk }}
-    {% else %}
-        <i class="fas fa-plus-circle"></i> Registro de Ocorrência
-    {% endif %}
-</h1>
-<hr>
-
-<form method="post" class="needs-validation" novalidate>
-    {% csrf_token %}
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Dados Básicos</h5>
-        </div>
-        <div class="card-body">
-            
-            <div class="row">
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <label for="{{ form.natureza.id_for_label }}" class="form-label required">Natureza da Ocorrência:</label>
-                    {{ form.natureza }}
-                </div>
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <label for="{{ form.opm.id_for_label }}" class="form-label required">OPM:</label>
-                    {{ form.opm }}
-                </div>
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <label for="{{ form.data_hora_bruta.id_for_label }}" class="form-label required">Data/Hora (DDHHMMMESAA):</label>
-                    {{ form.data_hora_bruta }}
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-12 col-lg-6 mb-3">
-                    <label for="{{ form.rua.id_for_label }}" class="form-label">Endereço:</label>
-                    {{ form.rua }}
-                </div>
-                <div class="col-md-6 col-lg-2 mb-3">
-                    <label for="{{ form.numero.id_for_label }}" class="form-label">Número:</label>
-                    {{ form.numero }}
-                </div>
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <label for="{{ form.bairro.id_for_label }}" class="form-label">Bairro:</label>
-                    {{ form.bairro }}
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6 col-lg-3 mb-3">
-                    <label for="{{ form.tipo_acao.id_for_label }}" class="form-label">Tipo do Fato (Consumado/Tentado):</label>
-                    {{ form.tipo_acao }}
-                </div>
-                <div class="col-md-6 col-lg-9 mb-3">
-                    <label for="{{ form.resumo_cabecalho.id_for_label }}" class="form-label required">Título Sumário:</label>
-                    {{ form.resumo_cabecalho }}
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-12 mb-3">
-                    <label for="{{ form.relato_historico.id_for_label }}" class="form-label required">Histórico da Ocorrência:</label>
-                    {{ form.relato_historico }}
-                </div>
-            </div>
-            
-        </div>
-    </div>
-    
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0"><i class="fas fa-users"></i> Participantes</h5>
-        </div>
-        <div class="card-body">
-            
-            {{ envolvido_formset.management_form }}
-            
-            <div id="envolvidos-container">
-                {% for form_envolvido in envolvido_formset %}
-                    {% include "rpi/includes/envolvido_form.html" with form_envolvido=form_envolvido %}
-                {% endfor %}
-            </div>
-
-            <template id="empty-envolvido-template">
-                {% include "rpi/includes/envolvido_form.html" with form_envolvido=envolvido_formset.empty_form %}
-            </template>
-
-            <button type="button" id="add-envolvido-btn" class="btn btn-outline-primary mt-3">
-                <i class="fas fa-user-plus"></i> Adicionar Participante
-            </button>
-            
-        </div>
-    </div>
-
-    <section class="card mb-4 shadow-sm border-info">
-    <div class="card-header bg-info text-white">
-        <h5 class="mb-0">📦 Materiais Apreendidos</h5>
-    </div>
-    <div class="card-body">
-        
-        {{ apreensao_formset.management_form }} 
-
-        <div id="apreensoes-formset-container">
-            {% for form_apreensao in apreensao_formset %}
-                <div class="form-row form-apreensao-item mb-3 p-3 border rounded" style="background-color: #f8f9fa;">
-                    
-                    {% for hidden in form_apreensao.hidden_fields %}
-                        {{ hidden }}
+    <form method="post" class="needs-validation" novalidate id="ocorrencia-form">
+        {% csrf_token %}
+        {% if envolvido_formset.errors %}
+            <div class="alert alert-danger shadow-sm">
+                <h6 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Erro nos Participantes:</h6>
+                <ul class="mb-0">
+                    {% for dict in envolvido_formset.errors %}
+                        {% for field, errors in dict.items %}
+                            <li><strong>{{ field }}:</strong> {{ errors|striptags }}</li>
+                        {% endfor %}
                     {% endfor %}
-                    
-                    <div class="row">
-                        <div class="col-md-5">
-                            <label class="form-label">{{ form_apreensao.material_tipo.label }}</label>
-                            {{ form_apreensao.material_tipo }}
-                            <div class="text-danger">{{ form_apreensao.material_tipo.errors }}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">{{ form_apreensao.quantidade.label }}</label>
-                            {{ form_apreensao.quantidade }}
-                            <div class="text-danger">{{ form_apreensao.quantidade.errors }}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">{{ form_apreensao.unidade_medida.label }}</label>
-                            {{ form_apreensao.unidade_medida }}
-                            <div class="text-danger">{{ form_apreensao.unidade_medida.errors }}</div>
-                        </div>
-                        <div class="col-md-1 d-flex align-items-end">
-                            <button type="button" class="btn btn-sm btn-outline-danger remove-formset-row" data-formset-prefix="apreensoes" title="Remover Material">
-                                <i class="fas fa-minus-circle"></i>
-                            </button>
-                            <div class="d-none">{{ form_apreensao.DELETE }}</div> 
-                        </div>
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Dados Básicos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <label for="{{ form.natureza.id_for_label }}" class="form-label required">Natureza da Ocorrência:</label>
+                        {{ form.natureza }}
+                    </div>
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <label for="{{ form.opm.id_for_label }}" class="form-label required">OPM:</label>
+                        {{ form.opm }}
+                    </div>
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <label for="{{ form.data_hora_bruta.id_for_label }}" class="form-label required">Data/Hora (DDHHMMMESAA):</label>
+                        {{ form.data_hora_bruta }}
                     </div>
                 </div>
-            {% endfor %}
-        </div>
-        
-        <template id="empty-apreensao-template">
-            <div class="form-row form-apreensao-item mb-3 p-3 border rounded" style="background-color: #f8f9fa;">
-                
-                {% for hidden in apreensao_formset.empty_form.hidden_fields %}
-                    {{ hidden }}
-                {% endfor %}
+
+                <div class="row">
+                    <div class="col-md-12 col-lg-6 mb-3">
+                        <label for="{{ form.rua.id_for_label }}" class="form-label">Endereço:</label>
+                        {{ form.rua }}
+                    </div>
+                    <div class="col-md-6 col-lg-2 mb-3">
+                        <label for="{{ form.numero.id_for_label }}" class="form-label">Número:</label>
+                        {{ form.numero }}
+                    </div>
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <label for="{{ form.bairro.id_for_label }}" class="form-label">Bairro:</label>
+                        {{ form.bairro }}
+                    </div>
+                </div>
                 
                 <div class="row">
-                    <div class="col-md-5">
-                        <label class="form-label">{{ apreensao_formset.empty_form.material_tipo.label }}</label>
-                        {{ apreensao_formset.empty_form.material_tipo }}
+                    <div class="col-md-6 col-lg-3 mb-3">
+                        <label for="{{ form.tipo_acao.id_for_label }}" class="form-label">Tipo do Fato:</label>
+                        {{ form.tipo_acao }}
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">{{ apreensao_formset.empty_form.quantidade.label }}</label>
-                        {{ apreensao_formset.empty_form.quantidade }}
+                    <div class="col-md-6 col-lg-9 mb-3">
+                        <label for="{{ form.resumo_cabecalho.id_for_label }}" class="form-label required">Título Sumário:</label>
+                        {{ form.resumo_cabecalho }}
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">{{ apreensao_formset.empty_form.unidade_medida.label }}</label>
-                        {{ apreensao_formset.empty_form.unidade_medida }}
-                    </div>
-                    <div class="col-md-1 d-flex align-items-end">
-                        <button type="button" class="btn btn-sm btn-outline-danger remove-formset-row" data-formset-prefix="apreensoes" title="Remover Material">
-                            <i class="fas fa-minus-circle"></i>
-                        </button>
-                        <div class="d-none">{{ apreensao_formset.empty_form.DELETE }}</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="{{ form.relato_historico.id_for_label }}" class="form-label required">Histórico da Ocorrência:</label>
+                        {{ form.relato_historico }}
                     </div>
                 </div>
             </div>
-        </template>
+        </div>
         
-        <button type="button" class="btn btn-sm btn-secondary mt-3" id="add-apreensao-row" data-formset-prefix="apreensoes">
-            ➕ Adicionar Material Apreendido
-        </button>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-users"></i> Participantes</h5>
+            </div>
+            <div class="card-body">
+                {{ envolvido_formset.management_form }}
+                
+                <div id="envolvidos-container">
+                    {% for form_envolvido in envolvido_formset %}
+                        <div class="envolvido-form border rounded p-3 mb-3 bg-light">
+                            {% for hidden in form_envolvido.hidden_fields %} {{ hidden }} {% endfor %}
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <label class="form-label">Tipo:</label>
+                                    {{ form_envolvido.tipo_participante }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Nome Completo:</label>
+                                    {{ form_envolvido.nome }}
+                                </div>
+                                <div class="col-md-1">
+                                    <label class="form-label">Idade:</label>
+                                    {{ form_envolvido.idade }}
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label">Antecedentes:</label>
+                                    {{ form_envolvido.antecedentes }}
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                <div class="d-none">{{ form_envolvido.DELETE }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
 
-    </div>
-    </section>
+                <button type="button" id="add-envolvido-btn" class="btn btn-outline-primary mt-2">
+                    <i class="fas fa-user-plus"></i> Adicionar Participante
+                </button>
+            </div>
+        </div>
 
-    <div class="mt-4 pt-3 border-top">
-        <button type="submit" class="btn btn-success btn-lg shadow-sm me-3">
-            <i class="fas fa-save"></i> Salvar Ocorrência
-        </button>
-        <a href="{% url 'ocorrencia_list' %}" class="btn btn-outline-secondary btn-lg">
-            <i class="fas fa-times-circle"></i> Cancelar
-        </a>
+        <div class="card mb-4 shadow-sm border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">📦 Materiais Apreendidos</h5>
+            </div>
+            <div class="card-body">
+                {{ apreensao_formset.management_form }} 
+
+                <div id="apreensoes-formset-container">
+                    {% for form_apreensao in apreensao_formset %}
+                        <div class="form-apreensao-item mb-3 p-3 border rounded bg-light">
+                            {% for hidden in form_apreensao.hidden_fields %} {{ hidden }} {% endfor %}
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <label class="form-label">Material:</label>
+                                    {{ form_apreensao.material_tipo }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Quantidade:</label>
+                                    {{ form_apreensao.quantidade }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Unidade:</label>
+                                    {{ form_apreensao.unidade_medida }}
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="apreensoes">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                <div class="d-none">{{ form_apreensao.DELETE }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <button type="button" id="add-apreensao-btn" class="btn btn-outline-info mt-2">
+                    <i class="fas fa-plus"></i> Adicionar Material
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-top">
+            <button type="submit" class="btn btn-success btn-lg shadow-sm me-3">
+                <i class="fas fa-save"></i> Salvar Ocorrência
+            </button>
+            <a href="{% url 'ocorrencia_list' %}" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-times-circle"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<template id="envolvido-template">
+    <div class="envolvido-form border rounded p-3 mb-3 bg-light">
+        {% for hidden in envolvido_formset.empty_form.hidden_fields %} {{ hidden }} {% endfor %}
+        <div class="row">
+            <div class="col-md-2">
+                <label class="form-label">Tipo:</label>
+                {{ envolvido_formset.empty_form.tipo_participante }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Nome Completo:</label>
+                {{ envolvido_formset.empty_form.nome }}
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Idade:</label>
+                {{ envolvido_formset.empty_form.idade }}
+            </div>
+            <div class="col-md-5">
+                <label class="form-label">Antecedentes:</label>
+                {{ envolvido_formset.empty_form.antecedentes }}
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="d-none">{{ envolvido_formset.empty_form.DELETE }}</div>
+        </div>
     </div>
-</form>
+</template>
+
+<template id="apreensao-template">
+    <div class="form-apreensao-item mb-3 p-3 border rounded bg-light">
+        {% for hidden in apreensao_formset.empty_form.hidden_fields %} {{ hidden }} {% endfor %}
+        <div class="row">
+            <div class="col-md-5">
+                <label class="form-label">Material:</label>
+                {{ apreensao_formset.empty_form.material_tipo }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Quantidade:</label>
+                {{ apreensao_formset.empty_form.quantidade }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Unidade:</label>
+                {{ apreensao_formset.empty_form.unidade_medida }}
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="apreensoes">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="d-none">{{ apreensao_formset.empty_form.DELETE }}</div>
+        </div>
+    </div>
+</template>
 
 {% endblock content %}
 
-
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
 <script>
-    // ===============================================
-    // FUNÇÕES AUXILIARES DE FORMSET (Refatoradas para aceitar o prefixo)
-    // ===============================================
-
-    // 1. Inicialização Select2 (Chama em todos os selects do formulário)
-    function initializeSelect2(containerSelector) {
-        $(containerSelector).find('select').select2({
-            theme: "bootstrap-5",
-        });
-    }
-
-    // 2. Lógica de Indexação
-    function updateElementIndex(el, prefix, index) {
-        // Regex agora usa o prefixo variável
-        const idRegex = new RegExp(`(${prefix}-\\d+|${prefix}-__prefix__)`);
-        const replacement = `${prefix}-${index}`;
-
-        // Atualiza 'for', 'id' e 'name'
-        ['for', 'id', 'name'].forEach(attr => {
-            if (el.attr(attr)) {
-                el.attr(attr, el.attr(attr).replace(idRegex, replacement));
-            }
-        });
-    }
-
-    function reindexForms(prefix) {
-    // CORREÇÃO: Define o ID do contêiner com base no prefixo.
-    const containerId = (prefix === 'envolvidos') ? 'envolvidos-container' : `${prefix}-formset-container`;
-    const container = $(`#${containerId}`);
-    
-    // Note que estamos usando .envolvido-form ou .form-apreensao-item
-    const formClass = (prefix === 'envolvidos') ? 'envolvido-form' : 'form-apreensao-item'; 
-    
-    container.children(`.${formClass}`).each(function(index) {
-        // ... (o resto da função updateElementIndex é mantido)
-        $(this).find(':input, label').each(function() {
-            updateElementIndex($(this), prefix, index);
-        });
-        // ...
-    });
-}
-
-    // ===============================================
-    // FUNÇÃO PRINCIPAL: ADICIONAR LINHA
-    // ===============================================
-
-    function addFormsetRow(prefix, templateHtml) {
-    // CORREÇÃO: Define o ID do contêiner com base no prefixo.
-    const containerId = (prefix === 'envolvidos') ? 'envolvidos-container' : `${prefix}-formset-container`;
-    
-    // O TOTAL_FORMS SEMPRE SEGUE O PADRÃO Django: id_<prefix>-TOTAL_FORMS
-    const totalFormsInput = $(`#id_${prefix}-TOTAL_FORMS`);
-    
-    let formIdx = parseInt(totalFormsInput.val()); 
-    const container = $(`#${containerId}`); // Usa o ID corrigido
-    
-    try {
-        // ... (resto da lógica de substituição de prefixo é mantida)
-
-        const newFormHtml = templateHtml
-            .replace(/__prefix__/g, formIdx)
-            .replace(/__REPLACE_ME__/g, formIdx + 1);
-
-        const newForm = $(newFormHtml);
+$(document).ready(function() {
+    function addRow(prefix) {
+        const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
+        const currentCount = parseInt(totalForms.val());
+        const containerId = (prefix === 'envolvidos') ? '#envolvidos-container' : '#apreensoes-formset-container';
+        const templateId = (prefix === 'envolvidos') ? '#envolvido-template' : '#apreensao-template';
         
-        // 2. Anexa o novo formulário
-        container.append(newForm);
-
-        // ... (o resto da função é mantido)
-
-    } catch (e) {
-        console.error(`Erro ao adicionar nova linha (${prefix}):`, e);
-        alert(`Erro ao adicionar item. Verifique o console para detalhes.`);
-    }
-}
-
-    // ===============================================
-    // EVENTOS
-    // ===============================================
-
-    $(document).ready(function() {
-        // ... (Inicializações e Reindexações) ...
-
-        // Evento: Adicionar Novo Envolvido 
-        $('#add-envolvido-btn').click(function() {
-            // CORREÇÃO: Pega o HTML do template <template id="empty-envolvido-template">
-            const emptyHtml = $('#empty-envolvido-template').html().trim(); 
-            addFormsetRow('envolvidos', emptyHtml);
-        });
-
-        // Evento: Adicionar Nova Apreensão 
-        $('#add-apreensao-row').click(function() {
-            // Pega o HTML do template <template id="empty-apreensao-template">
-            const emptyHtml = $('#empty-apreensao-template').html().trim(); 
-            addFormsetRow('apreensoes', emptyHtml);
-        });
+        const template = $(templateId).html();
+        // Substitui o placeholder __prefix__ pelo número atual do formulário
+        const newHtml = template.replace(/__prefix__/g, currentCount);
         
-        // Evento: Remover Item (Unificado para ambos os formsets)
-        $(document).on('click', '.remove-formset-row, .remove-envolvido-btn', function() {
-            const isEnvolvido = $(this).hasClass('remove-envolvido-btn');
+        $(containerId).append(newHtml);
+        totalForms.val(currentCount + 1);
+        
+        if ($.fn.select2) {
+            $(containerId).find('select').last().select2({ theme: "bootstrap-5" });
+        }
+    }
 
-            // 1. Encontra o formulário pai
-            const formToRemove = $(this).closest('.envolvido-form, .form-apreensao-item');
-            
-            // 2. Define o prefixo correto
-            const prefix = isEnvolvido ? 'envolvidos' : $(this).data('formset-prefix');
-            
-            // 1. Marca o campo DELETE como true
-            const deleteInput = formToRemove.find(`[name$="-DELETE"]`);
-            if (deleteInput.length) {
-                deleteInput.val('on');
-            }
-            
-            // 2. Esconde o formulário
-            formToRemove.hide(200, function() {
-                // 3. Reindexa (opcional, mas bom para manter a ordem visual)
-                reindexForms(prefix); 
-            });
-        });
+    $('#add-envolvido-btn').click(function() { addRow('envolvidos'); });
+    $('#add-apreensao-btn').click(function() { addRow('apreensoes'); });
+
+    $(document).on('click', '.remove-formset-row', function() {
+        const prefix = $(this).data('prefix');
+        const row = $(this).closest(prefix === 'envolvidos' ? '.envolvido-form' : '.form-apreensao-item');
+        const idField = row.find('input[name$="-id"]');
+
+        if (idField.val()) {
+            // Marca para deletar no Django e esconde a linha
+            row.find('input[name$="-DELETE"]').val('on');
+            row.hide();
+        } else {
+            // Se for novo, apenas remove do HTML
+            row.remove();
+            const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
+            totalForms.val(parseInt(totalForms.val()) - 1);
+        }
     });
+});
 </script>
 {% endblock %}
