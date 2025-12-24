@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  # 1. Serviço WEB (Seu aplicativo Django + SQLite)
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+      
+    # Mantenha apenas o volume de sincronização de código!
+    volumes:
+      - .:/app
+      
+    # Se você está usando o SQLite, NÃO precisa de depends_on ou environment.
+    # Opcional, mas útil:
+    # command: python manage.py runserver 0.0.0.0:8000 # Caso não queira usar o CMD do Dockerfile
+    
+# Remova a seção de volumes persistentes do SQLite!
+# volumes:
+#   sqlite_data:

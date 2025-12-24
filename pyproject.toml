@@ -2,17 +2,17 @@
 name = "relatorio-periodico"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "Pablo Weber",email = "pablo.weber@hotmail.com"}
-]
+authors = [{ name = "Pablo Weber", email = "pablo.weber@hotmail.com" }]
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
-    "django (>=5.2.8,<6.0.0)",
-    "weasyprint (>=67.0,<68.0)",
-    "django-widget-tweaks (>=1.5.0,<2.0.0)"
+    "django>=5.1.0,<6.0.0",
+    "weasyprint>=63.0",
+    "django-widget-tweaks>=1.5.0",
 ]
 
+[tool.poetry]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
