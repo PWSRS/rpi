@@ -14,7 +14,7 @@
     </h1>
     <hr>
 
-    <form method="post" class="needs-validation" novalidate id="ocorrencia-form">
+    <form method="post" class="needs-validation" novalidate id="ocorrencia-form" enctype="multipart/form-data">
         {% csrf_token %}
         {% if envolvido_formset.errors %}
             <div class="alert alert-danger shadow-sm">
@@ -80,6 +80,99 @@
                         <label for="{{ form.relato_historico.id_for_label }}" class="form-label required">Histórico da Ocorrência:</label>
                         {{ form.relato_historico }}
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3 class="d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-camera"></i> Imagens (Opcional)</span>
+                    <button type="button" id="add-imagem-btn" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-plus"></i> Adicionar Imagem
+                    </button>
+                </h3>
+                <hr class="mt-1">
+                
+                {# CRÍTICO: Management Form deve vir primeiro #}
+                {{ imagem_formset.management_form }}
+                
+                <div id="imagens-container">
+                    {# INÍCIO DO CÓDIGO CORRIGIDO PARA RESOLVER A DESCONFIGURAÇÃO NA EDIÇÃO #}
+                    {% for form_imagem in imagem_formset %}
+                        <div class="card p-3 mb-3 imagem-form-bloco">
+                            
+                            {# Campos Hidden (ID, DELETE) #}
+                            {% for hidden in form_imagem.hidden_fields %} {{ hidden }} {% endfor %}
+
+                            <div class="row">
+                                
+                                {# COLUNA 1: IMAGEM EXISTENTE / CAMPO DE UPLOAD #}
+                                {% if form_imagem.instance.imagem %}
+                                    {# MODO EDIÇÃO: Imagem existente + Checkbox Limpar + Campo para substituição #}
+                                    <div class="col-md-6 mb-3">
+                                        
+                                        <label class="form-label d-block">Arquivo Atual:</label>
+                                        
+                                        <div class="d-flex align-items-center mb-2">
+                                            <a href="{{ form_imagem.instance.imagem.url }}" target="_blank">
+                                                <img src="{{ form_imagem.instance.imagem.url }}" style="max-width: 80px; max-height: 80px;" class="img-thumbnail me-2" alt="Imagem atual">
+                                            </a>
+                                            <p class="mb-0 small text-muted">
+                                                <a href="{{ form_imagem.instance.imagem.url }}" target="_blank">{{ form_imagem.instance.imagem.name|truncatechars:30 }}</a>
+                                                
+                                                {# CHECKBOX LIMPAR/MANTER (Bootstrap Form-Check) #}
+                                                <div class="form-check mt-1">
+                                                    {{ form_imagem.imagem.clear_checkbox }}
+                                                    <label class="form-check-label" for="{{ form_imagem.imagem.id_for_label }}_0">{{ form_imagem.imagem.clear_checkbox_label }}</label>
+                                                </div>
+                                            </p>
+                                        </div>
+                                        
+                                        {# Campo de UPLOAD para SUBSTITUIR (Agora com form-control do forms.py) #}
+                                        <label class="form-label mt-2">Substituir Arquivo:</label>
+                                        {{ form_imagem.imagem }}
+                                        
+                                        {% for error in form_imagem.imagem.errors %}
+                                            <div class="text-danger small">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+
+                                {% else %}
+                                    {# MODO CADASTRO / FORM EXTRA: Apenas campo de upload #}
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Arquivo de Imagem:</label>
+                                        {{ form_imagem.imagem }}
+                                        {% for error in form_imagem.imagem.errors %}
+                                            <div class="text-danger small">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                {# COLUNA 2: LEGENDA (Sempre presente) #}
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label">Legenda:</label>
+                                    {{ form_imagem.legenda }}
+                                    {% for error in form_imagem.legenda.errors %}
+                                        <div class="text-danger small">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                {# COLUNA 3: BOTÃO DE REMOVER #}
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="imagens">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                {# Campo ID e DELETE Oculto (Necessário para o Formset) #}
+                                {{ form_imagem.id }}
+                                <div class="d-none">{{ form_imagem.DELETE }}</div> 
+
+                            </div>
+                        </div>
+                    {% endfor %}
+                    {# FIM DO CÓDIGO CORRIGIDO #}
                 </div>
             </div>
         </div>
@@ -181,6 +274,7 @@
     </form>
 </div>
 
+{# TEMPLATE JS: Os templates de JS parecem corretos e não foram alterados #}
 <template id="envolvido-template">
     <div class="envolvido-form border rounded p-3 mb-3 bg-light">
         {% for hidden in envolvido_formset.empty_form.hidden_fields %} {{ hidden }} {% endfor %}
@@ -237,16 +331,65 @@
     </div>
 </template>
 
+{# NOVO: Template para Adicionar Imagens Dinamicamente (Mantido, pois a estrutura está correta) #}
+{# CORREÇÃO CRÍTICA: Deve ser <template> para o JS funcionar #}
+<template id="imagem-template">
+    <div class="card p-3 mb-3 imagem-form-bloco">
+        {# Usando a sintaxe do Django para renderizar os campos #}
+        {% for hidden in imagem_formset.empty_form.hidden_fields %} {{ hidden }} {% endfor %}
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Arquivo de Imagem:</label>
+                {{ imagem_formset.empty_form.imagem }}
+            </div>
+            <div class="col-md-5 mb-3">
+                <label class="form-label">Legenda:</label>
+                {{ imagem_formset.empty_form.legenda }}
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="imagens">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="d-none">{{ imagem_formset.empty_form.DELETE }}</div>
+        </div>
+    </div>
+</template>
+
 {% endblock content %}
 
 {% block extra_js %}
 <script>
 $(document).ready(function() {
+    
+    // Funções de inicialização Select2 para campos que já vieram do servidor (modo Edição)
+    function initializeSelect2() {
+        if ($.fn.select2) {
+            // Inicializa Select2 APENAS nos selects dentro dos containers de Envolvidos e Apreensões
+            $('#envolvidos-container select, #apreensoes-formset-container select').select2({ theme: "bootstrap-5" });
+        }
+    }
+    
+    initializeSelect2(); // Executa ao carregar a página (para formulários existentes)
+
     function addRow(prefix) {
         const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
         const currentCount = parseInt(totalForms.val());
-        const containerId = (prefix === 'envolvidos') ? '#envolvidos-container' : '#apreensoes-formset-container';
-        const templateId = (prefix === 'envolvidos') ? '#envolvido-template' : '#apreensao-template';
+        
+        let containerId, templateId;
+        
+        if (prefix === 'envolvidos') {
+            containerId = '#envolvidos-container';
+            templateId = '#envolvido-template';
+        } else if (prefix === 'apreensoes') {
+            containerId = '#apreensoes-formset-container';
+            templateId = '#apreensao-template';
+        } else if (prefix === 'imagens') {
+            containerId = '#imagens-container';
+            templateId = '#imagem-template';
+        } else {
+            return;
+        }
         
         const template = $(templateId).html();
         // Substitui o placeholder __prefix__ pelo número atual do formulário
@@ -255,25 +398,39 @@ $(document).ready(function() {
         $(containerId).append(newHtml);
         totalForms.val(currentCount + 1);
         
-        if ($.fn.select2) {
+        // Inicializa Select2 SOMENTE se for um formset que precisa dele
+        if ($.fn.select2 && (prefix === 'envolvidos' || prefix === 'apreensoes')) {
             $(containerId).find('select').last().select2({ theme: "bootstrap-5" });
         }
     }
 
+    // Listeners para adicionar formsets
     $('#add-envolvido-btn').click(function() { addRow('envolvidos'); });
     $('#add-apreensao-btn').click(function() { addRow('apreensoes'); });
+    $('#add-imagem-btn').click(function() { addRow('imagens'); }); 
 
+    // Lógica para remover (funciona perfeitamente)
     $(document).on('click', '.remove-formset-row', function() {
         const prefix = $(this).data('prefix');
-        const row = $(this).closest(prefix === 'envolvidos' ? '.envolvido-form' : '.form-apreensao-item');
+        
+        let rowClass;
+        if (prefix === 'envolvidos') {
+            rowClass = '.envolvido-form';
+        } else if (prefix === 'apreensoes') {
+            rowClass = '.form-apreensao-item';
+        } else if (prefix === 'imagens') {
+            rowClass = '.imagem-form-bloco';
+        } else {
+            return;
+        }
+
+        const row = $(this).closest(rowClass);
         const idField = row.find('input[name$="-id"]');
 
         if (idField.val()) {
-            // Marca para deletar no Django e esconde a linha
             row.find('input[name$="-DELETE"]').val('on');
             row.hide();
         } else {
-            // Se for novo, apenas remove do HTML
             row.remove();
             const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
             totalForms.val(parseInt(totalForms.val()) - 1);

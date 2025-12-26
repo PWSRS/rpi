@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Ocorrencia, Envolvido, RelatorioDiario, Apreensao
+from .models import Ocorrencia, Envolvido, RelatorioDiario, Apreensao, OcorrenciaImagem
 
 # --- 1. CLASSES DE FORMULÁRIOS ---
 
@@ -73,6 +73,16 @@ class OcorrenciaForm(forms.ModelForm):
                 widget.attrs["class"] = "form-control"
 
 
+class OcorrenciaImagemForm(forms.ModelForm):
+    class Meta:
+        model = OcorrenciaImagem
+        fields = ('imagem', 'legenda')
+        widgets = {
+            # ESSENCIAL: Garante que o input de arquivo tenha o estilo form-control
+            'imagem': forms.FileInput(attrs={'class': 'form-control'}), 
+            'legenda': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
 # --- 2. FÁBRICAS DE FORMSETS ---
 
 EnvolvidoFormSet = inlineformset_factory(
@@ -82,3 +92,12 @@ EnvolvidoFormSet = inlineformset_factory(
 ApreensaoFormSet = inlineformset_factory(
     Ocorrencia, Apreensao, form=ApreensaoForm, extra=1, can_delete=True
 )
+
+ImagemFormSet = inlineformset_factory(
+    Ocorrencia, 
+    OcorrenciaImagem, 
+    form=OcorrenciaImagemForm, # AGORA USAMOS A CLASSE CUSTOMIZADA
+    extra=1, 
+    can_delete=True
+)
+

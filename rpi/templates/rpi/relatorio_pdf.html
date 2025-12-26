@@ -46,6 +46,7 @@
                     na {{ ocorrencia.rua }}, n° {{ ocorrencia.numero }}, bairro {{ ocorrencia.bairro }}, na cidade de {{ ocorrencia.opm.municipio.nome }},
                     
                     {{ ocorrencia.relato_historico }}
+                    {{ item.imagens_html|safe }}
                 </p>
 
                 {# --- SEÇÃO DE ENVOLVIDOS --- #}
@@ -78,6 +79,15 @@
                 <a href="#inicio_sumario" class="voltar-link" style="font-size: 0.8em; text-decoration: none;">
                     (Voltar)
                 </a>
+                {% for imagem_obj in ocorrencia.imagens.all %}
+                    <div>
+                        <p>{{ imagem_obj.legenda }}</p>
+                        {% if imagem_obj.imagem %}
+                            {# IMPORTANTE: Remova o {{ base_url }} daqui #}
+                            <img src="{{ imagem_obj.imagem.url }}" style="max-width: 100%; height: auto;"/> 
+                        {% endif %}
+                    </div>
+                {% endfor %}
             </div>
 
         {% endwith %}

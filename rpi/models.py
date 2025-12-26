@@ -134,6 +134,43 @@ class RelatorioDiario(models.Model):
 
 # --- ENTIDADE PRINCIPAL E RELACIONADAS ---
 
+class OcorrenciaImagem(models.Model):
+    """
+    Modelo para armazenar múltiplas imagens relacionadas a uma ocorrência.
+    O relacionamento ForeignKey com Ocorrencia permite o 'Um-para-Muitos'.
+    """
+    
+    # CRÍTICO: Relacionamento One-to-Many com Ocorrencia
+    ocorrencia = models.ForeignKey(
+        'Ocorrencia', # Usa string se a classe Ocorrencia estiver abaixo ou em outro arquivo
+        on_delete=models.CASCADE, 
+        related_name='imagens', # Nome usado para acessar as imagens a partir da Ocorrencia
+        verbose_name="Ocorrência"
+    )
+    
+    # Campo de Imagem: É a imagem real, stored no MEDIA_ROOT/ocorrencias/imagens/
+    imagem = models.ImageField(
+        upload_to='ocorrencias/imagens/', 
+        verbose_name="Imagem",
+        null=True, # Permite nulo no DB (Opcional)
+        blank=True # Permite campo vazio no formulário (Opcional)
+    )
+    
+    legenda = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True, 
+        verbose_name="Legenda"
+    )
+    
+    class Meta:
+        verbose_name = "Imagem da Ocorrência"
+        verbose_name_plural = "Imagens da Ocorrência"
+        ordering = ['id'] # Ordena as imagens pela ordem de inserção
+
+    def __str__(self):
+        return f"Imagem de Ocorrência {self.ocorrencia.pk} ({self.legenda or 'Sem Legenda'})"
+
 
 class Ocorrencia(models.Model):
 

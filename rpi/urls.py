@@ -8,6 +8,8 @@ from .views import (
     OcorrenciaDeleteView,
     iniciar_dia,
     finalizar_relatorio,
+    listar_materiais_apreendidos,
+    deletar_materiais_apreendidos,
 )
 
 urlpatterns = [
@@ -33,5 +35,8 @@ urlpatterns = [
     path('relatorio/<int:pk>/reexportar/', views.reexportar_pdf, name='reexportar_pdf'),
     # ...
     path('relatorio/<int:pk>/download/', views.download_pdf_relatorio, name='download_pdf_relatorio'),
+    path('listar_materiais_apreendidos/', views.listar_materiais_apreendidos, name='listar_materiais_apreendidos'),
+    path('materiais/deletar/<int:apreensao_id>/', views.deletar_materiais_apreendidos, name='apreensao_delete'),
+    
 
 ]

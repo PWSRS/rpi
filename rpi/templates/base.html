@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="pt-BR" class="h-100"> {# ADICIONADO: class="h-100" para que a tag html ocupe 100% da altura #}
+<html lang="pt-BR" class="h-100"> 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,16 +11,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />    <link rel="stylesheet" href="{% static 'alunos/css/rodape.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" /> 
+    <link rel="stylesheet" href="{% static 'alunos/css/rodape.css' %}">
 
 
     {# Bloco para CSS e outras coisas específicas do head que templates filhos podem adicionar #}
     {% block extra_head_css %}
-      
+     
     {% endblock %} 
 
 </head>
-<body>
+{# ALTERAÇÃO CRÍTICA: Adicionar as classes do Flexbox ao body #}
+<body class="d-flex flex-column h-100">
+    
     <header class="bg-primary text-white p-3 mb-4 shadow-sm">
         <div class="container d-flex justify-content-between align-items-center">
             <a href="{% url 'ocorrencia_list' %}" class="text-white text-decoration-none h4">
@@ -28,7 +31,12 @@
             </a>
             <nav>
                 {% if user.is_authenticated %}
-                    <span class="me-2 text-white-50">Olá, {{ user.username }}!</span>
+                    <span class="me-3 text-white-50 small">Olá, {{ user.username }}!</span>
+                    
+                    <a href="{% url 'listar_materiais_apreendidos' %}" class="btn btn-outline-light btn-sm me-2">
+                        <i class="fas fa-boxes"></i> Apreensões
+                    </a>
+
                     <a href="{% url 'admin:index' %}" class="btn btn-secondary btn-sm me-2">Admin</a>
                     <a href="#" class="btn btn-danger btn-sm">Sair</a> 
                 {% else %}
@@ -37,15 +45,18 @@
             </nav>
         </div>
     </header>
-
-    <main class="container mb-5">
+    
+    {# ALTERAÇÃO CRÍTICA: Adicionar a classe flex-grow-1 ao main. Removemos mb-5. #}
+    <main class="container flex-grow-1">
         {% block content %}
         {% endblock content %}
     </main>
 
+    
     <footer class="bg-light text-center p-3 mt-auto border-top">
         <div class="container">
-            <small>&copy; {{ "now"|date:"Y" }} Sistema RPI. Desenvolvido pela ARI Sul.</small>
+            {# Usando a tag {% now "Y" %} para garantir que o ano atual seja exibido #}
+            <small>&copy; {% now "Y" %} Sistema RPI &reg; Todos os direitos reservados. Desenvolvido pela ARI Sul.</small>
         </div>
     </footer>
 

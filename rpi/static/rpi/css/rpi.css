@@ -7,7 +7,7 @@ body {
 /* Estilo para dar aparência de link ao sumário */
 .sumario-link {
     text-decoration: underline; /* Adiciona o sublinhado */
-    color: #0000EE; /* Azul padrão de links (ou #003366 para um azul militar mais escuro) */
+    color: #0000ee; /* Azul padrão de links (ou #003366 para um azul militar mais escuro) */
     display: inline-block;
     margin-bottom: 5px;
     cursor: pointer;
@@ -25,7 +25,7 @@ body {
 
 .voltar-link {
     font-size: 10pt;
-    color: #0000EE;
+    color: #0000ee;
     text-decoration: none;
     font-style: italic;
     margin-left: 10px;
@@ -97,4 +97,31 @@ h2 {
     margin-bottom: 15px;
     text-align: center;
     color: red;
+}
+
+.imagem-form-bloco input[type='file'] {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--bs-body-color);
+    background-color: var(--bs-body-bg);
+    background-clip: padding-box;
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* CSS para corrigir a desconfiguração na EDIÇÃO */
+/* Força a pré-visualização, link e checkbox de limpeza a coexistirem sem quebrar o layout */
+.imagem-form-bloco .d-flex .small.text-muted {
+    /* Permite que o texto e a checkbox fiquem em colunas implícitas */
+    flex-grow: 1;
+}
+.imagem-form-bloco .form-check {
+    /* Garante que o checkbox não quebre linha de forma estranha */
+    padding-left: 1.5em;
+    display: block;
 }

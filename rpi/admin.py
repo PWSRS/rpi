@@ -5,6 +5,7 @@ from .models import (
     OPM,
     RelatorioDiario,
     Ocorrencia,
+    OcorrenciaImagem,
     Envolvido,
     Apreensao,
     MaterialApreendidoTipo,
@@ -91,6 +92,11 @@ class MaterialApreendidoTipoAdmin(admin.ModelAdmin):
     list_display = ("nome",)
     search_fields = ("nome",)
 
+class OcorrenciaImagemInline(admin.TabularInline):
+    """Configuração para cadastrar múltiplas imagens em linha."""
+    model = OcorrenciaImagem
+    extra = 1 # Quantidade de formulários extras para imagens
+    fields = ('imagem', 'legenda',)
 
 # ----------------- 3. MODEL ADMIN PRINCIPAL (OCORRENCIA) -----------------
 
@@ -108,6 +114,7 @@ class OcorrenciaAdmin(admin.ModelAdmin):
 
     # Filtros laterais
     list_filter = ("natureza__tipo_impacto", "opm__municipio", "opm", "natureza")
+    inlines = [OcorrenciaImagemInline]
 
     # Campos que permitem a busca rápida
     search_fields = (
