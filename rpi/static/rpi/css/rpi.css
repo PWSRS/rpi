@@ -50,13 +50,6 @@ body {
     line-height: 1.5;
     text-indent: 1.5em; /* Recuo na primeira linha (opcional) */
 }
-/* Exemplo futuro para imagens */
-.imagem-ocorrencia {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin-top: 10px;
-}
 
 .logo {
     /* Mantenha o tamanho que você definiu para corrigir o problema de ser gigante */
@@ -124,4 +117,35 @@ h2 {
     /* Garante que o checkbox não quebre linha de forma estranha */
     padding-left: 1.5em;
     display: block;
+}
+
+.galeria-imagens {
+    display: table;
+    width: 100%;
+    text-align: center;
+    margin-top: 2px;
+}
+
+.bloco-imagem {
+    display: table-cell;
+    width: 50%;
+    vertical-align: top;
+    padding: 1px;
+    page-break-inside: avoid;
+}
+
+.imagem-relatorio {
+    max-width: 7cm;
+    max-height: 5cm;
+    height: auto;
+    border: 0.9pt solid #000;
+    padding: 1px;
+    display: block;
+    margin: 0 auto;
+}
+
+.legenda-imagem {
+    font-size: 9pt;
+    margin-top: 2px;
+    color: #000;
 }

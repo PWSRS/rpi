@@ -12,7 +12,11 @@
     <p>ESTADO DO RIO GRANDE DO SUL</p>
     <p>SECRETARIA DA SEGURANÇA PÚBLICA</p>
     <p>BRIGADA MILITAR - SISTEMA DE INTELIGÊNCIA</p>
-    <h1>RELATÓRIO PERIÓDICO DE INTELIGÊNCIA Nº {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}/ARI SUL - {{ relatorio.data_inicio|date:"d/m/Y" }}</h1>
+    <h1>
+        RELATÓRIO PERIÓDICO DE INTELIGÊNCIA Nº
+        {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}/ARI SUL -
+        {{ relatorio.data_inicio|date:"d/m/Y" }}
+    </h1>
 </header>
 
 <br>
@@ -22,79 +26,97 @@
 {% for item in ocorrencias %}
     <p>
         <a href="#ocorrencia_{{ forloop.counter }}" class="sumario-link">
-            {{ forloop.counter }}. {{ item.ocorrencia.natureza.nome|upper }} - 
-            {{ item.ocorrencia.opm.municipio.nome|upper }} ({{ item.sigla_opm_limpa|upper }})
+            {{ forloop.counter }}. {{ item.ocorrencia.natureza.nome|upper }} -
+            {{ item.ocorrencia.opm.municipio.nome|upper }}
+            ({{ item.sigla_opm_limpa|upper }})
         </a>
     </p>
 {% endfor %}
 
 <div style="page-break-before: always;"></div>
-    
+
 {% for item in ocorrencias %}
-    {% with ocorrencia=item.ocorrencia %}
-    <div class="ocorrencia" id="ocorrencia_{{ forloop.counter }}" style="page-break-inside: avoid; margin-bottom: 25px;">
-        {% with nr_ocorrencia=forloop.counter %}
-        
-            <p class="titulo">
-                {{ nr_ocorrencia }}. {{ ocorrencia.natureza.nome|upper }} – 
-                {{ ocorrencia.opm.municipio.nome|upper }} ({{ item.sigla_opm_limpa|upper }})
-            </p>
+{% with ocorrencia=item.ocorrencia %}
+<div class="ocorrencia" id="ocorrencia_{{ forloop.counter }}"
+     style="page-break-inside: avoid; margin-bottom: 25px;">
 
-            <div class="historico" style="text-align: justify;">
-                <p>
-                    <strong>Em {{ ocorrencia.data_hora_bruta }},</strong>
-                    na {{ ocorrencia.rua }}, n° {{ ocorrencia.numero }}, bairro {{ ocorrencia.bairro }}, na cidade de {{ ocorrencia.opm.municipio.nome }},
-                    
-                    {{ ocorrencia.relato_historico }}
-                    {{ item.imagens_html|safe }}
-                </p>
+{% with nr_ocorrencia=forloop.counter %}
 
-                {# --- SEÇÃO DE ENVOLVIDOS --- #}
-                {% if ocorrencia.envolvidos.all %}
-                <div class="detalhes-tecnicos" style="margin-top: 10px; margin-left: 20px; font-size: 0.9em;">
-                    <strong>Envolvido(s):</strong>
-                    <ul style="list-style: none; padding: 0;">
-                        {% for env in ocorrencia.envolvidos.all %}
-                        <li>
-                            - {{ env.nome|upper }}, {{ env.idade|default:"??" }} anos ({{ env.get_tipo_participante_display }}). 
-                            Antecedentes: {% if env.antecedentes == 'S' %}SIM{% else %}NÃO{% endif %}.
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
+<p class="titulo">
+    {{ nr_ocorrencia }}. {{ ocorrencia.natureza.nome|upper }} –
+    {{ ocorrencia.opm.municipio.nome|upper }}
+    ({{ item.sigla_opm_limpa|upper }})
+</p>
 
-                {# --- SEÇÃO DE MATERIAIS --- #}
-                {% if ocorrencia.apreensoes.all %}
-                <div class="detalhes-tecnicos" style="margin-top: 5px; margin-left: 20px; font-size: 0.9em;">
-                    <strong>Material Apreendido:</strong>
-                    <ul style="list-style: none; padding: 0;">
-                        {% for mat in ocorrencia.apreensoes.all %}
-                        <li>- {{ mat.quantidade }} {{ mat.unidade_medida }} de {{ mat.material_tipo }}.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
+<div class="historico" style="text-align: justify;">
+    <p>
+        <strong>Em {{ ocorrencia.data_hora_bruta }},</strong>
+        na {{ ocorrencia.rua }}, n° {{ ocorrencia.numero }},
+        bairro {{ ocorrencia.bairro }},
+        na cidade de {{ ocorrencia.opm.municipio.nome }},
+        {{ ocorrencia.relato_historico }}
+        {{ item.imagens_html|safe }}
+    </p>
 
-                <a href="#inicio_sumario" class="voltar-link" style="font-size: 0.8em; text-decoration: none;">
-                    (Voltar)
-                </a>
-                {% for imagem_obj in ocorrencia.imagens.all %}
-                    <div>
-                        <p>{{ imagem_obj.legenda }}</p>
-                        {% if imagem_obj.imagem %}
-                            {# IMPORTANTE: Remova o {{ base_url }} daqui #}
-                            <img src="{{ imagem_obj.imagem.url }}" style="max-width: 100%; height: auto;"/> 
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
-
-        {% endwith %}
+    {% if ocorrencia.envolvidos.all %}
+    <div class="detalhes-tecnicos"
+         style="margin-top: 10px; margin-left: 20px; font-size: 0.9em;">
+        <strong>Participante(s):</strong>
+        <ul style="list-style: none; padding: 0;">
+            {% for env in ocorrencia.envolvidos.all %}
+            <li>
+                * {{ env.nome|upper }},
+                {{ env.idade|default:"??" }} anos
+                ({{ env.get_tipo_participante_display }}).
+                Antecedentes:
+                {% if env.antecedentes == 'S' %}SIM{% else %}NÃO{% endif %}.
+            </li>
+            {% endfor %}
+        </ul>
     </div>
-    {% endwith %}
+    {% endif %}
+
+    {% if ocorrencia.apreensoes.all %}
+    <div class="detalhes-tecnicos"
+         style="margin-top: 5px; margin-left: 20px; font-size: 0.9em;">
+        <strong>Material Apreendido:</strong>
+        <ul style="list-style: none; padding: 0;">
+            {% for mat in ocorrencia.apreensoes.all %}
+            <li>
+                * {{ mat.quantidade }} {{ mat.unidade_medida }}
+                {{ mat.material_tipo }}.
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <a href="#inicio_sumario"
+       class="voltar-link"
+       style="font-size: 0.8em; text-decoration: none;">
+        (Voltar)
+    </a>
+
+    <div class="galeria-imagens">
+        {% for imagem in item.imagens %}
+            <div class="bloco-imagem">
+                <img src="{{ imagem.uri }}" class="imagem-relatorio">
+                {% if imagem.legenda %}
+                    <p class="legenda-imagem">{{ imagem.legenda }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+
+
+</div>
+
+{% endwith %}
+</div>
+{% endwith %}
 {% empty %}
-    <p>Este relatório não possui ocorrências.</p>
+<p>Este relatório não possui ocorrências.</p>
 {% endfor %}
 
 </body>

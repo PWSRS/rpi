@@ -429,149 +429,79 @@ def deletar_materiais_apreendidos(request, apreensao_id):
     
     return redirect('listar_materiais_apreendidos')
 
-def gerar_pdf_relatorio_weasyprint(relatorio_diario, request): 
+def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
     """
-    Gera o PDF do relatório diário (WeasyPrint), utilizando o request para 
-    resolver a base URL HTTP para o carregamento das imagens de Mídia.
+    Gera o PDF do relatório diário (WeasyPrint),
+    resolvendo imagens estáticas e de mídia via file:// URI.
     """
 
-    # --- FUNÇÃO AUXILIAR PARA FORMATO MILITAR ---
     def formatar_data_militar(data):
-        if not data: return ""
-        meses = {1: "JAN", 2: "FEV", 3: "MAR", 4: "ABR", 5: "MAI", 6: "JUN", 7: "JUL", 8: "AGO", 9: "SET", 10: "OUT", 11: "NOV", 12: "DEZ"}
-        dia = data.strftime("%d")
-        hora_minuto = data.strftime("%H%M") 
-        mes = meses[data.month]
-        ano = data.strftime("%y")
-        return f"{dia}{hora_minuto}{mes}{ano}"
-
-
-    # --- FUNÇÕES AUXILIARES PARA GERAR LISTAS HTML (Mantidas) ---
-
-    def _gerar_lista_envolvidos_html(ocorrencia):
-        # ... (código mantido) ...
-        envolvidos_qs = ocorrencia.envolvidos.all() 
-        if not envolvidos_qs.exists():
+        if not data:
             return ""
+        meses = {
+            1: "JAN", 2: "FEV", 3: "MAR", 4: "ABR",
+            5: "MAI", 6: "JUN", 7: "JUL", 8: "AGO",
+            9: "SET", 10: "OUT", 11: "NOV", 12: "DEZ",
+        }
+        return f"{data.strftime('%d%H%M')}{meses[data.month]}{data.strftime('%y')}"
 
-        html_parts = []
-        html_parts.append('<div class="detalhes-tecnicos" style="margin-top: 10px; margin-left: 20px; font-size: 0.9em;">')
-        html_parts.append('<strong>Envolvido(s):</strong>')
-        html_parts.append('<ul style="list-style: none; padding: 0;">')
-        
-        for env in envolvidos_qs:
-            tipo = env.get_tipo_participante_display()
-            nome = getattr(env, "nome", "NÃO INFORMADO")
-            idade = getattr(env, "idade", "??")
-            antecedentes = "SIM" if env.antecedentes == "S" else "NÃO"
-            
-            html_parts.append(
-                f'<li>- <b>{nome}</b>, {idade} anos ({tipo}). Antecedentes: {antecedentes}.</li>'
-            )
-            
-        html_parts.append('</ul>')
-        html_parts.append('</div>')
-
-        return "\n".join(html_parts)
-
-    def _gerar_lista_apreensoes_html(ocorrencia):
-        # ... (código mantido) ...
-        apreensoes_qs = ocorrencia.apreensoes.all()
-        if not apreensoes_qs.exists():
-            return ""
-
-        html_parts = []
-        html_parts.append('<div class="detalhes-tecnicos" style="margin-top: 5px; margin-left: 20px; font-size: 0.9em;">')
-        html_parts.append('<strong>Material Apreendido:</strong>')
-        html_parts.append('<ul style="list-style: none; padding: 0;">')
-
-        for apreensao in apreensoes_qs:
-            material = getattr(apreensao.material_tipo, "nome", "Material Não Identificado")
-            quantidade = str(apreensao.quantidade).replace('.', ',') 
-            unidade = apreensao.unidade_medida 
-            
-            html_parts.append(
-                f'<li>- {quantidade} {unidade} de {material}.</li>'
-            )
-            
-        html_parts.append('</ul>')
-        html_parts.append('</div>')
-
-        return "\n".join(html_parts)
-
-
-    # 1. CONSULTA GERAL OTIMIZADA E ORDENADA
     ocorrencias_qs = (
-        relatorio_diario.ocorrencias.select_related("natureza", "opm", "opm__municipio")
-        .prefetch_related("envolvidos", "apreensoes__material_tipo", "imagens") 
+        relatorio_diario.ocorrencias
+        .select_related("natureza", "opm", "opm__municipio")
+        .prefetch_related("envolvidos", "apreensoes__material_tipo", "imagens")
         .order_by("data_hora_fato")
     )
 
-    cvli_qs = [] 
-
-    # 3. PRÉ-PROCESSAMENTO DE DADOS
     ocorrencias_com_dados = []
+
     for ocorrencia in ocorrencias_qs:
-        sigla_opm_limpa = "OPM Não Definida"
-        if ocorrencia.opm:
-            try:
-                sigla_opm_limpa = ocorrencia.opm.sigla.split(" - ")[0]
-            except:
-                sigla_opm_limpa = ocorrencia.opm.sigla
+        sigla_opm = ocorrencia.opm.sigla.split(" - ")[0] if ocorrencia.opm else ""
 
-        envolvidos_html = _gerar_lista_envolvidos_html(ocorrencia)
-        apreensoes_html = _gerar_lista_apreensoes_html(ocorrencia)
+        imagens = []
+        for img in ocorrencia.imagens.all():
+            if img.imagem:
+                imagem_uri = urllib.parse.urljoin(
+                    "file:",
+                    urllib.request.pathname2url(img.imagem.path)
+                )
+                imagens.append({
+                    "legenda": img.legenda,
+                    "uri": imagem_uri,
+                })
 
-        ocorrencias_com_dados.append(
-            {
-                "ocorrencia": ocorrencia,
-                "sigla_opm_limpa": sigla_opm_limpa,
-                "envolvidos_html": envolvidos_html,
-                "apreensoes_html": apreensoes_html,
-            }
-        )
+        ocorrencias_com_dados.append({
+            "ocorrencia": ocorrencia,
+            "sigla_opm_limpa": sigla_opm,
+            "imagens": imagens,
+        })
 
-    # 4. MONTAGEM DO CONTEXTO PARA O TEMPLATE
-    
-    # Acessando logo e CSS via File URI (Static)
-    logo_file_path = find("rpi/img/logo.png")
-    logo_uri = ""
-    if logo_file_path:
-        logo_uri = urllib.parse.urljoin(
-            "file:", urllib.request.pathname2url(logo_file_path)
-        )
+    logo_path = find("rpi/img/logo.png")
+    logo_uri = urllib.parse.urljoin(
+        "file:",
+        urllib.request.pathname2url(logo_path)
+    ) if logo_path else ""
 
-    css_file_path = find("rpi/css/rpi.css")
-    css_uri = ""
-    if css_file_path:
-        css_uri = urllib.parse.urljoin(
-            "file:", urllib.request.pathname2url(css_file_path)
-        )
-        
-    data_inicio_militar = formatar_data_militar(relatorio_diario.data_inicio)
-    data_fim_militar = formatar_data_militar(relatorio_diario.data_fim)
+    css_path = find("rpi/css/rpi.css")
+    css_uri = urllib.parse.urljoin(
+        "file:",
+        urllib.request.pathname2url(css_path)
+    ) if css_path else ""
 
     context = {
         "relatorio": relatorio_diario,
         "ocorrencias": ocorrencias_com_dados,
-        "cvli_qs": cvli_qs,
-        "data_inicio_militar": data_inicio_militar,
-        "data_fim_militar": data_fim_militar,
+        "data_inicio_militar": formatar_data_militar(relatorio_diario.data_inicio),
+        "data_fim_militar": formatar_data_militar(relatorio_diario.data_fim),
         "logo_uri": logo_uri,
         "css_uri": css_uri,
     }
 
-    # 5. RENDERIZAÇÃO E GERAÇÃO DO PDF
     html_string = render_to_string("rpi/relatorio_pdf.html", context)
-    
-    # CRÍTICO: Definir o base_url como a URL HTTP/HTTPS absoluta do seu site.
-    base_url_http = request.build_absolute_uri('/') 
 
-    pdf_file = HTML(string=html_string, base_url=base_url_http).write_pdf()
+    pdf = HTML(string=html_string, base_url="file:///").write_pdf()
 
-    # 6. CONFIGURAÇÃO DA RESPOSTA HTTP
-    response = HttpResponse(pdf_file, content_type="application/pdf")
-    filename = f"Relatorio_Diario_{data_inicio_militar}_{data_fim_militar}.pdf"
-    response["Content-Disposition"] = f'inline; filename="{filename}"'
-    
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = "inline; filename=relatorio.pdf"
+
     return response
+
