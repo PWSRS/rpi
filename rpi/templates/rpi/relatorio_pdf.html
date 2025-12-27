@@ -56,7 +56,14 @@
         na cidade de {{ ocorrencia.opm.municipio.nome }},
         {{ ocorrencia.relato_historico }}
         {{ item.imagens_html|safe }}
+    <a href="#inicio_sumario"
+       class="voltar-link"
+       style="font-size: 0.8em; text-decoration: none;">
+        (Voltar)
+    </a>
     </p>
+    
+
 
     {% if ocorrencia.envolvidos.all %}
     <div class="detalhes-tecnicos"
@@ -90,12 +97,6 @@
         </ul>
     </div>
     {% endif %}
-
-    <a href="#inicio_sumario"
-       class="voltar-link"
-       style="font-size: 0.8em; text-decoration: none;">
-        (Voltar)
-    </a>
 
     <div class="galeria-imagens">
         {% for imagem in item.imagens %}

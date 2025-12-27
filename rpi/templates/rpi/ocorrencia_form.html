@@ -29,6 +29,19 @@
             </div>
         {% endif %}
 
+        {% if apreensao_formset.errors %}
+            <div class="alert alert-danger shadow-sm">
+                <h6 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Erro nas apreensões:</h6>
+                <ul class="mb-0">
+                    {% for dict in apreensao_formset.errors %}
+                        {% for field, errors in dict.items %}
+                            <li><strong>{{ field }}:</strong> {{ errors|striptags }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0"><i class="fas fa-info-circle"></i> Dados Básicos</h5>

@@ -1,8 +1,30 @@
+/* Estilos gerais */
 body {
     font-family: Arial, sans-serif;
     font-size: 10pt;
     margin: 0; /* Margens */
     padding: 0;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+header img {
+    max-width: 150px;
+    height: auto;
+}
+/* Estilos para título geral do RPI no cabeçalho */
+header h1 {
+    font-size: 13pt;
+    font-weight: bold;
+}
+/* Estilos para o sumário */
+h2 {
+    font-size: 12pt;
+    font-weight: bold;
+    text-align: center;
 }
 /* Estilo para dar aparência de link ao sumário */
 .sumario-link {
@@ -22,35 +44,38 @@ body {
 .sumario-link span {
     color: inherit;
 }
-
+/* Estilos para links de voltar */
 .voltar-link {
     font-size: 10pt;
     color: #0000ee;
     text-decoration: none;
     font-style: italic;
-    margin-left: 10px;
+    margin-left: 2px;
 }
-
+/* Efeito ao passar o mouse */
 .voltar-link:hover {
     text-decoration: underline;
     color: #0056b3;
 }
 
+/* Estilos para o margem e posicionamento das ocorrências */
 .ocorrencia {
     margin-bottom: 20px;
     page-break-inside: avoid; /* Evita quebras de página dentro da ocorrência */
 }
+/* Estilos para títulos das ocorrências*/
 .titulo {
     font-weight: bold;
     font-size: 11pt;
     margin-bottom: 5px;
 }
+/* Estilos para o texto do histórico */
 .historico {
     text-align: justify; /* Alinhamento justificado */
     line-height: 1.5;
     text-indent: 1.5em; /* Recuo na primeira linha (opcional) */
 }
-
+/* Estilos para a logo do RPI*/
 .logo {
     /* Mantenha o tamanho que você definiu para corrigir o problema de ser gigante */
     width: 100px;
@@ -62,28 +87,7 @@ body {
     margin-right: auto; /* Centraliza horizontalmente à direita */
     /* Você pode adicionar um espaçamento abaixo se precisar, ex: margin-bottom: 20px; */
 }
-
-header {
-    text-align: center;
-    margin-bottom: 5px;
-}
-
-header img {
-    max-width: 150px;
-    height: auto;
-}
-
-header h1 {
-    font-size: 13pt;
-    font-weight: bold;
-}
-
-h2 {
-    font-size: 12pt;
-    font-weight: bold;
-    text-align: center;
-}
-
+/* Estilos para o período do relatório */
 .periodo {
     font-size: 12pt;
     font-weight: bold;
@@ -91,7 +95,7 @@ h2 {
     text-align: center;
     color: red;
 }
-
+/* Estilos para detalhes técnicos */
 .imagem-form-bloco input[type='file'] {
     display: block;
     width: 100%;
@@ -118,14 +122,14 @@ h2 {
     padding-left: 1.5em;
     display: block;
 }
-
+/* Estilos para galeria de imagens */
 .galeria-imagens {
     display: table;
     width: 100%;
     text-align: center;
     margin-top: 2px;
 }
-
+/* Estilos para cada bloco de imagem */
 .bloco-imagem {
     display: table-cell;
     width: 50%;
@@ -133,7 +137,7 @@ h2 {
     padding: 1px;
     page-break-inside: avoid;
 }
-
+/* Estilos para as imagens no relatório */
 .imagem-relatorio {
     max-width: 7cm;
     max-height: 5cm;
@@ -143,7 +147,7 @@ h2 {
     display: block;
     margin: 0 auto;
 }
-
+/* Estilos para legendas das imagens */
 .legenda-imagem {
     font-size: 9pt;
     margin-top: 2px;
