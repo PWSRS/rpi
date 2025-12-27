@@ -1,7 +1,7 @@
 {% extends "base.html" %} 
 {% load static %}
 
-{% block title %}Lista de Ocorrências - Sistema de Ocorrências{% endblock %}
+{% block title %}Lista de Ocorrências{% endblock %}
 
 {% block content %} 
 
@@ -96,7 +96,7 @@
                                 <strong>OPM:</strong> {{ ocorrencia.opm.sigla }} 
                                 <small class="text-muted">({{ ocorrencia.opm.municipio.nome }})</small>
                                 <span class="text-muted" style="font-size: 0.9rem;">
-                                   | RPI Nº {{ ocorrencia.pk }} - Data: {{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}
+                                   | RPI Nº {{ relatorio_atual.nr_relatorio }}/{{ relatorio_atual.ano_criacao }} - Data: {{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}
                                 </span>
                             </p>
                         </div>

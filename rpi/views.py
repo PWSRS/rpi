@@ -13,6 +13,7 @@ from django.db import transaction
 from django.db.models import F, Prefetch
 from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 
 # 4. Django - Views, Mixins e Decoradores
 from django.contrib import messages
@@ -177,17 +178,37 @@ class OcorrenciaListView(LoginRequiredMixin, ListView):
     context_object_name = "ocorrencias"
     ordering = ["-data_hora_fato"]
 
+    def get_queryset(self):
+        """
+        Retorna apenas as ocorrências vinculadas ao relatório atual do usuário.
+        """
+        relatorio_atual = (
+            RelatorioDiario.objects
+            .filter(usuario_responsavel=self.request.user)
+            .order_by("-data_inicio")
+            .first()
+        )
+
+        if not relatorio_atual:
+            return Ocorrencia.objects.none()
+
+        # Retorna SOMENTE as ocorrências deste relatório
+        return relatorio_atual.ocorrencias.all().order_by("-data_hora_fato")
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Busque o ÚLTIMO relatório do usuário, independentemente do status.
+        # Mantém o relatório atual disponível no template
         context["relatorio_atual"] = (
-            RelatorioDiario.objects.filter(usuario_responsavel=self.request.user)
+            RelatorioDiario.objects
+            .filter(usuario_responsavel=self.request.user)
             .order_by("-data_inicio")
             .first()
         )
 
         return context
+
+
 
 
 class OcorrenciaCreateView(LoginRequiredMixin, CreateView):
@@ -505,3 +526,54 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
 
     return response
 
+
+
+class RelatorioListView(LoginRequiredMixin, ListView):
+    """
+    Lista relatórios FINALIZADOS do usuário logado,
+    com opção de filtro por período (data inicial e final).
+    """
+    model = RelatorioDiario
+    template_name = "rpi/relatorio_list.html"
+    context_object_name = "relatorios"
+    ordering = ["-data_inicio"]
+
+    def get_queryset(self):
+        """
+        Monta o queryset base e aplica filtros de data (se existirem).
+        """
+        queryset = (
+            RelatorioDiario.objects
+            .filter(
+                usuario_responsavel=self.request.user,
+                finalizado=True
+            )
+            .order_by("-data_inicio")
+        )
+
+        # Recupera datas enviadas via GET
+        data_inicio = self.request.GET.get("data_inicio")
+        data_fim = self.request.GET.get("data_fim")
+
+        # Converte string -> date
+        if data_inicio:
+            data_inicio = parse_date(data_inicio)
+            if data_inicio:
+                queryset = queryset.filter(data_inicio__date__gte=data_inicio)
+
+        if data_fim:
+            data_fim = parse_date(data_fim)
+            if data_fim:
+                queryset = queryset.filter(data_inicio__date__lte=data_fim)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        """
+        Envia os valores do filtro de volta para o template
+        (para manter os campos preenchidos).
+        """
+        context = super().get_context_data(**kwargs)
+        context["data_inicio"] = self.request.GET.get("data_inicio", "")
+        context["data_fim"] = self.request.GET.get("data_fim", "")
+        return context

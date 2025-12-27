@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios Finalizados{% endblock %}
+
+{% block content %}
+
+<h1>Relatórios Finalizados</h1>
+
+<form method="get" class="row g-3 mt-3 mb-4">
+    <div class="col-md-4">
+        <label for="data_inicio" class="form-label">Data inicial</label>
+        <input
+            type="date"
+            class="form-control"
+            id="data_inicio"
+            name="data_inicio"
+            value="{{ data_inicio }}"
+        >
+    </div>
+
+    <div class="col-md-4">
+        <label for="data_fim" class="form-label">Data final</label>
+        <input
+            type="date"
+            class="form-control"
+            id="data_fim"
+            name="data_fim"
+            value="{{ data_fim }}"
+        >
+    </div>
+
+    <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary me-2">
+            Filtrar
+        </button>
+
+        <a href="{% url 'relatorio_list' %}" class="btn btn-outline-secondary">
+            Limpar
+        </a>
+    </div>
+</form>
+
+
+{% if relatorios %}
+    <div class="list-group mt-4">
+        {% for relatorio in relatorios %}
+            <div class="list-group-item mb-2 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>
+                            Relatório {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}
+                        </strong>
+                        <br>
+                        <small class="text-muted">
+                            Início: {{ relatorio.data_inicio|date:"d/m/Y H:i" }} |
+                            Fim: {{ relatorio.data_fim|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+
+                    <a href="{% url 'reexportar_pdf' relatorio.pk %}"
+                       class="btn btn-sm btn-outline-danger"
+                       target="_blank">
+                        PDF
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="mt-4 text-muted">
+        Nenhum relatório finalizado encontrado.
+    </p>
+{% endif %}
+
+{% endblock %}
