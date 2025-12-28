@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}{% endblock %}
+
+{% block content %}
+
+<h1>
+    Relatório {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}
+</h1>
+
+<p>
+    <strong>Início:</strong> {{ relatorio.data_inicio|date:"d/m/Y H:i" }} <br>
+    <strong>Fim:</strong>
+    {% if relatorio.data_fim %}
+        {{ relatorio.data_fim|date:"d/m/Y H:i" }}
+    {% else %}
+        Em andamento
+    {% endif %}
+</p>
+
+<hr>
+
+<div class="mb-3">
+    <a href="{% url 'download_pdf_relatorio' relatorio.pk %}"
+       class="btn btn-danger"
+       target="_blank">
+        📄 Gerar PDF
+    </a>
+
+    <a href="{% url 'relatorio_list' %}" class="btn btn-secondary">
+        ⬅ Voltar
+    </a>
+</div>
+
+<hr>
+
+<h3>Ocorrências do Relatório</h3>
+
+{% for ocorrencia in ocorrencias %}
+    <div class="card mb-2">
+        <div class="card-body">
+            <strong>{{ ocorrencia.natureza.nome }}</strong><br>
+            OPM: {{ ocorrencia.opm.sigla }} |
+            Data: {{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+{% empty %}
+    <p>Este relatório não possui ocorrências.</p>
+{% endfor %}
+
+{% endblock %}

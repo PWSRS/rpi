@@ -11,6 +11,7 @@ from .views import (
     listar_materiais_apreendidos,
     deletar_materiais_apreendidos,
     RelatorioListView,
+    RelatorioDetailView,
 )
 
 urlpatterns = [
@@ -40,5 +41,6 @@ urlpatterns = [
     path('materiais/deletar/<int:apreensao_id>/', views.deletar_materiais_apreendidos, name='apreensao_delete'),
     #filtragem do RPI
     path("relatorios/",RelatorioListView.as_view(),name="relatorio_list"),
+    path("relatorios/<int:pk>/",RelatorioDetailView.as_view(),name="relatorio_detail"),
 
 ]

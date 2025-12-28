@@ -529,10 +529,6 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
 
 
 class RelatorioListView(LoginRequiredMixin, ListView):
-    """
-    Lista relatórios FINALIZADOS do usuário logado,
-    com opção de filtro por período (data inicial e final).
-    """
     model = RelatorioDiario
     template_name = "rpi/relatorio_list.html"
     context_object_name = "relatorios"
@@ -540,40 +536,61 @@ class RelatorioListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         """
-        Monta o queryset base e aplica filtros de data (se existirem).
+        Sobrescreve o queryset padrão para aplicar filtros por data
+        usando parâmetros GET.
         """
-        queryset = (
-            RelatorioDiario.objects
-            .filter(
-                usuario_responsavel=self.request.user,
-                finalizado=True
-            )
-            .order_by("-data_inicio")
+        queryset = RelatorioDiario.objects.filter(
+            usuario_responsavel=self.request.user,
+            finalizado=True  # MOSTRA SOMENTE RELATÓRIOS FINALIZADOS
         )
 
-        # Recupera datas enviadas via GET
+        # Captura os parâmetros da URL (?data_inicio=...&data_fim=...)
         data_inicio = self.request.GET.get("data_inicio")
         data_fim = self.request.GET.get("data_fim")
 
-        # Converte string -> date
+        # Se o usuário informou data inicial
         if data_inicio:
-            data_inicio = parse_date(data_inicio)
-            if data_inicio:
-                queryset = queryset.filter(data_inicio__date__gte=data_inicio)
+            queryset = queryset.filter(
+                data_inicio__date__gte=parse_date(data_inicio)
+            )
 
+        # Se o usuário informou data final
         if data_fim:
-            data_fim = parse_date(data_fim)
-            if data_fim:
-                queryset = queryset.filter(data_inicio__date__lte=data_fim)
+            queryset = queryset.filter(
+                data_inicio__date__lte=parse_date(data_fim)
+            )
 
         return queryset
 
+class RelatorioDetailView(LoginRequiredMixin, DetailView):
+    """
+    View responsável por exibir o DETALHE de um relatório:
+    - dados do relatório
+    - ocorrências vinculadas a ele
+    """
+    model = RelatorioDiario
+    template_name = "rpi/relatorio_detail.html"
+    context_object_name = "relatorio"
+    
+    paginate_by = 1
+
+    def get_queryset(self):
+        """
+        Garante que o usuário só veja relatórios dele.
+        """
+        return RelatorioDiario.objects.filter(
+            usuario_responsavel=self.request.user
+        )
+
     def get_context_data(self, **kwargs):
         """
-        Envia os valores do filtro de volta para o template
-        (para manter os campos preenchidos).
+        Adiciona as ocorrências do relatório ao contexto.
         """
         context = super().get_context_data(**kwargs)
-        context["data_inicio"] = self.request.GET.get("data_inicio", "")
-        context["data_fim"] = self.request.GET.get("data_fim", "")
+
+        # Busca apenas ocorrências deste relatório
+        context["ocorrencias"] = self.object.ocorrencias.all().order_by(
+            "-data_hora_fato"
+        )
+
         return context

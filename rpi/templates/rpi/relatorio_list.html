@@ -3,73 +3,112 @@
 {% block title %}Relatórios Finalizados{% endblock %}
 
 {% block content %}
-
 <h1>Relatórios Finalizados</h1>
 
-<form method="get" class="row g-3 mt-3 mb-4">
+<!-- FORMULÁRIO DE FILTRO -->
+<form method="get" class="row g-3 mb-4">
     <div class="col-md-4">
-        <label for="data_inicio" class="form-label">Data inicial</label>
-        <input
-            type="date"
-            class="form-control"
-            id="data_inicio"
-            name="data_inicio"
-            value="{{ data_inicio }}"
-        >
+        <label class="form-label">Data inicial</label>
+        <input type="date"
+               name="data_inicio"
+               value="{{ request.GET.data_inicio }}"
+               class="form-control">
     </div>
 
     <div class="col-md-4">
-        <label for="data_fim" class="form-label">Data final</label>
-        <input
-            type="date"
-            class="form-control"
-            id="data_fim"
-            name="data_fim"
-            value="{{ data_fim }}"
-        >
+        <label class="form-label">Data final</label>
+        <input type="date"
+               name="data_fim"
+               value="{{ request.GET.data_fim }}"
+               class="form-control">
     </div>
 
     <div class="col-md-4 d-flex align-items-end">
-        <button type="submit" class="btn btn-primary me-2">
+        <button type="submit" class="btn btn-primary w-100">
             Filtrar
         </button>
-
-        <a href="{% url 'relatorio_list' %}" class="btn btn-outline-secondary">
-            Limpar
-        </a>
     </div>
 </form>
 
+<!-- LISTA DE RELATÓRIOS -->
+{% for relatorio in relatorios %}
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center">
 
-{% if relatorios %}
-    <div class="list-group mt-4">
-        {% for relatorio in relatorios %}
-            <div class="list-group-item mb-2 shadow-sm">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>
-                            Relatório {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}
-                        </strong>
-                        <br>
-                        <small class="text-muted">
-                            Início: {{ relatorio.data_inicio|date:"d/m/Y H:i" }} |
-                            Fim: {{ relatorio.data_fim|date:"d/m/Y H:i" }}
-                        </small>
-                    </div>
-
-                    <a href="{% url 'reexportar_pdf' relatorio.pk %}"
-                       class="btn btn-sm btn-outline-danger"
-                       target="_blank">
-                        PDF
-                    </a>
-                </div>
+            <div>
+                <h5 class="mb-0">
+                    Relatório {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}
+                </h5>
+                <small class="text-muted">
+                    {{ relatorio.data_inicio|date:"d/m/Y H:i" }}
+                    →
+                    {{ relatorio.data_fim|date:"d/m/Y H:i" }}
+                </small>
             </div>
-        {% endfor %}
+
+            <div class="btn-group">
+                <a href="{% url 'relatorio_detail' relatorio.pk %}"
+                   class="btn btn-outline-primary btn-sm">
+                    Ver relatório
+                </a>
+            </div>
+
+        </div>
     </div>
-{% else %}
-    <p class="mt-4 text-muted">
-        Nenhum relatório finalizado encontrado.
+{% empty %}
+    <p class="text-muted">
+        Nenhum relatório encontrado para o período.
     </p>
+{% endfor %}
+
+<!-- PAGINAÇÃO -->
+{% if is_paginated %}
+<nav aria-label="Paginação de relatórios">
+    <ul class="pagination justify-content-center">
+
+        <!-- Anterior -->
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ page_obj.previous_page_number }}">
+                    « Anterior
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">« Anterior</span>
+            </li>
+        {% endif %}
+
+        <!-- Páginas -->
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Próxima -->
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ page_obj.next_page_number }}">
+                    Próxima »
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Próxima »</span>
+            </li>
+        {% endif %}
+
+    </ul>
+</nav>
 {% endif %}
 
 {% endblock %}
