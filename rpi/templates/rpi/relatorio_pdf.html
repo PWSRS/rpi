@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ css_uri }}">
 </head>
 <body>
+
 <header>
     <img src="{{ logo_uri }}" alt="Logo da Brigada Militar" class="logo">
     <p>ESTADO DO RIO GRANDE DO SUL</p>
@@ -20,52 +21,63 @@
 </header>
 
 <br>
+
+<!-- ================= SUMÁRIO ================= -->
+
 <h2 id="inicio_sumario">SUMÁRIO</h2>
-<p class="periodo">PERÍODO: DE {{ data_inicio_militar }} A {{ data_fim_militar }}</p>
+<p class="periodo">
+    PERÍODO: DE {{ data_inicio_militar }} A {{ data_fim_militar }}
+</p>
 
 {% for item in ocorrencias %}
-    <p>
-        <a href="#ocorrencia_{{ forloop.counter }}" class="sumario-link">
-            {{ forloop.counter }}. {{ item.ocorrencia.natureza.nome|upper }} -
-            {{ item.ocorrencia.opm.municipio.nome|upper }}
-            ({{ item.sigla_opm_limpa|upper }})
-        </a>
-    </p>
+<p>
+    <a href="#ocorrencia_{{ forloop.counter }}" class="sumario-link">
+        {{ forloop.counter }}.
+        {{ item.ocorrencia.natureza.nome|upper }} –
+        {{ item.ocorrencia.opm.municipio.nome|upper }}
+        ({{ item.sigla_opm_limpa|upper }})
+    </a>
+</p>
 {% endfor %}
 
+{% if ocorrencias_cvli %}
+<p>
+    <a href="#secao_cvli" class="sumario-link">
+        {{ numero_cvli }}. CRIMES VIOLENTOS LETAIS INTENCIONAIS (CVLI)
+    </a>
+</p>
+
+<p style="font-size: 0.8em; margin-left: 15px;">
+    Total de CVLI nas últimas 24h: {{ total_cvli }} ({{ cvli_resumo_opm }})
+</p>
+{% endif %}
+
 <div style="page-break-before: always;"></div>
+
+<!-- ================= OCORRÊNCIAS NORMAIS ================= -->
 
 {% for item in ocorrencias %}
 {% with ocorrencia=item.ocorrencia %}
 <div class="ocorrencia" id="ocorrencia_{{ forloop.counter }}"
      style="page-break-inside: avoid; margin-bottom: 25px;">
 
-{% with nr_ocorrencia=forloop.counter %}
-
 <p class="titulo">
-    {{ nr_ocorrencia }}. {{ ocorrencia.natureza.nome|upper }} –
+    {{ forloop.counter }}.
+    {{ ocorrencia.natureza.nome|upper }} –
     {{ ocorrencia.opm.municipio.nome|upper }}
     ({{ item.sigla_opm_limpa|upper }})
 </p>
 
-<div class="historico" style="text-align: justify;">
-    <p>
-        <strong>Em {{ ocorrencia.data_hora_bruta }},</strong>
-        na {{ ocorrencia.rua }}, n° {{ ocorrencia.numero }},
-        bairro {{ ocorrencia.bairro }},
-        na cidade de {{ ocorrencia.opm.municipio.nome }},
-        {{ ocorrencia.relato_historico }}
-        {{ item.imagens_html|safe }}
-    <a href="#inicio_sumario"
-       class="voltar-link"
-       style="font-size: 0.8em; text-decoration: none;">
-        (Voltar)
-    </a>
-    </p>
-    
+<p style="text-align: justify;">
+    <strong>Em {{ ocorrencia.data_hora_bruta }},</strong>
+    na {{ ocorrencia.rua }}, nº {{ ocorrencia.numero }},
+    bairro {{ ocorrencia.bairro }},
+    na cidade de {{ ocorrencia.opm.municipio.nome }},
+    {{ ocorrencia.relato_historico }}
+    <a href="#inicio_sumario" class="voltar-link">(VOLTAR)</a>
+</p>
 
-
-    {% if ocorrencia.envolvidos.all %}
+{% if ocorrencia.envolvidos.all %}
     <div class="detalhes-tecnicos"
          style="margin-top: 10px; margin-left: 20px; font-size: 0.9em;">
         <strong>Participante(s):</strong>
@@ -109,16 +121,120 @@
         {% endfor %}
     </div>
 
-
-
-</div>
-
-{% endwith %}
 </div>
 {% endwith %}
-{% empty %}
-<p>Este relatório não possui ocorrências.</p>
 {% endfor %}
+
+<!-- ================= SEÇÃO CVLI ================= -->
+
+{% if ocorrencias_cvli %}
+<div style="page-break-before: always;"></div>
+
+<div id="secao_cvli">
+
+<h2>
+    {{ numero_cvli }}. CRIMES VIOLENTOS LETAIS INTENCIONAIS (CVLI)
+</h2>
+
+<table style="width:100%; border-collapse: collapse; font-size: 0.9em;">
+    <thead>
+        <tr>
+            <th style="border:1px solid #000; padding:5px;">MUNICÍPIO</th>
+            <th style="border:1px solid #000; padding:5px;">OPM</th>
+            <th style="border:1px solid #000; padding:5px;">Nº VÍTIMAS</th>
+            <th style="border:1px solid #000; padding:5px;">INSTRUMENTO</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for linha in tabela_cvli %}
+        <tr>
+            <td style="border:1px solid #000; padding:5px;">
+                {{ linha.municipio|upper }}
+            </td>
+            <td style="border:1px solid #000; padding:5px;">
+                {{ linha.opm|upper }}
+            </td>
+            <td style="border:1px solid #000; padding:5px; text-align:center;">
+                {{ linha.vitimas }}
+            </td>
+            <td style="border:1px solid #000; padding:5px;">
+                {{ linha.instrumento }}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<br>
+
+<h3>
+    {{ numero_cvli }}.1 HISTÓRICO DOS CVLI
+</h3>
+
+{% for item in ocorrencias_cvli %}
+{% with ocorrencia=item.ocorrencia %}
+<p class="titulo">
+    {{ item.letra }})
+    {{ ocorrencia.opm.municipio.nome|upper }} –
+    {{ item.sigla_opm_limpa|upper }}
+</p>
+
+<p style="text-align: justify;">
+    <strong>Em {{ ocorrencia.data_hora_bruta }},</strong>
+    na {{ ocorrencia.rua }}, nº {{ ocorrencia.numero }},
+    bairro {{ ocorrencia.bairro }},
+    {{ ocorrencia.relato_historico }}
+    <a href="#inicio_sumario" class="voltar-link">(VOLTAR)</a>
+</p>
+
+{% if ocorrencia.envolvidos.all %}
+    <div class="detalhes-tecnicos"
+         style="margin-top: 10px; margin-left: 20px; font-size: 0.9em;">
+        <strong>Participante(s):</strong>
+        <ul style="list-style: none; padding: 0;">
+            {% for env in ocorrencia.envolvidos.all %}
+            <li>
+                * {{ env.nome|upper }},
+                {{ env.idade|default:"??" }} anos
+                ({{ env.get_tipo_participante_display }}).
+                Antecedentes:
+                {% if env.antecedentes == 'S' %}SIM{% else %}NÃO{% endif %}.
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if ocorrencia.apreensoes.all %}
+    <div class="detalhes-tecnicos"
+         style="margin-top: 5px; margin-left: 20px; font-size: 0.9em;">
+        <strong>Material Apreendido:</strong>
+        <ul style="list-style: none; padding: 0;">
+            {% for mat in ocorrencia.apreensoes.all %}
+            <li>
+                * {{ mat.quantidade }} {{ mat.unidade_medida }}
+                {{ mat.material_tipo }}.
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="galeria-imagens">
+        {% for imagem in item.imagens %}
+            <div class="bloco-imagem">
+                <img src="{{ imagem.uri }}" class="imagem-relatorio">
+                {% if imagem.legenda %}
+                    <p class="legenda-imagem">{{ imagem.legenda }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% endwith %}
+{% endfor %}
+
+</div>
+{% endif %}
 
 </body>
 </html>

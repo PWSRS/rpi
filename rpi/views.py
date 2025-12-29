@@ -3,6 +3,8 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 from pathlib import Path
+from collections import Counter
+
 
 # 2. Bibliotecas de terceiros (Third-party)
 from weasyprint import HTML, CSS
@@ -452,9 +454,12 @@ def deletar_materiais_apreendidos(request, apreensao_id):
 
 def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
     """
-    Gera o PDF do relatório diário (WeasyPrint),
-    resolvendo imagens estáticas e de mídia via file:// URI.
+    Gera o PDF do relatório diário utilizando WeasyPrint
     """
+
+    # ============================================================
+    # FUNÇÕES AUXILIARES
+    # ============================================================
 
     def formatar_data_militar(data):
         if not data:
@@ -466,65 +471,155 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
         }
         return f"{data.strftime('%d%H%M')}{meses[data.month]}{data.strftime('%y')}"
 
+    # Crimes considerados CVLI (por enquanto, lista simples)
+    CRIMES_CVLI = [
+        "HOMICÍDIO DOLOSO",
+        "FEMINICÍDIO",
+        "LATROCÍNIO",
+        "LESÃO CORPORAL SEGUIDA DE MORTE",
+    ]
+
+    # ============================================================
+    # CONSULTA DAS OCORRÊNCIAS
+    # ============================================================
+
     ocorrencias_qs = (
         relatorio_diario.ocorrencias
         .select_related("natureza", "opm", "opm__municipio")
-        .prefetch_related("envolvidos", "apreensoes__material_tipo", "imagens")
+        .prefetch_related("envolvidos", "apreensoes", "imagens")
         .order_by("data_hora_fato")
     )
 
-    ocorrencias_com_dados = []
+    ocorrencias_normais = []
+    ocorrencias_cvli = []
 
     for ocorrencia in ocorrencias_qs:
-        sigla_opm = ocorrencia.opm.sigla.split(" - ")[0] if ocorrencia.opm else ""
+        natureza_nome = ocorrencia.natureza.nome.upper()
 
-        imagens = []
-        for img in ocorrencia.imagens.all():
-            if img.imagem:
-                imagem_uri = urllib.parse.urljoin(
-                    "file:",
-                    urllib.request.pathname2url(img.imagem.path)
-                )
-                imagens.append({
-                    "legenda": img.legenda,
-                    "uri": imagem_uri,
-                })
-
-        ocorrencias_com_dados.append({
+        item = {
             "ocorrencia": ocorrencia,
-            "sigla_opm_limpa": sigla_opm,
-            "imagens": imagens,
+            "sigla_opm_limpa": ocorrencia.opm.sigla.split(" - ")[0]
+            if ocorrencia.opm else "",
+        }
+
+        if natureza_nome in CRIMES_CVLI:
+            ocorrencias_cvli.append(item)
+        else:
+            ocorrencias_normais.append(item)
+
+    # ============================================================
+    # NUMERAÇÃO DO RELATÓRIO
+    # ============================================================
+
+    numero_cvli = len(ocorrencias_normais) + 1
+
+    # Letras a), b), c)...
+    letras = "abcdefghijklmnopqrstuvwxyz"
+    for idx, item in enumerate(ocorrencias_cvli):
+        item["letra"] = letras[idx]
+
+    # ============================================================
+    # TABELA RESUMO CVLI
+    # ============================================================
+
+    tabela_cvli = []
+    contador_opm = Counter()
+
+    for item in ocorrencias_cvli:
+        ocorrencia = item["ocorrencia"]
+
+        municipio = ocorrencia.opm.municipio.nome if ocorrencia.opm else ""
+        opm = item["sigla_opm_limpa"]
+
+        contador_opm[opm] += 1
+
+        tabela_cvli.append({
+            "municipio": municipio,
+            "opm": opm,
+            "vitimas": 1,               # por ora fixo
+            "instrumento": "A DEFINIR", # placeholder
         })
 
+    total_cvli = len(ocorrencias_cvli)
+
+    cvli_resumo_opm = ", ".join(
+        f"{qtd} {opm}" for opm, qtd in contador_opm.items()
+    )
+
+    # ============================================================
+    # LOGO E CSS
+    # ============================================================
+
     logo_path = find("rpi/img/logo.png")
-    logo_uri = urllib.parse.urljoin(
-        "file:",
-        urllib.request.pathname2url(logo_path)
-    ) if logo_path else ""
+    logo_uri = (
+        urllib.parse.urljoin(
+            "file:",
+            urllib.request.pathname2url(logo_path)
+        )
+        if logo_path else ""
+    )
 
     css_path = find("rpi/css/rpi.css")
-    css_uri = urllib.parse.urljoin(
-        "file:",
-        urllib.request.pathname2url(css_path)
-    ) if css_path else ""
+    css_uri = (
+        urllib.parse.urljoin(
+            "file:",
+            urllib.request.pathname2url(css_path)
+        )
+        if css_path else ""
+    )
+
+    # ============================================================
+    # CONTEXTO DO TEMPLATE
+    # ============================================================
 
     context = {
         "relatorio": relatorio_diario,
-        "ocorrencias": ocorrencias_com_dados,
-        "data_inicio_militar": formatar_data_militar(relatorio_diario.data_inicio),
-        "data_fim_militar": formatar_data_militar(relatorio_diario.data_fim),
+
+        "ocorrencias": ocorrencias_normais,
+        "ocorrencias_cvli": ocorrencias_cvli,
+
+        "numero_cvli": numero_cvli,
+
+        "tabela_cvli": tabela_cvli,
+        "total_cvli": total_cvli,
+        "cvli_resumo_opm": cvli_resumo_opm,
+
+        "data_inicio_militar": formatar_data_militar(
+            relatorio_diario.data_inicio
+        ),
+        "data_fim_militar": formatar_data_militar(
+            relatorio_diario.data_fim
+        ),
+
         "logo_uri": logo_uri,
         "css_uri": css_uri,
     }
 
-    html_string = render_to_string("rpi/relatorio_pdf.html", context)
+    # ============================================================
+    # RENDERIZAÇÃO DO PDF
+    # ============================================================
 
-    pdf = HTML(string=html_string, base_url="file:///").write_pdf()
+    html_string = render_to_string(
+        "rpi/relatorio_pdf.html",
+        context
+    )
 
-    response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = "inline; filename=relatorio.pdf"
+    pdf = HTML(
+        string=html_string,
+        base_url="file:///"
+    ).write_pdf()
+
+    response = HttpResponse(
+        pdf,
+        content_type="application/pdf"
+    )
+    response["Content-Disposition"] = (
+        "inline; filename=relatorio.pdf"
+    )
 
     return response
+
+
 
 
 
