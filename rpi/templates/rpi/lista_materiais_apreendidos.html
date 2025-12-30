@@ -12,6 +12,29 @@
     </a>
 </div>
 
+<div class="card shadow-sm mb-4 border-primary">
+    <div class="card-header bg-primary text-white py-2">
+        <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Filtrar por Período</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="data_inicio" class="form-label small fw-bold">Data Inicial:</label>
+                <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+            </div>
+            <div class="col-md-4">
+                <label for="data_fim" class="form-label small fw-bold">Data Final:</label>
+                <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i> Filtrar Materiais
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card shadow-sm">
     <div class="card-header bg-dark text-white">
         <h5 class="mb-0">Inventário de Itens Registrados</h5>
@@ -52,7 +75,8 @@
                                     data-bs-toggle="modal" 
                                     data-bs-target="#deleteConfirmModal" 
                                     data-delete-url="{% url 'apreensao_delete' item.id %}" 
-                                    data-ocorrencia-id="{{ item.id }}"
+                                    data-item-id="{{ item.id }}"
+                                    data-item-nome="{{ item.material_tipo.nome }}"
                                     title="Excluir Material">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
@@ -61,7 +85,7 @@
                     {% empty %}
                     <tr>
                         <td colspan="5" class="text-center py-4 text-muted">
-                            Nenhum material encontrado no sistema.
+                            Nenhum material encontrado para o período selecionado.
                         </td>
                     </tr>
                     {% endfor %}
@@ -80,8 +104,8 @@
             </div>
             <div class="modal-body">
                 <p>Você tem certeza que deseja excluir o registro deste material?</p>
-                <p><strong>Item:</strong> <span id="ocorrenciaIdPlaceholder" class="badge bg-secondary"></span></p>
-                <p class="text-danger small">Esta ação não poderá ser desfeita e o item será removido dos relatórios.</p>
+                <p><strong>Item:</strong> <span id="itemNamePlaceholder" class="badge bg-secondary"></span></p>
+                <p class="text-danger small">Esta ação não poderá ser desfeita.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -104,10 +128,11 @@
         deleteModal.addEventListener('show.bs.modal', function (event) {
             var button = event.relatedTarget;
             var deleteUrl = button.getAttribute('data-delete-url');
-            var itemId = button.getAttribute('data-ocorrencia-id');
+            var itemNome = button.getAttribute('data-item-nome');
+            var itemId = button.getAttribute('data-item-id');
 
             document.getElementById('deleteForm').setAttribute('action', deleteUrl);
-            document.getElementById('ocorrenciaIdPlaceholder').textContent = 'ID #' + itemId;
+            document.getElementById('itemNamePlaceholder').textContent = itemNome + ' (ID #' + itemId + ')';
         });
     }
 </script>

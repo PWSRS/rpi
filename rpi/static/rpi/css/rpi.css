@@ -26,6 +26,42 @@ h2 {
     font-weight: bold;
     text-align: center;
 }
+
+table tr{
+    text-align: center;
+}
+
+/* Configuração Geral (vale para todas as páginas) */
+    @page {
+        size: A4;
+        margin: 2cm;
+
+        @bottom-right {
+            content: "Página " counter(page) " de " counter(pages);
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            color: #666;
+        }
+
+        @bottom-left {
+            content: "RPI/ARI SUL";
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+            color: #999;
+        }
+    }
+
+    /* Configuração Específica para a Primeira Página (Capa) */
+    /* Isso "limpa" o conteúdo definido acima apenas na pág 1 */
+    @page :first {
+        @bottom-left { 
+            content: ""; 
+        }
+        @bottom-right { 
+            content: ""; 
+        }
+    }
+
 /* Estilo para dar aparência de link ao sumário */
 .sumario-link {
     text-decoration: underline; /* Adiciona o sublinhado */
@@ -162,4 +198,19 @@ h2 {
     font-size: 12pt;
     font-weight: bold;
     margin-bottom: 10px;
+}
+
+/* Evita quebras de página dentro de tabelas ou blocos de ocorrência */
+.tabela-sumario, .bloco-ocorrencia {
+    page-break-inside: avoid;
+}
+
+/* Garante que a quebra manual não gere duplicidade */
+.page-break {
+    display: block;
+    page-break-before: always;
+}
+.tabela-sumario {
+    width: 100%;
+    margin-bottom: 0 !important; /* Remove margem que pode empurrar a quebra */
 }

@@ -53,6 +53,7 @@ class OcorrenciaForm(forms.ModelForm):
             "tipo_acao",
             "relato_historico",
             "resumo_cabecalho",
+            "instrumento",
         ]
         widgets = {
             "relato_historico": forms.Textarea(
@@ -76,12 +77,13 @@ class OcorrenciaForm(forms.ModelForm):
 class OcorrenciaImagemForm(forms.ModelForm):
     class Meta:
         model = OcorrenciaImagem
-        fields = ('imagem', 'legenda')
+        fields = ("imagem", "legenda")
         widgets = {
             # ESSENCIAL: Garante que o input de arquivo tenha o estilo form-control
-            'imagem': forms.FileInput(attrs={'class': 'form-control'}), 
-            'legenda': forms.TextInput(attrs={'class': 'form-control'}),
+            "imagem": forms.FileInput(attrs={"class": "form-control"}),
+            "legenda": forms.TextInput(attrs={"class": "form-control"}),
         }
+
 
 # --- 2. FÁBRICAS DE FORMSETS ---
 
@@ -94,10 +96,9 @@ ApreensaoFormSet = inlineformset_factory(
 )
 
 ImagemFormSet = inlineformset_factory(
-    Ocorrencia, 
-    OcorrenciaImagem, 
-    form=OcorrenciaImagemForm, # AGORA USAMOS A CLASSE CUSTOMIZADA
-    extra=1, 
-    can_delete=True
+    Ocorrencia,
+    OcorrenciaImagem,
+    form=OcorrenciaImagemForm,  # AGORA USAMOS A CLASSE CUSTOMIZADA
+    extra=1,
+    can_delete=True,
 )
-

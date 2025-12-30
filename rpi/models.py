@@ -134,39 +134,37 @@ class RelatorioDiario(models.Model):
 
 # --- ENTIDADE PRINCIPAL E RELACIONADAS ---
 
+
 class OcorrenciaImagem(models.Model):
     """
     Modelo para armazenar múltiplas imagens relacionadas a uma ocorrência.
     O relacionamento ForeignKey com Ocorrencia permite o 'Um-para-Muitos'.
     """
-    
+
     # CRÍTICO: Relacionamento One-to-Many com Ocorrencia
     ocorrencia = models.ForeignKey(
-        'Ocorrencia', # Usa string se a classe Ocorrencia estiver abaixo ou em outro arquivo
-        on_delete=models.CASCADE, 
-        related_name='imagens', # Nome usado para acessar as imagens a partir da Ocorrencia
-        verbose_name="Ocorrência"
+        "Ocorrencia",  # Usa string se a classe Ocorrencia estiver abaixo ou em outro arquivo
+        on_delete=models.CASCADE,
+        related_name="imagens",  # Nome usado para acessar as imagens a partir da Ocorrencia
+        verbose_name="Ocorrência",
     )
-    
+
     # Campo de Imagem: É a imagem real, stored no MEDIA_ROOT/ocorrencias/imagens/
     imagem = models.ImageField(
-        upload_to='ocorrencias/imagens/', 
+        upload_to="ocorrencias/imagens/",
         verbose_name="Imagem",
-        null=True, # Permite nulo no DB (Opcional)
-        blank=True # Permite campo vazio no formulário (Opcional)
+        null=True,  # Permite nulo no DB (Opcional)
+        blank=True,  # Permite campo vazio no formulário (Opcional)
     )
-    
+
     legenda = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True, 
-        verbose_name="Legenda"
+        max_length=255, blank=True, null=True, verbose_name="Legenda"
     )
-    
+
     class Meta:
         verbose_name = "Imagem da Ocorrência"
         verbose_name_plural = "Imagens da Ocorrência"
-        ordering = ['id'] # Ordena as imagens pela ordem de inserção
+        ordering = ["id"]  # Ordena as imagens pela ordem de inserção
 
     def __str__(self):
         return f"Imagem de Ocorrência {self.ocorrencia.pk} ({self.legenda or 'Sem Legenda'})"
@@ -178,6 +176,22 @@ class Ocorrencia(models.Model):
         ("C", "Consumado"),
         ("T", "Tentado"),
     ]
+
+    INSTRUMENTO_CHOICES = [
+        ("ARMA_DE_FOGO", "ARMA DE FOGO"),
+        ("ARMA_BRANCA", "ARMA BRANCA"),
+        ("OBJETO_CONTUNDENTE", "OBJETO CONTUNDENTE"),
+        ("ASFIXIA", "ASFIXIA / ESTRANGULAMENTO"),
+        ("OUTROS", "OUTROS"),
+    ]
+
+    instrumento = models.CharField(
+        max_length=50,
+        choices=INSTRUMENTO_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="Instrumento utilizado (para CVLI)",
+    )
 
     tipo_acao = models.CharField(
         max_length=1, choices=TIPO_ACAO_CHOICES, default="C", verbose_name="Ação"
