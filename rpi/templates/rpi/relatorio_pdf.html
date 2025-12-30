@@ -132,7 +132,7 @@
 
 <div id="secao_cvli">
 
-<h2>
+<h2 class="titulo-secao-cvli">
     {{ numero_cvli }}. CRIMES VIOLENTOS LETAIS INTENCIONAIS (CVLI)
 </h2>
 
@@ -175,9 +175,11 @@
 {% with ocorrencia=item.ocorrencia %}
 <p class="titulo">
     {{ item.letra }})
-    {{ ocorrencia.opm.municipio.nome|upper }} –
-    {{ item.sigla_opm_limpa|upper }}
+    {{ ocorrencia.natureza.nome|upper }} –
+    {{ ocorrencia.opm.municipio.nome|upper }}
+    ({{ item.sigla_opm_limpa|upper }})
 </p>
+
 
 <p style="text-align: justify;">
     <strong>Em {{ ocorrencia.data_hora_bruta }},</strong>
@@ -219,7 +221,7 @@
         </ul>
     </div>
     {% endif %}
-
+    
     <div class="galeria-imagens">
         {% for imagem in item.imagens %}
             <div class="bloco-imagem">

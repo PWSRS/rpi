@@ -65,20 +65,20 @@ def finalizar_relatorio(request, pk):
             messages.error(request, "Não possui ocorrências.")
             return redirect("ocorrencia_list")
 
-        # 1. FINALIZAÇÃO
         relatorio.finalizado = True
         relatorio.data_fim = timezone.now()
         relatorio.save()
 
         messages.success(
-            request, f"Relatório {relatorio.nr_relatorio} finalizado com sucesso!"
+            request,
+            f"Relatório {relatorio.nr_relatorio} finalizado com sucesso!"
         )
 
-        # 2. REDIRECIONA PARA O DOWNLOAD (Chama a URL de download)
-        # Assumindo que sua URL de download seja: path('relatorio/<int:pk>/download/', ...)
-        return redirect("download_pdf_relatorio", pk=relatorio.pk) 
+        # Volta para a tela do relatório
+        return redirect("ocorrencia_list")
 
     return redirect("ocorrencia_list")
+
 
 def download_pdf_relatorio(request, pk):
     """
@@ -496,11 +496,23 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
     for ocorrencia in ocorrencias_qs:
         natureza_nome = ocorrencia.natureza.nome.upper()
 
+        imagens = []
+        for img in ocorrencia.imagens.all():
+            if img.imagem and img.imagem.path:
+                imagens.append({
+                    "uri": Path(img.imagem.path).as_uri(),
+                    "legenda": img.legenda,
+                })
+
         item = {
             "ocorrencia": ocorrencia,
-            "sigla_opm_limpa": ocorrencia.opm.sigla.split(" - ")[0]
-            if ocorrencia.opm else "",
+            "sigla_opm_limpa": (
+                ocorrencia.opm.sigla.split(" - ")[0]
+                if ocorrencia.opm else ""
+            ),
+            "imagens": imagens,
         }
+
 
         if natureza_nome in CRIMES_CVLI:
             ocorrencias_cvli.append(item)

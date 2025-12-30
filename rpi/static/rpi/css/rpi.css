@@ -122,34 +122,44 @@ h2 {
     padding-left: 1.5em;
     display: block;
 }
-/* Estilos para galeria de imagens */
+/* ===== GALERIA DE IMAGENS ===== */
+
 .galeria-imagens {
-    display: table;
-    width: 100%;
-    text-align: center;
-    margin-top: 2px;
-}
-/* Estilos para cada bloco de imagem */
-.bloco-imagem {
-    display: table-cell;
-    width: 50%;
-    vertical-align: top;
-    padding: 1px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* centraliza no meio da página */
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 6px;
     page-break-inside: avoid;
 }
-/* Estilos para as imagens no relatório */
+
+.bloco-imagem {
+    width: 48%; /* máximo 2 por linha */
+    text-align: center;
+    page-break-inside: avoid;
+}
+
 .imagem-relatorio {
     max-width: 7cm;
     max-height: 5cm;
+    width: 100%;
     height: auto;
     border: 0.9pt solid #000;
     padding: 1px;
+    margin: 0 auto; /* centraliza a imagem */
     display: block;
-    margin: 0 auto;
 }
-/* Estilos para legendas das imagens */
+
 .legenda-imagem {
     font-size: 9pt;
     margin-top: 2px;
     color: #000;
+}
+
+.titulo-secao-cvli {
+    text-align: left;
+    font-size: 12pt;
+    font-weight: bold;
+    margin-bottom: 10px;
 }
