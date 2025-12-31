@@ -6,6 +6,39 @@
     <title>Relatório {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}</title>
     <link rel="stylesheet" href="{{ css_uri }}">
 </head>
+<style>
+    /* Configuração Geral (vale para todas as páginas) */
+@page {
+    size: A4;
+    margin: 2cm;
+
+    @bottom-right {
+        content: 'Página ' counter(page) ' de ' counter(pages);
+        font-family: Arial, sans-serif;
+        font-size: 10pt;
+        color: #666;
+    }
+
+    @bottom-left {
+        content: 'RPI Nº {{nr_relatorio}}/ARI SUL - SISTEMA DE INTELIGÊNCIA - BRIGADA MILITAR';
+        font-family: Arial, sans-serif;
+        font-size: 9pt;
+        color: #999;
+    }
+}
+
+/* Configuração Específica para a Primeira Página (Capa) */
+/* Isso "limpa" o conteúdo definido acima apenas na pág 1 */
+@page :first {
+    @bottom-left {
+        content: '';
+    }
+    @bottom-right {
+        content: '';
+    }
+}
+
+</style>
 <body>
 
 <header>

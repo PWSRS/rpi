@@ -42,7 +42,7 @@ class EnvolvidoForm(forms.ModelForm):
 
 class OcorrenciaForm(forms.ModelForm):
     class Meta:
-        model = Ocorrencia  # 🚨 ISSO É O QUE ESTAVA FALTANDO E GERANDO O ERRO
+        model = Ocorrencia
         fields = [
             "data_hora_bruta",
             "natureza",

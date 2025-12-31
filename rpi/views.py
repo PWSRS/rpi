@@ -663,6 +663,8 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
         "data_fim_militar": formatar_data_militar(relatorio_diario.data_fim),
         "logo_uri": logo_uri,
         "css_uri": css_uri,
+        "nr_relatorio": f"{numero_cvli:03d}/{relatorio_diario.ano_criacao}",
+        
     }
 
     # ============================================================
