@@ -170,24 +170,27 @@ class OcorrenciaImagem(models.Model):
         return f"Imagem de Ocorrência {self.ocorrencia.pk} ({self.legenda or 'Sem Legenda'})"
 
 
+class Instrumento(models.Model):
+    nome = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nome
+
+    class Meta:
+        verbose_name = "Instrumento"
+        verbose_name_plural = "Instrumentos"
+        ordering = ["nome"]
+
+
 class Ocorrencia(models.Model):
 
     TIPO_ACAO_CHOICES = [
         ("C", "Consumado"),
         ("T", "Tentado"),
     ]
-
-    INSTRUMENTO_CHOICES = [
-        ("ARMA_DE_FOGO", "ARMA DE FOGO"),
-        ("ARMA_BRANCA", "ARMA BRANCA"),
-        ("OBJETO_CONTUNDENTE", "OBJETO CONTUNDENTE"),
-        ("ASFIXIA", "ASFIXIA / ESTRANGULAMENTO"),
-        ("OUTROS", "OUTROS"),
-    ]
-
-    instrumento = models.CharField(
-        max_length=50,
-        choices=INSTRUMENTO_CHOICES,
+    instrumento = models.ForeignKey(
+        Instrumento,
+        on_delete=models.SET_NULL,  # Se o instrumento for deletado, a ocorrência permanece como "null"
         null=True,
         blank=True,
         verbose_name="Instrumento utilizado (para CVLI)",

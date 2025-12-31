@@ -1,7 +1,7 @@
 # 1. Bibliotecas padrão do Python (Standard Library)
 import urllib.parse
 import urllib.request
-from datetime import datetime
+from datetime import datetime, time
 from pathlib import Path
 from collections import Counter
 
@@ -61,19 +61,21 @@ def finalizar_relatorio(request, pk):
     )
 
     if request.method == "POST":
+        # Trava de segurança: impede finalizar sem dados
         if not relatorio.ocorrencias.exists():
-            messages.error(request, "Não possui ocorrências.")
+            messages.error(
+                request, "Não é possível finalizar um relatório sem ocorrências."
+            )
             return redirect("ocorrencia_list")
 
         relatorio.finalizado = True
-        relatorio.data_fim = timezone.now()
+        # NÃO alteramos data_fim aqui, mantemos as 07:00 fixas
         relatorio.save()
 
         messages.success(
-            request, f"Relatório {relatorio.nr_relatorio} finalizado com sucesso!"
+            request,
+            f"Relatório {relatorio.nr_relatorio}/{relatorio.ano_criacao} finalizado com sucesso!",
         )
-
-        # Volta para a tela do relatório
         return redirect("ocorrencia_list")
 
     return redirect("ocorrencia_list")
@@ -98,27 +100,23 @@ def download_pdf_relatorio(request, pk):
 # NOVO: Reverte o status de finalização do relatório para permitir a edição
 @login_required
 def reabrir_relatorio(request, pk):
-    """
-    Permite que um usuário reabra um relatório finalizado (finalizado=False)
-    para corrigir ou adicionar ocorrências.
-    """
     relatorio = get_object_or_404(
         RelatorioDiario, pk=pk, usuario_responsavel=request.user
     )
 
     if request.method == "POST":
         relatorio.finalizado = False
-        relatorio.data_fim = None
+        # RETIFICAÇÃO CRÍTICA: Removido 'data_fim = None'
+        # Mantemos a data_fim original (07:00 do dia seguinte) para não invalidar o banco
         relatorio.save()
 
         messages.warning(
             request,
             f"Relatório {relatorio.nr_relatorio} foi REABERTO para edição. Lembre-se de FINALIZAR novamente!",
         )
-        return redirect("ocorrencia_list")  # Redirecionamento simples após a ação POST
+        return redirect("ocorrencia_list")
 
     return redirect("ocorrencia_list")
-
 
 # NOVO: Permite reexportar o PDF mesmo que o relatório esteja finalizado
 @login_required
@@ -149,26 +147,42 @@ def reexportar_pdf(request, pk):
 
 @login_required
 def iniciar_dia(request):
-    relatorio_aberto = RelatorioDiario.obter_relatorio_atual(request.user)
+    # BUSCA EXPLÍCITA: Verifica se já existe um relatório ABERTO para o usuário
+    relatorio_aberto = RelatorioDiario.objects.filter(
+        usuario_responsavel=request.user, finalizado=False
+    ).last()
 
     if request.method == "POST" and not relatorio_aberto:
-        # Pega o último número do ano atual para incrementar
-        ultimo_relatorio = (
-            RelatorioDiario.objects.filter(ano_criacao=timezone.now().year)
+        agora = timezone.now()
+
+        # 1. FIXA O PERÍODO: 07:00 de hoje até 07:00 de amanhã
+        inicio_plantao = timezone.make_aware(
+            datetime.combine(agora.date(), time(7, 0, 0))
+        )
+        fim_plantao = inicio_plantao + timezone.timedelta(days=1)
+
+        # 2. LÓGICA DE INCREMENTO ANUAL (Reset automático)
+        ano_atual = agora.year
+        ultimo = (
+            RelatorioDiario.objects.filter(ano_criacao=ano_atual)
             .order_by("nr_relatorio")
             .last()
         )
+        proximo_numero = (ultimo.nr_relatorio + 1) if ultimo else 1
 
-        proximo_numero = (ultimo_relatorio.nr_relatorio + 1) if ultimo_relatorio else 1
-
+        # 3. CRIAÇÃO DO RELATÓRIO
         relatorio_aberto = RelatorioDiario.objects.create(
             nr_relatorio=proximo_numero,
-            ano_criacao=timezone.now().year,
-            data_inicio=timezone.now(),
-            data_fim=timezone.now() + timezone.timedelta(hours=24),
+            ano_criacao=ano_atual,
+            data_inicio=inicio_plantao,
+            data_fim=fim_plantao,
             usuario_responsavel=request.user,
+            finalizado=False,  # Garante que inicie aberto
         )
-        messages.success(request, f"Relatório {proximo_numero} iniciado!")
+
+        messages.success(
+            request, f"Relatório {proximo_numero}/{ano_atual} iniciado com sucesso!"
+        )
         return redirect("ocorrencia_create")
 
     return render(request, "rpi/iniciar_dia.html", {"relatorio": relatorio_aberto})
@@ -181,34 +195,48 @@ class OcorrenciaListView(LoginRequiredMixin, ListView):
     model = Ocorrencia
     template_name = "rpi/ocorrencia_list.html"
     context_object_name = "ocorrencias"
-    ordering = ["-data_hora_fato"]
 
     def get_queryset(self):
-        """
-        Retorna apenas as ocorrências vinculadas ao relatório atual do usuário.
-        """
-        relatorio_atual = (
-            RelatorioDiario.objects.filter(usuario_responsavel=self.request.user)
+        # 1. Busca APENAS o relatório que está ABERTO agora
+        relatorio_aberto = RelatorioDiario.objects.filter(
+            usuario_responsavel=self.request.user, finalizado=False
+        ).last()
+
+        # 2. Se houver um aberto, mostra apenas as ocorrências dele
+        if relatorio_aberto:
+            return relatorio_aberto.ocorrencias.all().order_by("-data_hora_fato")
+
+        # 3. Se NÃO houver nenhum aberto (plantão finalizado e nenhum novo iniciado),
+        # você pode optar por mostrar as do ÚLTIMO finalizado para não ver a tela vazia,
+        # OU retornar vazio para forçar o início de um novo dia.
+        ultimo_finalizado = (
+            RelatorioDiario.objects.filter(
+                usuario_responsavel=self.request.user, finalizado=True
+            )
             .order_by("-data_inicio")
             .first()
         )
 
-        if not relatorio_atual:
-            return Ocorrencia.objects.none()
+        if ultimo_finalizado:
+            return ultimo_finalizado.ocorrencias.all().order_by("-data_hora_fato")
 
-        # Retorna SOMENTE as ocorrências deste relatório
-        return relatorio_atual.ocorrencias.all().order_by("-data_hora_fato")
+        return Ocorrencia.objects.none()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # Mantém o relatório atual disponível no template
-        context["relatorio_atual"] = (
-            RelatorioDiario.objects.filter(usuario_responsavel=self.request.user)
+        # Busca o mesmo relatório para o template decidir se mostra os botões de Editar/Excluir
+        relatorio = (
+            RelatorioDiario.objects.filter(
+                usuario_responsavel=self.request.user, finalizado=False
+            ).last()
+            or RelatorioDiario.objects.filter(
+                usuario_responsavel=self.request.user, finalizado=True
+            )
             .order_by("-data_inicio")
             .first()
         )
 
+        context["relatorio_atual"] = relatorio
         return context
 
 
@@ -219,11 +247,14 @@ class OcorrenciaCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("ocorrencia_list")
 
     def dispatch(self, request, *args, **kwargs):
-        self.relatorio_atual = RelatorioDiario.obter_relatorio_atual(request.user)
+        # Usa o filtro de finalizado=False para ter certeza que o relatório permite novas inserções
+        self.relatorio_atual = RelatorioDiario.objects.filter(
+            usuario_responsavel=request.user, finalizado=False
+        ).last()
+
         if not self.relatorio_atual:
             messages.warning(
-                request,
-                "Você precisa iniciar um relatório antes de cadastrar ocorrências.",
+                request, "Não há relatório aberto. Inicie um novo plantão."
             )
             return redirect("iniciar_dia")
         return super().dispatch(request, *args, **kwargs)
@@ -617,7 +648,7 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
                 "opm": opm,
                 "vitimas": n_vitimas,  # por ora fixo
                 "instrumento": (
-                    ocorrencia.get_instrumento_display()
+                    ocorrencia.instrumento.nome
                     if ocorrencia.instrumento
                     else "NÃO INFORMADO"
                 ),  # placeholder
@@ -664,7 +695,6 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
         "logo_uri": logo_uri,
         "css_uri": css_uri,
         "nr_relatorio": f"{numero_cvli:03d}/{relatorio_diario.ano_criacao}",
-        
     }
 
     # ============================================================

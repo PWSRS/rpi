@@ -1,6 +1,13 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Ocorrencia, Envolvido, RelatorioDiario, Apreensao, OcorrenciaImagem
+from .models import (
+    Ocorrencia,
+    Envolvido,
+    RelatorioDiario,
+    Apreensao,
+    OcorrenciaImagem,
+    Instrumento,
+)
 
 # --- 1. CLASSES DE FORMULÁRIOS ---
 
@@ -46,31 +53,46 @@ class OcorrenciaForm(forms.ModelForm):
         fields = [
             "data_hora_bruta",
             "natureza",
+            "tipo_acao",
+            "instrumento",  # Agora ele carregará todos os Instrumentos do banco
             "opm",
             "rua",
             "numero",
             "bairro",
-            "tipo_acao",
-            "relato_historico",
             "resumo_cabecalho",
-            "instrumento",
+            "relato_historico",
         ]
         widgets = {
             "relato_historico": forms.Textarea(
-                attrs={"rows": 6, "placeholder": "Descrição..."}
+                attrs={"rows": 5, "placeholder": "Relate detalhadamente o fato..."}
+            ),
+            "resumo_cabecalho": forms.TextInput(
+                attrs={"placeholder": "Breve título para o sumário"}
             ),
             "data_hora_bruta": forms.TextInput(
-                attrs={"placeholder": "Ex: 151435DEZ25", "maxlength": "11"}
+                attrs={"placeholder": "Ex: 151435DEZ25", "maxlength": "15"}
             ),
+            "rua": forms.TextInput(attrs={"placeholder": "Nome da rua/avenida"}),
+            "numero": forms.TextInput(attrs={"placeholder": "Nº"}),
+            "bairro": forms.TextInput(attrs={"placeholder": "Bairro"}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Otimização: Ordenar os instrumentos por nome no dropdown do formulário
+        if "instrumento" in self.fields:
+            self.fields["instrumento"].queryset = Instrumento.objects.all().order_by(
+                "nome"
+            )
+            self.fields["instrumento"].empty_label = "Selecione o instrumento..."
+
+        # Aplicação automática de classes CSS (Bootstrap)
         for field_name, field in self.fields.items():
             widget = field.widget
             if isinstance(widget, (forms.Select, forms.SelectMultiple)):
                 widget.attrs["class"] = "form-select"
-            elif not isinstance(widget, forms.HiddenInput):
+            elif not isinstance(widget, (forms.HiddenInput, forms.CheckboxInput)):
                 widget.attrs["class"] = "form-control"
 
 

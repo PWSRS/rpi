@@ -9,6 +9,7 @@ from .models import (
     Envolvido,
     Apreensao,
     MaterialApreendidoTipo,
+    Instrumento,
 )
 
 # ----------------- 1. CONFIGURAÇÃO DE INLINES -----------------
@@ -92,31 +93,45 @@ class MaterialApreendidoTipoAdmin(admin.ModelAdmin):
     list_display = ("nome",)
     search_fields = ("nome",)
 
+
 class OcorrenciaImagemInline(admin.TabularInline):
     """Configuração para cadastrar múltiplas imagens em linha."""
+
     model = OcorrenciaImagem
-    extra = 1 # Quantidade de formulários extras para imagens
-    fields = ('imagem', 'legenda',)
+    extra = 1  # Quantidade de formulários extras para imagens
+    fields = (
+        "imagem",
+        "legenda",
+    )
+
 
 # ----------------- 3. MODEL ADMIN PRINCIPAL (OCORRENCIA) -----------------
 
 
 @admin.register(Ocorrencia)
 class OcorrenciaAdmin(admin.ModelAdmin):
-    # Campos exibidos na lista principal (tabela)
+    # 1. Campos exibidos na listagem principal
     list_display = (
         "data_hora_fato",
         "natureza",
+        "tipo_acao",    # Adicionei para você ver se é Consumado/Tentado
+        "instrumento",   # O novo campo ForeignKey
         "opm",
         "relatorio_diario",
-        "resumo_cabecalho",
     )
 
-    # Filtros laterais
-    list_filter = ("natureza__tipo_impacto", "opm__municipio", "opm", "natureza")
-    inlines = [OcorrenciaImagemInline]
+    # 2. Filtros laterais
+    # Adicionado 'instrumento' e 'tipo_acao' nos filtros
+    list_filter = (
+        "natureza__tipo_impacto", 
+        "tipo_acao",
+        "instrumento", 
+        "opm__municipio", 
+        "opm", 
+        "natureza"
+    )
 
-    # Campos que permitem a busca rápida
+    # 3. Campos de busca
     search_fields = (
         "relato_historico",
         "resumo_cabecalho",
@@ -124,37 +139,50 @@ class OcorrenciaAdmin(admin.ModelAdmin):
         "natureza__nome",
     )
 
-    # Definição do layout do formulário de cadastro/edição
+    # 4. Layout do formulário (Fieldsets)
     fieldsets = (
         (
             "Dados da Ocorrência",
             {
                 "fields": (
-                    # Usando uma tupla para agrupar na mesma linha
                     ("data_hora_fato", "data_hora_bruta"),
-                    "natureza",
+                    ("natureza", "tipo_acao"), # Agrupados na mesma linha
+                    "instrumento",              # Novo campo aqui
                     "opm",
                     "relatorio_diario",
                 )
             },
         ),
         (
+            "Localização",
+            {
+                "fields": (("rua", "numero"), "bairro"),
+            },
+        ),
+        (
             "Relato e Resumo",
             {
                 "fields": ("relato_historico", "resumo_cabecalho"),
-                "classes": ("wide",),  # Ocupa a largura total
+                "classes": ("wide",),
             },
         ),
-        # Você pode adicionar um fieldset para endereço, se for parte do modelo Ocorrencia
-        # ('Localização', {'fields': ('rua', 'numero', 'bairro')}),
     )
 
-    # Incluindo os inlines de Envolvido e Apreensão (MODIFICAÇÃO PRINCIPAL)
-    inlines = [EnvolvidoInline, ApreensaoInline]
+    # 5. Inlines (Agrupados em uma única lista)
+    inlines = [OcorrenciaImagemInline, EnvolvidoInline, ApreensaoInline]
 
-    # ORDENAÇÃO: Ordena as ocorrências na listagem pela data mais recente
+    # 6. Ordenação
     ordering = ("-data_hora_fato",)
 
-    # Otimização para campos ForeignKey (autocomplete)
-    # Garante que campos com muitas opções sejam de busca
-    autocomplete_fields = ["opm", "relatorio_diario", "natureza"]
+    # 7. Autocomplete (Otimização)
+    # IMPORTANTE: Para o autocomplete do instrumento funcionar, 
+    # você deve registrar o InstrumentoAdmin com search_fields=['nome']
+    autocomplete_fields = ["opm", "relatorio_diario", "natureza", "instrumento"]
+
+@admin.register(Instrumento)
+class InstrumentoAdmin(admin.ModelAdmin):
+    list_display = ("nome",)
+    search_fields = ("nome",)
+
+
+

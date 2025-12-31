@@ -69,10 +69,16 @@
                     <label for="{{ form.resumo_cabecalho.id_for_label }}" class="form-label required">Título Sumário:</label>
                     {{ form.resumo_cabecalho }}
                 </div>
-
                 <div class="col-md-6 col-lg-3 mb-3" id="div_instrumento" style="display: none;">
-                    <label for="{{ form.instrumento.id_for_label }}" class="form-label fw-bold text-danger text-truncate">Instrumento (CVLI):</label>
+                    <label for="{{ form.instrumento.id_for_label }}" class="form-label fw-bold text-danger">
+                        <i class="bi bi-shield-fill-exclamation"></i> Instrumento (CVLI)
+                    </label>
                     {{ form.instrumento }}
+                    {% if form.instrumento.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.instrumento.errors }}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
                 
