@@ -121,16 +121,37 @@
                                 <label for="{{ form.tipo_acao.id_for_label }}" class="form-label">Tipo do Fato:</label>
                                 {{ form.tipo_acao }}
                             </div>
+                        
                             <div class="col-md-6 col-lg-7 mb-3" id="div_titulo_sumario">
                                 <label for="{{ form.resumo_cabecalho.id_for_label }}" class="form-label required">Título Sumário:</label>
                                 {{ form.resumo_cabecalho }}
                             </div>
+
                             <div class="col-md-6 col-lg-3 mb-3" id="div_instrumento" style="display: none;">
-                                <label class="form-label fw-bold text-danger"><i class="bi bi-shield-fill-exclamation"></i> Instrumento (CVLI)</label>
-                                {{ form.instrumento }}
+                                <label class="form-label fw-bold text-danger">
+                                    <i class="bi bi-shield-fill-exclamation"></i> Instrumentos Usados (CVLI)
+                                </label>
+                                
+                                <div class="input-group">
+                                    {{ form.instrumento }}
+                                    
+                                    <button class="btn btn-outline-secondary" type="button" onclick="abrirModalInstrumento()" title="Cadastrar novo instrumento">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        
+
+                        <div id="modalInstrumento" style="display:none; position:fixed; top:30%; left:35%; background:white; border:1px solid #ccc; padding:20px; z-index:2000; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); min-width: 300px;">
+                            <h4 class="mb-3">Novo Instrumento</h4>
+                            <input type="text" id="novo_nome_instrumento" class="form-control mb-3" placeholder="Ex: Barra de Ferro">
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="fecharModalInstrumento()">Cancelar</button>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="salvarInstrumentoRapido()">Salvar</button>
+                            </div>
+                        </div>
+                        <div id="overlayInst" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1999;"></div>
+                                            
                         <div class="row">
                             <div class="col-12 mb-3">
                                 <label for="{{ form.relato_historico.id_for_label }}" class="form-label required">Histórico da Ocorrência:</label>
@@ -423,5 +444,61 @@ function inicializarSelects() {
         }
     });
 });
+function abrirModalInstrumento() {
+    document.getElementById('modalInstrumento').style.display = 'block';
+    document.getElementById('overlayInst').style.display = 'block';
+}
+
+function fecharModalInstrumento() {
+    document.getElementById('modalInstrumento').style.display = 'none';
+    document.getElementById('overlayInst').style.display = 'none';
+}
+
+function salvarInstrumentoRapido() {
+    const nomeInput = document.getElementById('novo_nome_instrumento');
+    const nome = nomeInput.value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    if (!nome) {
+        alert("Digite o nome do instrumento.");
+        return;
+    }
+
+    fetch("{% url 'adicionar_instrumento_ajax' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": csrfToken
+        },
+        body: "nome=" + encodeURIComponent(nome)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.id) {
+            // Tente capturar o select (ajuste o ID se necessário para id_instrumento)
+            const campoSelect = $('#id_instrumento'); 
+
+            if (campoSelect.length > 0) {
+                // Criar a nova opção: new Option(texto, valor, defaultSelected, selected)
+                const novaOpcao = new Option(data.nome, data.id, true, true);
+                
+                // Adiciona ao select, dispara o change para o Select2 atualizar e foca nele
+                campoSelect.append(novaOpcao).trigger('change');
+                
+                console.log("Item adicionado com sucesso:", data.nome);
+            } else {
+                console.error("Erro: Campo #id_instrumento não encontrado no HTML.");
+            }
+            
+            nomeInput.value = '';
+            fecharModalInstrumento();
+        } else {
+            alert("Erro ao salvar: " + (data.erro || "Erro desconhecido"));
+        }
+    })
+    .catch(error => {
+        console.error('Erro na requisição AJAX:', error);
+    });
+}
 </script>
 {% endblock %}

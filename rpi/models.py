@@ -306,10 +306,6 @@ class Envolvido(models.Model):
         verbose_name = "Envolvido"
         verbose_name_plural = "Envolvidos"
 
-
-# NO SEU rpi/models.py
-
-
 # --- TABELA AUXILIAR PARA TIPOS DE MATERIAIS ---
 class MaterialApreendidoTipo(models.Model):
     # Ex: 'Pistola', 'Maconha', 'Munição Cal .40'

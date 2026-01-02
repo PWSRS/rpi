@@ -12,6 +12,11 @@ from .views import (
     deletar_materiais_apreendidos,
     RelatorioListView,
     RelatorioDetailView,
+    InstrumentoListView,
+    InstrumentoCreateView,
+    InstrumentoUpdateView,
+    InstrumentoDeleteView,
+    salvar_instrumento_ajax,
 )
 
 urlpatterns = [
@@ -42,5 +47,11 @@ urlpatterns = [
     #filtragem do RPI
     path("relatorios/",RelatorioListView.as_view(),name="relatorio_list"),
     path("relatorios/<int:pk>/",RelatorioDetailView.as_view(),name="relatorio_detail"),
-
+    #Instrumentos
+    path("instrumentos/", InstrumentoListView.as_view(), name="instrumentos"),
+    path("instrumentos/novo/", InstrumentoCreateView.as_view(), name="novo_instrumento"),
+    path("instrumentos/<int:pk>/editar/", InstrumentoUpdateView.as_view(), name="editar_instrumento"),
+    path("instrumentos/<int:pk>/deletar/", InstrumentoDeleteView.as_view(), name="deletar_instrumento"),
+    # Add novo instrumento via AJAX
+    path("instrumentos/adicionar_ajax/", views.salvar_instrumento_ajax, name="adicionar_instrumento_ajax"),
 ]

@@ -13,7 +13,7 @@ from weasyprint import HTML, CSS
 from django.conf import settings
 from django.db import transaction
 from django.db.models import F, Prefetch
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 
@@ -40,7 +40,7 @@ from django.contrib.staticfiles.finders import find
 from django.forms import modelformset_factory, inlineformset_factory
 
 # 7. Importações do seu App Local (Internal)
-from .models import Ocorrencia, Envolvido, RelatorioDiario, Apreensao, OcorrenciaImagem
+from .models import Ocorrencia, Envolvido, RelatorioDiario, Apreensao, OcorrenciaImagem, Instrumento
 from .forms import (
     OcorrenciaForm,
     EnvolvidoForm,
@@ -48,6 +48,7 @@ from .forms import (
     ApreensaoForm,
     ApreensaoFormSet,
     ImagemFormSet,
+    InstrumentoForm,
 )
 
 # --- GERENCIAMENTO DO RELATÓRIO ---
@@ -773,3 +774,52 @@ class RelatorioDetailView(LoginRequiredMixin, DetailView):
         )
 
         return context
+    
+    
+class InstrumentoCreateView(LoginRequiredMixin, CreateView):
+    model = Instrumento
+    form_class = InstrumentoForm
+    template_name = "rpi/instrumento_form.html"
+    success_url = reverse_lazy("ocorrencia_create")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Instrumento cadastrado com sucesso!")
+        return super().form_valid(form)
+
+class InstrumentoListView(LoginRequiredMixin, ListView):
+    model = Instrumento
+    template_name = "rpi/instrumento_list.html"
+    context_object_name = "instrumentos"
+    ordering = ["nome"]
+    
+class InstrumentoDeleteView(LoginRequiredMixin, DeleteView):
+    model = Instrumento
+    success_url = reverse_lazy("instrumento_list")
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, "Instrumento excluído com sucesso.")
+        return super().delete(request, *args, **kwargs)
+    
+class InstrumentoUpdateView(LoginRequiredMixin, UpdateView):
+    model = Instrumento
+    form_class = InstrumentoForm
+    template_name = "rpi/instrumento_form.html"
+    success_url = reverse_lazy("instrumento_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Instrumento atualizado com sucesso!")
+        return super().form_valid(form)
+    
+class InstrumentoDetailView(LoginRequiredMixin, DetailView):
+    model = Instrumento
+    template_name = "rpi/instrumento_detail.html"
+    context_object_name = "instrumento"
+
+
+def salvar_instrumento_ajax(request):
+    if request.method == "POST":
+        nome = request.POST.get('nome')
+        if nome:
+            novo_inst = Instrumento.objects.create(nome=nome)
+            return JsonResponse({'id': novo_inst.id, 'nome': novo_inst.nome}, status=200)
+    return JsonResponse({'erro': 'Dados inválidos'}, status=400)

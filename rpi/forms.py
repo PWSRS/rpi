@@ -124,3 +124,12 @@ ImagemFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,
 )
+class InstrumentoForm(forms.ModelForm):
+    class Meta:
+        model = Instrumento
+        fields = ["nome"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "form-control"

@@ -1,0 +1,49 @@
+<a href="{% url 'criar_item' %}">Novo Item</a>
+<ul>
+    {% for item in itens %}
+    <li>
+        {{ item.nome }} 
+        <a href="{% url 'editar_item' item.pk %}">Editar</a>
+        <a href="{% url 'deletar_item' item.pk %}">Excluir</a>
+    </li>
+    {% endfor %}
+</ul>
+
+<button type="button" 
+        onclick="abrirModal('{{ item.pk }}', '{{ item.nome }}')" 
+        style="color: red; cursor: pointer;">
+    Excluir
+</button>
+
+<div id="meuModal" style="display:none; position:fixed; top:20%; left:30%; background:white; border:1px solid #ccc; padding:20px; z-index:1000; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+    <h3>Confirmar Exclusão</h3>
+    <p>Tem certeza que deseja excluir o item: <strong id="nomeItemModal"></strong>?</p>
+    
+    <form id="formDeletar" method="POST">
+        {% csrf_token %}
+        <button type="submit" style="background-color: red; color: white;">Confirmar Exclusão</button>
+        <button type="button" onclick="fecharModal()">Cancelar</button>
+    </form>
+</div>
+
+<div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;"></div>
+
+<script>
+function abrirModal(pk, nome) {
+    // Define o nome do item no texto do modal
+    document.getElementById('nomeItemModal').innerText = nome;
+    
+    // Atualiza a 'action' do form com a URL de deletar do Django
+    // A URL deve bater com o nome que você deu no urls.py
+    document.getElementById('formDeletar').action = "/deletar/" + pk + "/";
+    
+    // Mostra o modal e o fundo escuro
+    document.getElementById('meuModal').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+}
+
+function fecharModal() {
+    document.getElementById('meuModal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+}
+</script>

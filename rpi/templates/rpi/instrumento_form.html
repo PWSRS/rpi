@@ -1,0 +1,7 @@
+<h2>Formulário de Item</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Salvar</button>
+    <a href="{% url 'lista_itens' %}">Cancelar</a>
+</form>
