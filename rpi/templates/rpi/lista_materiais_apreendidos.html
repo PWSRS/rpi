@@ -37,32 +37,32 @@
 
 <div class="card shadow-sm">
     <div class="card-header bg-dark text-white">
-        <h5 class="mb-0">Inventário de Itens Registrados</h5>
+        <h5 class="mb-0">Materiais Apreendidos</h5>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-striped table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="text-center">Qtd.</th>
-                        <th class="text-center">Un. Medida</th>
-                        <th class="text-center">Material</th>
                         <th class="text-center">Data do Fato</th>
+                        <th class="text-center">Qtd.</th>
+                        <th class="text-center">Material</th>
+                        <th class="text-center">Un. Medida</th>
                         <th class="text-center">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in materiais %}
                     <tr>
-                        <td class="text-center align-middle"><strong>{{ item.quantidade }}</strong></td>
-                        <td class="text-center align-middle">{{ item.unidade_medida|default:"-" }}</td>
-                        <td class="text-center align-middle">{{ item.material_tipo.nome }}</td>
                         <td class="text-center align-middle">
                             <a href="{% url 'ocorrencia_detail' item.ocorrencia.id %}" class="text-decoration-none">
                                 <i class="far fa-calendar-alt me-1"></i>
                                 {{ item.ocorrencia.data_hora_fato|date:"d/m/Y" }}
                             </a>
                         </td>
+                        <td class="text-center align-middle"><strong>{{ item.quantidade }}</strong></td>
+                        <td class="text-center align-middle">{{ item.material_tipo.nome }}</td>
+                        <td class="text-center align-middle">{{ item.unidade_medida|default:"-" }}</td>
                         <td class="text-center align-middle">
                             <a href="{% url 'ocorrencia_update' item.ocorrencia.id %}" 
                                class="btn btn-sm btn-outline-warning me-1" 

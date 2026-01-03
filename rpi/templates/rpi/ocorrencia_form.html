@@ -214,9 +214,10 @@
                                 <div class="form-apreensao-item mb-3 p-3 border rounded bg-light">
                                     {% for hidden in form_apreensao.hidden_fields %} {{ hidden }} {% endfor %}
                                     <div class="row">
-                                        <div class="col-md-5">Material: {{ form_apreensao.material_tipo }}</div>
-                                        <div class="col-md-3">Qtd: {{ form_apreensao.quantidade }}</div>
-                                        <div class="col-md-3">Un: {{ form_apreensao.unidade_medida }}</div>
+                                        <div class="col-md-4">Material: {{ form_apreensao.material_tipo }}</div>
+                                        <div class="col-md-4">Descrição: {{ form_apreensao.descricao_adicional }}</div>
+                                        <div class="col-md-1">Qtd: {{ form_apreensao.quantidade }}</div>
+                                        <div class="col-md-2">Un: {{ form_apreensao.unidade_medida }}</div>
                                         <div class="col-md-1 d-flex align-items-end">
                                             <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="apreensoes"><i class="fas fa-trash"></i></button>
                                         </div>
@@ -295,8 +296,9 @@
 <template id="apreensao-template">
     <div class="form-apreensao-item mb-3 p-3 border rounded bg-light">
         <div class="row">
-            <div class="col-md-5">{{ apreensao_formset.empty_form.material_tipo }}</div>
-            <div class="col-md-3">{{ apreensao_formset.empty_form.quantidade }}</div>
+            <div class="col-md-4">{{ apreensao_formset.empty_form.material_tipo }}</div>
+            <div class="col-md-4">{{ apreensao_formset.empty_form.descricao_adicional }}</div>
+            <div class="col-md-1">{{ apreensao_formset.empty_form.quantidade }}</div>
             <div class="col-md-3">{{ apreensao_formset.empty_form.unidade_medida }}</div>
             <div class="col-md-1 d-flex align-items-end">
                 <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="apreensoes"><i class="fas fa-trash"></i></button>

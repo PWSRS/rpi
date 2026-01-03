@@ -17,6 +17,11 @@ from .views import (
     InstrumentoUpdateView,
     InstrumentoDeleteView,
     salvar_instrumento_ajax,
+    salvar_material_apreendido_ajax,
+    MaterialApreendidoTipoCreateView,
+    MaterialApreendidoTipoListView,
+    MaterialApreendidoTipoUpdateView,
+    MaterialApreendidoTipoDeleteView,
 )
 
 urlpatterns = [
@@ -54,4 +59,12 @@ urlpatterns = [
     path("instrumentos/<int:pk>/deletar/", InstrumentoDeleteView.as_view(), name="deletar_instrumento"),
     # Add novo instrumento via AJAX
     path("instrumentos/adicionar_ajax/", views.salvar_instrumento_ajax, name="adicionar_instrumento_ajax"),
-]
+    #Add Tipo de Material apreendio
+    path("material_apreendido/adicionar_ajax/", MaterialApreendidoTipoCreateView.as_view(), name="create_material_apreendido_tipo"),
+    path("material_apreendido/listar/", MaterialApreendidoTipoListView.as_view(), name="list_material_apreendido_tipo"),
+    path("material_apreendido/<int:pk>/editar/", MaterialApreendidoTipoUpdateView.as_view(), name="update_material_apreendido_tipo"),
+    path("material_apreendido/<int:pk>/deletar/", MaterialApreendidoTipoDeleteView.as_view(), name="delete_material_apreendido_tipo"),
+    # Add novo material apreendido via AJAX
+    path("material_apreendido/adicionar_ajax/", views.salvar_material_apreendido_ajax, name="adicionar_material_apreendido_ajax"),
+]   
+    

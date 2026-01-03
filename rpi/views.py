@@ -4,6 +4,8 @@ import urllib.request
 from datetime import datetime, time
 from pathlib import Path
 from collections import Counter
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 
 # 2. Bibliotecas de terceiros (Third-party)
@@ -40,7 +42,7 @@ from django.contrib.staticfiles.finders import find
 from django.forms import modelformset_factory, inlineformset_factory
 
 # 7. Importações do seu App Local (Internal)
-from .models import Ocorrencia, Envolvido, RelatorioDiario, Apreensao, OcorrenciaImagem, Instrumento
+from .models import Ocorrencia, Envolvido, RelatorioDiario, Apreensao, OcorrenciaImagem, Instrumento, MaterialApreendidoTipo
 from .forms import (
     OcorrenciaForm,
     EnvolvidoForm,
@@ -49,6 +51,7 @@ from .forms import (
     ApreensaoFormSet,
     ImagemFormSet,
     InstrumentoForm,
+    MaterialApreendidoTipoForm,
 )
 
 # --- GERENCIAMENTO DO RELATÓRIO ---
@@ -823,3 +826,55 @@ def salvar_instrumento_ajax(request):
             novo_inst = Instrumento.objects.create(nome=nome)
             return JsonResponse({'id': novo_inst.id, 'nome': novo_inst.nome}, status=200)
     return JsonResponse({'erro': 'Dados inválidos'}, status=400)
+
+
+class MaterialApreendidoTipoCreateView(LoginRequiredMixin, CreateView):
+    model = MaterialApreendidoTipo
+    form_class = MaterialApreendidoTipoForm
+    template_name = "rpi/material_tipo_form.html"
+    success_url = reverse_lazy("ocorrencia_create")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Tipo de material cadastrado com sucesso!")
+        return super().form_valid(form)
+    
+class MaterialApreendidoTipoListView(LoginRequiredMixin, ListView):
+    model = MaterialApreendidoTipo
+    template_name = "rpi/material_tipo_list.html"
+    context_object_name = "materiais_tipos"
+    ordering = ["nome"]
+    
+class MaterialApreendidoTipoDeleteView(LoginRequiredMixin, DeleteView):
+    model = MaterialApreendidoTipo
+    success_url = reverse_lazy("material_tipo_list")
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, "Tipo de material excluído com sucesso.")
+        return super().delete(request, *args, **kwargs)
+    
+class MaterialApreendidoTipoDetailView(LoginRequiredMixin, DetailView):
+    model = MaterialApreendidoTipo
+    template_name = "rpi/material_tipo_detail.html"
+    context_object_name = "material_tipo"
+
+class MaterialApreendidoTipoUpdateView(LoginRequiredMixin, UpdateView):
+    model = MaterialApreendidoTipo
+    form_class = MaterialApreendidoTipoForm
+    template_name = "rpi/material_tipo_form.html"
+    success_url = reverse_lazy("material_tipo_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Tipo de material atualizado com sucesso!")
+        return super().form_valid(form)
+
+@login_required
+def salvar_material_apreendido_ajax(request):
+    if request.method == "POST":
+        nome = request.POST.get('nome')
+        if nome:
+            obj, created = MaterialApreendidoTipo.objects.get_or_create(nome=nome)
+            # ESTE RETORNO DEVE ESTAR DENTRO DO IF NOME
+            return JsonResponse({'id': obj.id, 'nome': obj.nome}, status=201)
+    
+    # SE CHEGAR AQUI, DEU ERRO
+    return JsonResponse({'error': 'Nome não fornecido ou método inválido'}, status=400)

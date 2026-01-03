@@ -1,0 +1,7 @@
+<h2>Material Apreendido</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Salvar</button>
+    <a href="{% url 'list_material_apreendido_tipo' %}">Cancelar</a>
+</form>

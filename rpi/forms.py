@@ -7,6 +7,7 @@ from .models import (
     Apreensao,
     OcorrenciaImagem,
     Instrumento,
+    MaterialApreendidoTipo,
 )
 
 # --- 1. CLASSES DE FORMULÁRIOS ---
@@ -15,7 +16,7 @@ from .models import (
 class ApreensaoForm(forms.ModelForm):
     class Meta:
         model = Apreensao
-        fields = ["material_tipo", "quantidade", "unidade_medida"]
+        fields = ["material_tipo", "descricao_adicional", "quantidade", "unidade_medida"]
         widgets = {
             "quantidade": forms.TextInput(
                 attrs={"placeholder": "1.00 ou 100", "class": "form-control"}
@@ -23,12 +24,15 @@ class ApreensaoForm(forms.ModelForm):
             "unidade_medida": forms.TextInput(
                 attrs={"placeholder": "Un, g, Kg...", "class": "form-control"}
             ),
+            "descricao_adicional": forms.TextInput(
+                attrs={"placeholder": "Descrição adicional...", "class": "form-control"}
+            ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            if field_name not in ["quantidade", "unidade_medida"]:
+            if field_name not in ["quantidade", "descricao_adicional", "unidade_medida"]:
                 field.widget.attrs["class"] = "form-control"
 
 
@@ -127,6 +131,16 @@ ImagemFormSet = inlineformset_factory(
 class InstrumentoForm(forms.ModelForm):
     class Meta:
         model = Instrumento
+        fields = ["nome"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "form-control"
+            
+class MaterialApreendidoTipoForm(forms.ModelForm):
+    class Meta:
+        model = MaterialApreendidoTipo
         fields = ["nome"]
 
     def __init__(self, *args, **kwargs):

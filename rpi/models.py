@@ -319,6 +319,7 @@ class MaterialApreendidoTipo(models.Model):
     class Meta:
         verbose_name = "Tipo de Material Apreendido"
         verbose_name_plural = "Tipos de Materiais Apreendidos"
+        ordering = ["nome"]
 
 
 # --- ENTIDADE DE RELACIONAMENTO (APREENSÃO) ---
@@ -343,6 +344,10 @@ class Apreensao(models.Model):
     unidade_medida = models.CharField(
         max_length=50, blank=True, verbose_name="Unidade de Medida"
     )
+    
+    descricao_adicional = models.CharField(
+        max_length=255, blank=True, null=True, verbose_name="Descrição Adicional"
+    )
 
     def __str__(self):
         return f"{self.quantidade} {self.unidade_medida} de {self.material_tipo.nome}"
@@ -350,7 +355,3 @@ class Apreensao(models.Model):
     class Meta:
         verbose_name = "Apreensão"
         verbose_name_plural = "Apreensões"
-        unique_together = (
-            "ocorrencia",
-            "material_tipo",
-        )  # Evita cadastrar o mesmo item duas vezes na mesma ocorrência
