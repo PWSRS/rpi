@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <h1 class="mb-4">
+        {% if form.instance.pk %}
+            <i class="fas fa-edit"></i> Editar Material ID: {{ form.instance.pk }}
+        {% else %}
+            <i class="fas fa-plus-circle"></i> Registro de Material
+        {% endif %}
+    </h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="{{ form.nome.id_for_label }}" class="form-label">Tipo de Material</label>
+            {# O Django injeta o 'value' automaticamente aqui #}
+            {{ form.nome }} 
+            
+            {% if form.nome.errors %}
+                <div class="text-danger small">{{ form.nome.errors }}</div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        <a href="{% url 'list_material_apreendido_tipo' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+
+{% endblock %}

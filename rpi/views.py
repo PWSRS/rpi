@@ -844,10 +844,11 @@ class MaterialApreendidoTipoListView(LoginRequiredMixin, ListView):
     template_name = "rpi/material_tipo_list.html"
     context_object_name = "materiais_tipos"
     ordering = ["nome"]
+    paginate_by = 5
     
 class MaterialApreendidoTipoDeleteView(LoginRequiredMixin, DeleteView):
     model = MaterialApreendidoTipo
-    success_url = reverse_lazy("material_tipo_list")
+    success_url = reverse_lazy("list_material_apreendido_tipo")
 
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, "Tipo de material excluído com sucesso.")
@@ -862,7 +863,7 @@ class MaterialApreendidoTipoUpdateView(LoginRequiredMixin, UpdateView):
     model = MaterialApreendidoTipo
     form_class = MaterialApreendidoTipoForm
     template_name = "rpi/material_tipo_form.html"
-    success_url = reverse_lazy("material_tipo_list")
+    success_url = reverse_lazy("list_material_apreendido_tipo")
 
     def form_valid(self, form):
         messages.success(self.request, "Tipo de material atualizado com sucesso!")

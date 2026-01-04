@@ -261,6 +261,10 @@
                         </button>
                     </div>
                 </div>
+                <div class="d-flex justify-content-between mb-4">
+                    <button type="button" class="btn btn-secondary prev-tab"><i class="fas fa-arrow-left"></i> Anterior</button>
+                    <button type="button" class="btn btn-primary next-tab">Próximo: Mídia <i class="fas fa-arrow-right"></i></button>
+                </div>
             </div>
 
             <!-- ================= MODAL MATERIAL ================= -->
@@ -385,12 +389,12 @@ $(document).ready(function () {
 
         $('#id_natureza').select2({
             theme: "bootstrap-5",
-            placeholder: "🔍 Digite para buscar a natureza...",
+            placeholder: "🔍 Digite para buscar o fato...",
             allowClear: true,
             width: '100%',
             dropdownParent: $('#fato'),
             language: {
-                noResults: () => "Nenhuma natureza encontrada",
+                noResults: () => "Nenhuma fato encontrado",
                 searching: () => "Buscando..."
             }
         });
@@ -418,11 +422,17 @@ $(document).ready(function () {
     /* ---------- 3. LÓGICA CVLI ---------- */
     function verificarCVLI() {
         const crimes = [
-            "HOMICÍDIO",
+            "HOMICÍDIO DOLOSO",
             "FEMINICÍDIO",
             "ABORTO",
             "LESÃO CORPORAL SEGUIDA DE MORTE",
             "ROUBO COM MORTE",
+            "LATROCÍNIO"
+            "ROUBO A PEDESTRE COM MORTE"
+            "ROUBO A RESIDÊNCIA COM MORTE",
+            "ROUBO A ESTABELECIMENTO COM MORTE",
+            "ROUBO A ESTABELECIMENTO BANCÁRIO COM MORTE",
+            "INSTIGAÇÃO AO SUICÍDIO",
             "LATROCÍNIO"
         ];
 

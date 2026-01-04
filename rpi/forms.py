@@ -83,6 +83,12 @@ class OcorrenciaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Transformar automaticamente o resumo do cabeçalho em maiúsculas
+        self.fields['resumo_cabecalho'].widget.attrs.update({
+            'style': 'text-transform: uppercase;',
+            'oninput': 'this.value = this.value.toUpperCase()'
+        })
 
         # Otimização: Ordenar os instrumentos por nome no dropdown do formulário
         if "instrumento" in self.fields:
