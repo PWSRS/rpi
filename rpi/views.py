@@ -6,6 +6,7 @@ from pathlib import Path
 from collections import Counter
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.db import IntegrityError
 
 
 # 2. Bibliotecas de terceiros (Third-party)
@@ -867,14 +868,28 @@ class MaterialApreendidoTipoUpdateView(LoginRequiredMixin, UpdateView):
         messages.success(self.request, "Tipo de material atualizado com sucesso!")
         return super().form_valid(form)
 
+
 @login_required
+@require_POST
 def salvar_material_apreendido_ajax(request):
-    if request.method == "POST":
-        nome = request.POST.get('nome')
-        if nome:
-            obj, created = MaterialApreendidoTipo.objects.get_or_create(nome=nome)
-            # ESTE RETORNO DEVE ESTAR DENTRO DO IF NOME
-            return JsonResponse({'id': obj.id, 'nome': obj.nome}, status=201)
-    
-    # SE CHEGAR AQUI, DEU ERRO
-    return JsonResponse({'error': 'Nome não fornecido ou método inválido'}, status=400)
+    nome = request.POST.get("nome", "").strip()
+
+    if not nome:
+        return JsonResponse(
+            {"error": "Nome não informado"},
+            status=400
+        )
+
+    obj, created = MaterialApreendidoTipo.objects.get_or_create(
+        nome__iexact=nome,
+        defaults={"nome": nome}
+    )
+
+    return JsonResponse(
+        {
+            "id": obj.id,
+            "nome": obj.nome,
+            "created": created
+        },
+        status=200
+    )

@@ -201,39 +201,90 @@
                 </div>
             </div>
 
-            {# --- ABA 3: MATERIAIS --- #}
+            <!-- ================= ABA 3 ================= -->
             <div class="tab-pane fade" id="materiais" role="tabpanel">
                 <div class="card mb-4 shadow-sm border-info">
                     <div class="card-header bg-info text-white">
                         <h5 class="mb-0">📦 Materiais Apreendidos</h5>
                     </div>
                     <div class="card-body">
-                        {{ apreensao_formset.management_form }} 
+                        {{ apreensao_formset.management_form }}
+
                         <div id="apreensoes-formset-container">
-                            {% for form_apreensao in apreensao_formset %}
-                                <div class="form-apreensao-item mb-3 p-3 border rounded bg-light">
-                                    {% for hidden in form_apreensao.hidden_fields %} {{ hidden }} {% endfor %}
-                                    <div class="row">
-                                        <div class="col-md-4">Material: {{ form_apreensao.material_tipo }}</div>
-                                        <div class="col-md-4">Descrição: {{ form_apreensao.descricao_adicional }}</div>
-                                        <div class="col-md-1">Qtd: {{ form_apreensao.quantidade }}</div>
-                                        <div class="col-md-2">Un: {{ form_apreensao.unidade_medida }}</div>
-                                        <div class="col-md-1 d-flex align-items-end">
-                                            <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="apreensoes"><i class="fas fa-trash"></i></button>
+                        {% for form_apreensao in apreensao_formset %}
+                            <div class="form-apreensao-item mb-3 p-3 border rounded bg-light">
+                                {% for hidden in form_apreensao.hidden_fields %}{{ hidden }}{% endfor %}
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Material</label>
+                                        <div class="input-group">
+                                            {{ form_apreensao.material_tipo }}
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                    onclick="abrirModalMaterial(this)">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
                                         </div>
-                                        <div class="d-none">{{ form_apreensao.DELETE }}</div>
                                     </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Descrição</label>
+                                        {{ form_apreensao.descricao_adicional }}
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <label class="form-label">Qtd</label>
+                                        {{ form_apreensao.quantidade }}
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label class="form-label">Un</label>
+                                        {{ form_apreensao.unidade_medida }}
+                                    </div>
+
+                                    <div class="col-md-1 d-flex align-items-end">
+                                        <button type="button"
+                                                class="btn btn-outline-danger remove-formset-row"
+                                                data-prefix="apreensoes">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="d-none">{{ form_apreensao.DELETE }}</div>
                                 </div>
-                            {% endfor %}
+                            </div>
+                        {% endfor %}
                         </div>
-                        <button type="button" id="add-apreensao-btn" class="btn btn-outline-info mt-2"><i class="fas fa-plus"></i> Adicionar Material</button>
+
+                        <button type="button" id="add-apreensao-btn"
+                                class="btn btn-outline-info mt-2">
+                            <i class="fas fa-plus"></i> Adicionar Material
+                        </button>
                     </div>
                 </div>
-                <div class="d-flex justify-content-between mb-4">
-                    <button type="button" class="btn btn-secondary prev-tab"><i class="fas fa-arrow-left"></i> Anterior</button>
-                    <button type="button" class="btn btn-primary next-tab">Próximo: Mídia <i class="fas fa-arrow-right"></i></button>
+            </div>
+
+            <!-- ================= MODAL MATERIAL ================= -->
+            <div id="modalMaterial" style="display:none; position:fixed; top:30%; left:35%; background:white;
+            border:1px solid #ccc; padding:20px; z-index:2000; border-radius:8px; min-width:300px;">
+                <h5 class="mb-3">Novo Material</h5>
+                <input type="text" id="novo_nome_material"
+                    class="form-control mb-3"
+                    placeholder="Ex: Pistola, Celular, Documento">
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary btn-sm"
+                            onclick="fecharModalMaterial()">Cancelar</button>
+                    <button type="button" class="btn btn-primary btn-sm" data-url="{% url 'adicionar_material_apreendido_ajax' %}"
+                            onclick="salvarMaterialRapido()">
+                            Salvar
+                    </button>
                 </div>
             </div>
+
+            <div id="overlayMaterial"
+                style="display:none; position:fixed; top:0; left:0; width:100%;
+                height:100%; background:rgba(0,0,0,.5); z-index:1999;"></div>
+
 
             {# --- ABA 4: MÍDIA E SALVAR --- #}
             <div class="tab-pane fade" id="midia" role="tabpanel">
@@ -323,28 +374,24 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-$(document).ready(function() {
-    
-    // --- 1. INICIALIZAÇÃO DE COMPONENTES ---
-    // Ativa o Select2 nos campos iniciais
-    // Configuração turbinada para a Natureza (Autocomplete)
-    // --- 1. INICIALIZAÇÃO DE COMPONENTES ---
-function inicializarSelects() {
-    if ($.fn.select2) {
+/* ==========================================================
+   DOCUMENT READY
+========================================================== */
+$(document).ready(function () {
+
+    /* ---------- 1. SELECT2 ---------- */
+    function inicializarSelects() {
+        if (!$.fn.select2) return;
+
         $('#id_natureza').select2({
             theme: "bootstrap-5",
             placeholder: "🔍 Digite para buscar a natureza...",
-            allowClear: true, // Isso ativa o "X"
+            allowClear: true,
             width: '100%',
             dropdownParent: $('#fato'),
-            // Tradução manual rápida:
             language: {
-                noResults: function() {
-                    return "Nenhuma natureza encontrada";
-                },
-                searching: function() {
-                    return "Buscando...";
-                }
+                noResults: () => "Nenhuma natureza encontrada",
+                searching: () => "Buscando..."
             }
         });
 
@@ -353,79 +400,64 @@ function inicializarSelects() {
             width: '100%'
         });
     }
-}
     inicializarSelects();
-    // --- 2. NAVEGAÇÃO ENTRE ABAS ---
-    $('.next-tab').click(function() {
-        const nextTabEl = $('.nav-pills .active').parent().next('li').find('button');
-        if (nextTabEl.length > 0) {
-            bootstrap.Tab.getInstance(nextTabEl[0])?.show() || new bootstrap.Tab(nextTabEl[0]).show();
-            window.scrollTo(0, 0);
-        }
+
+    /* ---------- 2. NAVEGAÇÃO ENTRE ABAS ---------- */
+    $('.next-tab').on('click', function () {
+        const next = $('.nav-pills .active').parent().next().find('button');
+        if (next.length) new bootstrap.Tab(next[0]).show();
+        window.scrollTo(0, 0);
     });
 
-    $('.prev-tab').click(function() {
-        const prevTabEl = $('.nav-pills .active').parent().prev('li').find('button');
-        if (prevTabEl.length > 0) {
-            bootstrap.Tab.getInstance(prevTabEl[0])?.show() || new bootstrap.Tab(prevTabEl[0]).show();
-            window.scrollTo(0, 0);
-        }
+    $('.prev-tab').on('click', function () {
+        const prev = $('.nav-pills .active').parent().prev().find('button');
+        if (prev.length) new bootstrap.Tab(prev[0]).show();
+        window.scrollTo(0, 0);
     });
 
-    // --- 3. DESTAQUE DE ERROS (Destaque visual nas abas) ---
-    // Se o Django retornar erro, essa parte marca a aba em vermelho
-    $('.is-invalid, .alert-danger').each(function() {
-        var tabId = $(this).closest('.tab-pane').attr('id');
-        if (tabId) {
-            $('#' + tabId + '-tab').addClass('text-danger fw-bold border-bottom border-danger');
-            // Adiciona um ícone de aviso se não existir
-            if (!$('#' + tabId + '-tab i.fa-exclamation-circle').length) {
-                $('#' + tabId + '-tab').append(' <i class="fas fa-exclamation-circle"></i>');
-            }
-        }
-    });
-
-    // --- 4. DEBUG DE CAMPOS (Diz no console quem está travando o form) ---
-    $('#ocorrencia-form').on('submit', function() {
-        $(this).find(':invalid').each(function() {
-            console.warn("Campo obrigatório vazio: " + $(this).attr('name'));
-        });
-    });
-
-    // --- 5. LÓGICA CVLI ---
+    /* ---------- 3. LÓGICA CVLI ---------- */
     function verificarCVLI() {
-        const naturezasCVLI = ["HOMICÍDIO", "FEMINICÍDIO", "ABORTO", "LESÃO CORPORAL SEGUIDA DE MORTE", "ROUBO COM MORTE", "LATROCÍNIO"];
-        const naturezaTexto = $('#id_natureza option:selected').text().toUpperCase();
-        const $divInstrumento = $('#div_instrumento');
-        
-        if (naturezasCVLI.some(crime => naturezaTexto.includes(crime))) {
-            $divInstrumento.show();
-        } else {
-            $divInstrumento.hide();
-            $('#id_instrumento').val('');
-        }
-    }
-    $('#id_natureza').on('change', verificarCVLI);
-    verificarCVLI(); // Roda ao carregar a página
+        const crimes = [
+            "HOMICÍDIO",
+            "FEMINICÍDIO",
+            "ABORTO",
+            "LESÃO CORPORAL SEGUIDA DE MORTE",
+            "ROUBO COM MORTE",
+            "LATROCÍNIO"
+        ];
 
-    // --- 6. GESTÃO DE FORMSETS (Adicionar/Remover Linhas) ---
+        const texto = $('#id_natureza option:selected').text().toUpperCase();
+        const div = $('#div_instrumento');
+
+        crimes.some(c => texto.includes(c)) ? div.show() : div.hide();
+    }
+
+    $('#id_natureza').on('change', verificarCVLI);
+    verificarCVLI();
+
+    /* ---------- 4. FORMSETS ---------- */
     function addRow(prefix) {
         const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
-        const currentCount = parseInt(totalForms.val());
-        const templateId = prefix === 'envolvidos' ? 'envolvido-template' : 
-                         prefix === 'apreensoes' ? 'apreensao-template' : 'imagem-template';
-        
-        let html = $(`#${templateId}`).html();
-        html = html.replace(/__prefix__/g, currentCount);
-        
-        const container = prefix === 'envolvidos' ? '#envolvidos-container' : 
-                          prefix === 'apreensoes' ? '#apreensoes-formset-container' : '#imagens-container';
-        
+        const index = parseInt(totalForms.val());
+
+        const templateId = {
+            envolvidos: 'envolvido-template',
+            apreensoes: 'apreensao-template',
+            imagens: 'imagem-template'
+        }[prefix];
+
+        let html = $(`#${templateId}`).html().replace(/__prefix__/g, index);
+
+        const container = {
+            envolvidos: '#envolvidos-container',
+            apreensoes: '#apreensoes-formset-container',
+            imagens: '#imagens-container'
+        }[prefix];
+
         $(container).append(html);
-        totalForms.val(currentCount + 1);
-        
-        // Re-inicializa Select2 para novos campos de participantes ou materiais
-        if ($.fn.select2 && prefix !== 'imagens') {
+        totalForms.val(index + 1);
+
+        if (prefix !== 'imagens' && $.fn.select2) {
             $(container).find('select').select2({ theme: "bootstrap-5", width: '100%' });
         }
     }
@@ -434,73 +466,146 @@ function inicializarSelects() {
     $('#add-apreensao-btn').click(() => addRow('apreensoes'));
     $('#add-imagem-btn').click(() => addRow('imagens'));
 
-    $(document).on('click', '.remove-formset-row', function() {
+    $(document).on('click', '.remove-formset-row', function () {
         const row = $(this).closest('.envolvido-form, .form-apreensao-item, .imagem-form-bloco');
         const idField = row.find('input[name$="-id"]');
+
         if (idField.val()) {
             row.find('input[name$="-DELETE"]').val('on');
             row.hide();
         } else {
             row.remove();
-            // Opcional: decrementar o TOTAL_FORMS aqui se quiser ser rigoroso com novos campos
         }
     });
+
 });
+
+/* ==========================================================
+   INSTRUMENTO (AJAX)
+========================================================== */
 function abrirModalInstrumento() {
-    document.getElementById('modalInstrumento').style.display = 'block';
-    document.getElementById('overlayInst').style.display = 'block';
+    $('#modalInstrumento, #overlayInst').show();
 }
 
 function fecharModalInstrumento() {
-    document.getElementById('modalInstrumento').style.display = 'none';
-    document.getElementById('overlayInst').style.display = 'none';
+    $('#modalInstrumento, #overlayInst').hide();
+    $('#novo_nome_instrumento').val('');
 }
 
 function salvarInstrumentoRapido() {
-    const nomeInput = document.getElementById('novo_nome_instrumento');
-    const nome = nomeInput.value;
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    if (!nome) {
-        alert("Digite o nome do instrumento.");
-        return;
-    }
+    const nome = $('#novo_nome_instrumento').val().trim();
+    if (!nome) return alert("Digite o nome do instrumento.");
 
     fetch("{% url 'adicionar_instrumento_ajax' %}", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            "X-CSRFToken": csrfToken
+            "X-CSRFToken": $('[name=csrfmiddlewaretoken]').val()
         },
         body: "nome=" + encodeURIComponent(nome)
     })
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
-        if (data.id) {
-            // Tente capturar o select (ajuste o ID se necessário para id_instrumento)
-            const campoSelect = $('#id_instrumento'); 
-
-            if (campoSelect.length > 0) {
-                // Criar a nova opção: new Option(texto, valor, defaultSelected, selected)
-                const novaOpcao = new Option(data.nome, data.id, true, true);
-                
-                // Adiciona ao select, dispara o change para o Select2 atualizar e foca nele
-                campoSelect.append(novaOpcao).trigger('change');
-                
-                console.log("Item adicionado com sucesso:", data.nome);
-            } else {
-                console.error("Erro: Campo #id_instrumento não encontrado no HTML.");
-            }
-            
-            nomeInput.value = '';
-            fecharModalInstrumento();
-        } else {
-            alert("Erro ao salvar: " + (data.erro || "Erro desconhecido"));
-        }
-    })
-    .catch(error => {
-        console.error('Erro na requisição AJAX:', error);
+        const select = $('#id_instrumento');
+        select.append(new Option(data.nome, data.id, true, true)).trigger('change');
+        fecharModalInstrumento();
     });
 }
+
+/* ==========================================================
+   MATERIAL APREENDIDO (AJAX)
+========================================================== */
+let selectMaterialAtual = null;
+
+function abrirModalMaterial(botao) {
+    selectMaterialAtual = botao.closest('.input-group').querySelector('select');
+    $('#modalMaterial, #overlayMaterial').show();
+    $('#novo_nome_material').focus();
+}
+
+function fecharModalMaterial() {
+    $('#modalMaterial, #overlayMaterial').hide();
+    $('#novo_nome_material').val('');
+    selectMaterialAtual = null;
+}
+
+function salvarMaterialRapido() {
+    const nome = $('#novo_nome_material').val().trim();
+    if (!nome) {
+        alert("Informe o nome do material.");
+        return;
+    }
+
+    const urlEl = document.querySelector('[data-url]');
+    if (!urlEl) {
+        console.error("data-url não encontrado no botão.");
+        alert("Erro interno de configuração.");
+        return;
+    }
+
+    const url = urlEl.getAttribute('data-url');
+
+    fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-CSRFToken": $('[name=csrfmiddlewaretoken]').val()
+        },
+        body: "nome=" + encodeURIComponent(nome)
+    })
+    .then(response => {
+
+        // Caso Django tenha redirecionado (login, APPEND_SLASH, etc.)
+        if (response.redirected) {
+            console.error("Redirect detectado:", response.url);
+            alert("Sua sessão expirou. Faça login novamente.");
+            window.location.href = response.url;
+            return null;
+        }
+
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error("Erro HTTP:", response.status, text);
+                throw new Error("HTTP " + response.status);
+            });
+        }
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            return response.text().then(text => {
+                console.error("Resposta não é JSON:", text);
+                throw new Error("Resposta inesperada do servidor");
+            });
+        }
+
+        return response.json();
+    })
+    .then(data => {
+        if (!data.id) {
+            alert(data.error || "Erro ao salvar material");
+            return;
+        }
+
+        const option = new Option(data.nome, data.id, true, true);
+        selectMaterialAtual.append(option);
+        $(selectMaterialAtual).trigger('change');
+
+        if (!data.created) {
+            alert("Material já existia e foi selecionado.");
+        }
+
+        fecharModalMaterial();
+    })
+
+
+
+        .catch(err => {
+            console.error("Falha AJAX Material:", err);
+            alert("Erro ao salvar material.");
+        });
+    }
+
+
 </script>
+
 {% endblock %}

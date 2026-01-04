@@ -53,7 +53,7 @@
                 <div class="table-responsive">
                     <table class="table table-hover table-sm mb-0">
                         <thead class="bg-light">
-                            <tr>
+                            <tr class="text-center">
                                 <th>Tipo</th>
                                 <th>Nome</th>
                                 <th>Idade</th>
@@ -62,7 +62,7 @@
                         </thead>
                         <tbody>
                             {% for envolvido in envolvidos %}
-                            <tr>
+                            <tr class="text-center">
                                 <td>
                                     <span class="badge rounded-pill
                                     {% if envolvido.get_tipo_participante_display == 'Vítima' %} text-bg-danger
@@ -93,15 +93,17 @@
                     <table class="table table-hover table-sm mb-0">
                         <thead class="bg-light">
                             <tr>
-                                <th>Material</th>
+                                <th class="text-center">Material</th>
+                                <th class="text-center">Descrição</th>
                                 <th class="text-center">Qtd</th>
-                                <th>Unidade</th>
+                                <th class="text-center">Unidade</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in apreensoes %}
-                            <tr>
+                            <tr class="text-center">
                                 <td><strong>{{ item.material_tipo.nome }}</strong></td>
+                                <td><strong>{{ item.descricao_adicional }}</strong></td>
                                 <td class="text-center">{{ item.quantidade }}</td>
                                 <td>{{ item.unidade_medida|default:"-" }}</td>
                             </tr>

@@ -46,8 +46,9 @@
                     <tr>
                         <th class="text-center">Data do Fato</th>
                         <th class="text-center">Qtd.</th>
-                        <th class="text-center">Material</th>
                         <th class="text-center">Un. Medida</th>
+                        <th class="text-center">Material</th>
+                        <th class="text-center">Descrição</th>
                         <th class="text-center">Ações</th>
                     </tr>
                 </thead>
@@ -61,8 +62,9 @@
                             </a>
                         </td>
                         <td class="text-center align-middle"><strong>{{ item.quantidade }}</strong></td>
-                        <td class="text-center align-middle">{{ item.material_tipo.nome }}</td>
                         <td class="text-center align-middle">{{ item.unidade_medida|default:"-" }}</td>
+                        <td class="text-center align-middle">{{ item.material_tipo.nome }}</td>
+                        <td class="text-center align-middle">{{ item.descricao_adicional }}</td>
                         <td class="text-center align-middle">
                             <a href="{% url 'ocorrencia_update' item.ocorrencia.id %}" 
                                class="btn btn-sm btn-outline-warning me-1" 
