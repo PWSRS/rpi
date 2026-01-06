@@ -19,12 +19,11 @@
     {% block extra_head_css %}
      
     {% endblock %} 
-
 </head>
 {# ALTERAÇÃO CRÍTICA: Adicionar as classes do Flexbox ao body #}
 <body class="d-flex flex-column h-100">
-    
-    <header class="bg-primary text-white p-3 mb-4 shadow-sm">
+    {% include "navbar.html" %}
+    <!--<header class="bg-primary text-white p-3 mb-4 shadow-sm">
         <div class="container d-flex justify-content-between align-items-center">
             <a href="{% url 'ocorrencia_list' %}" class="text-white text-decoration-none h4">
                 ARI SUL - Relatório Periódico de Inteligência (RPI)
@@ -45,7 +44,7 @@
                 {% else %}
                     <a href="#" class="btn btn-light btn-sm">Entrar</a>
                 {% endif %}
-            </nav>
+            </nav>-->
         </div>
     </header>
     
@@ -56,7 +55,7 @@
     </main>
 
     
-    <footer class="bg-light text-center p-3 mt-auto border-top">
+    <footer class="text-center p-3 mt-auto border-top">
         <div class="rodape">
             {# Usando a tag {% now "Y" %} para garantir que o ano atual seja exibido #}
             <small>&copy; {% now "Y" %} Sistema RPI &reg; Todos os direitos reservados. Desenvolvido pela ARI Sul.</small>

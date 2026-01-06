@@ -1,3 +1,13 @@
-rodape {
-    background-color: blue;
+footer {
+    background-color: #001f3f !important; /* Use !important para sobrepor o 'bg-light' do Bootstrap */
+    color: white; /* Muda a cor do texto para contrastar */
+}
+
+body {
+    padding-top: 70px; /* Espaço para a navbar fixa no topo */
+}
+
+.navbar {
+    --bs-bg-opacity: 1;
+    background-color: #001f3f !important; /* Cor estilo editor de código (Cinza Escuro) */
 }
