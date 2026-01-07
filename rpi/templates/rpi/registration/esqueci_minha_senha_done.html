@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}E-mail de Redefinição Enviado{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-8 col-lg-6">
+        {# Card de Aviso #}
+        <div class="card text-center shadow-lg border-0 p-5">
+            <div class="card-body">
+                
+                {# Ícone de E-mail Enviado #}
+                <i class="fas fa-paper-plane text-info mb-4" style="font-size: 4rem;"></i>
+                
+                <h2 class="card-title text-info fw-bold mb-3">E-mail de Redefinição Enviado!</h2>
+                
+                <p class="lead text-muted">
+                    Verifique sua **caixa de entrada** e, por precaução, a **pasta de spam**.
+                </p>
+                
+                <p class="text-secondary mt-4">
+                    Nós lhe enviamos um e-mail com instruções detalhadas para configurar sua nova senha. Se você não receber a mensagem em alguns minutos, verifique se o endereço de e-mail digitado está correto e tente o processo novamente.
+                </p>
+                
+                <hr class="my-4">
+                
+                <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-lg w-75 shadow-sm">
+                    Voltar para o Login
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

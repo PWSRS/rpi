@@ -1,5 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import get_user_model
 from .models import (
     Ocorrencia,
     Envolvido,
@@ -9,6 +11,53 @@ from .models import (
     Instrumento,
     MaterialApreendidoTipo,
 )
+
+# Obtém o modelo de usuário ativo (geralmente User ou CustomUser)
+User = get_user_model()
+
+
+class CadastroUsuarioForm(UserCreationForm):
+    # Campos adicionais com labels em português e atributos
+    first_name = forms.CharField(label="Primeiro nome", max_length=150, required=False)
+    last_name = forms.CharField(label="Último nome", max_length=150, required=False)
+    email = forms.EmailField(label="Endereço de email", max_length=254, required=True)
+
+    # Customizando a label da Confirmação de senha
+    password2 = forms.CharField(
+        label="Confirmação de senha",
+        widget=forms.PasswordInput(),
+        help_text="Digite a mesma senha informada anteriormente, para verificação.",
+    )
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+
+        # 1. Lista os campos na ordem correta, garantindo que 'password' e 'password2'
+        # VENHAM DEPOIS dos campos de informação pessoal.
+        # Usa o 'UserCreationForm.Meta.fields' para INCLUIR os campos de senha
+        # (que são ('password', 'password2')) de uma só vez, no final.
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+        ) + UserCreationForm.Meta.fields  # Isso adiciona ('password', 'password2') no final.
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Aplica a classe form-control a TODOS os campos
+        for field_name, field in self.fields.items():
+            field.widget.attrs["class"] = "form-control"
+
+        # Adiciona placeholders
+        self.fields["first_name"].widget.attrs["placeholder"] = "Seu primeiro nome"
+        self.fields["last_name"].widget.attrs["placeholder"] = "Seu último nome"
+        self.fields["email"].widget.attrs["placeholder"] = "exemplo@dominio.com"
+
+
+
+
 
 # --- 1. CLASSES DE FORMULÁRIOS ---
 

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Alterar Minha Senha{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5"> {# Colunas ajustadas para melhor proporção em telas maiores #}
+            <div class="card shadow-lg p-4"> {# Adiciona um card para agrupar o formulário e dar um visual flutuante #}
+                <div class="card-body">
+                    <h2 class="text-center mb-4 text-primary">Alterar Senha</h2> {# Título centralizado e com cor primária #}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {# Renderiza campos e seus erros #}
+                        {% for field in form %}
+                        <div class="mb-3"> {# Espaçamento entre campos #}
+                            <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label> {# Label em negrito #}
+                            {# CORREÇÃO: Removido o filtro inválido '|add_class:"form-control"'. O JavaScript em 'extra_js' fará a estilização. #}
+                            {{ field }} 
+                            
+                            {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            
+                            {% for error in field.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div> {# Erros em vermelho e menor #}
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="d-grid mt-4"> {# Botão em grade, ocupando a largura total #}
+                            <button type="submit" class="btn btn-primary btn-lg shadow">Confirmar Alteração de Senha</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    {# Script para adicionar a classe form-control a todos os widgets de formulário automaticamente #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var formFields = document.querySelectorAll('form input');
+            formFields.forEach(function(field) {
+                if (!field.classList.contains('form-control')) {
+                    field.classList.add('form-control');
+                }
+            });
+            // Opcional: Adicionar classes também a outros elementos como selects ou textareas se houver no futuro
+            var selectFields = document.querySelectorAll('form select');
+            selectFields.forEach(function(field) {
+                if (!field.classList.contains('form-select')) {
+                    field.classList.add('form-select');
+                }
+            });
+            var textareaFields = document.querySelectorAll('form textarea');
+            textareaFields.forEach(function(field) {
+                if (!field.classList.contains('form-control')) {
+                    field.classList.add('form-control');
+                }
+            });
+        });
+    </script>
+{% endblock extra_js %}

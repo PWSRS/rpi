@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Saiu da Conta{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-8 col-lg-6">
+        {# Card de Logout #}
+        <div class="card text-center shadow-lg border-0 p-4">
+            <div class="card-body">
+                
+                {# Ícone de Saída/Chave #}
+                <i class="fas fa-sign-out-alt text-warning mb-3" style="font-size: 4rem;"></i>
+                
+                <h2 class="card-title text-dark fw-bold mb-3">Sessão Encerrada</h2>
+                
+                <p class="lead text-muted">
+                    Você saiu da sua conta com sucesso. Obrigado por utilizar nosso serviço.
+                </p>
+                
+                <hr class="my-4">
+                
+                {# Botão Principal: Entrar Novamente #}
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg shadow-sm w-75 mb-3">
+                    <i class="fas fa-sign-in-alt me-2"></i> Entrar Novamente
+                </a>
+                
+                {# Botão Secundário: Ir para a Página Inicial #}
+                <div class="d-grid w-75 mx-auto">
+                    <a href="/" class="btn btn-outline-secondary">
+                        Ir para a Página Inicial
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

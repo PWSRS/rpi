@@ -124,5 +124,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_URL = "/admin/login/"  # Ou a URL da sua página de login customizada
-LOGIN_REDIRECT_URL = "/"  # Para onde ir após logar
+#LOGIN_URL = "/admin/login/"  # Ou a URL da sua página de login customizada
+#LOGIN_REDIRECT_URL = "/"  # Para onde ir após logar
+
+
+# Redirecionamento após o login
+LOGIN_URL = "/contas/login/"
+
+# Redirecionamento após o logout (Você definiu duas vezes, apenas a última vale)
+LOGOUT_REDIRECT_URL = (
+    'ocorrencia_list'  # Redireciona para a página de login após o logout
+)
+
+# 🟢 NOVO: Redirecionamento após a alteração de senha!
+# Vamos redirecionar para a raiz (onde o LOGIN_REDIRECT_URL aponta)
+PASSWORD_CHANGE_REDIRECT_URL = "/"

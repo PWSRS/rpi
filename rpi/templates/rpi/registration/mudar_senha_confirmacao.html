@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Senha Alterada{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-8 col-lg-6">
+        {# Card de Sucesso #}
+        <div class="card text-center shadow-lg border-0 p-4">
+            <div class="card-body">
+                
+                {# Ícone de Sucesso #}
+                <i class="fas fa-check-circle text-success mb-3" style="font-size: 4rem;"></i>
+                
+                <h2 class="card-title text-success fw-bold mb-3">Senha Alterada com Sucesso!</h2>
+                
+                <p class="lead text-muted">
+                    Sua nova senha foi definida. Agora você pode usar suas novas credenciais para acessar a plataforma.
+                </p>
+                
+                <hr class="my-4">
+                
+                {# O botão direciona para a página principal, conforme o seu código #}
+                <a href="{% url 'index' %}" class="btn btn-primary btn-lg shadow-sm w-75">
+                    <i class="fas fa-home me-2"></i> Ir para a Página Inicial
+                </a>
+                
+                <p class="small mt-3 text-secondary">
+                    O login foi concluído com a nova senha.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

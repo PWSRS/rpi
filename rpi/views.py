@@ -24,6 +24,8 @@ from django.utils.dateparse import parse_date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.views import PasswordChangeView
 from django.contrib.staticfiles.finders import find
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import (
@@ -53,7 +55,35 @@ from .forms import (
     ImagemFormSet,
     InstrumentoForm,
     MaterialApreendidoTipoForm,
+    CadastroUsuarioForm,
 )
+
+def registro_usuario(request):
+    """
+    View para lidar com o cadastro de novos usuários.
+    """
+    if request.method == "POST":
+        # Usa o formulário personalizado
+        form = CadastroUsuarioForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+
+            messages.success(
+                request,
+                "Sua conta foi criada com sucesso! Você pode fazer login agora.",
+            )
+
+            return redirect("login")
+
+    else:
+        # Exibe o formulário personalizado vazio
+        form = CadastroUsuarioForm()
+
+    return render(
+        request, "rpi/registro.html", {"form": form, "titulo": "Criar Conta"}
+    )
+
+
 
 # --- GERENCIAMENTO DO RELATÓRIO ---
 

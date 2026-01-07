@@ -10,4 +10,9 @@ body {
 .navbar {
     --bs-bg-opacity: 1;
     background-color: #001f3f !important; /* Cor estilo editor de código (Cinza Escuro) */
+    color: aqua;
+}
+
+.navbar.toggler-icon:hover {
+    background-color: #0056b3 !important; /* Cor ao passar o mouse */
 }

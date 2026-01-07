@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Criar Nova Senha{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-7 col-lg-5">
+        <div class="card shadow-lg p-4 border-0">
+            <div class="card-body">
+                
+                {% if validlink %}
+                    {# Bloco para quando o link é válido #}
+                    <h2 class="text-center mb-4 text-primary">Defina sua Nova Senha</h2>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {# Renderiza campos e seus erros #}
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
+                            {{ field }}
+                            
+                            {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            
+                            {% for error in field.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg shadow">Alterar minha senha</button>
+                        </div>
+                    </form>
+
+                {% else %}
+                    {# Bloco para quando o link é inválido ou expirou #}
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle text-danger mb-3" style="font-size: 4rem;"></i>
+                        <h2 class="text-danger fw-bold mb-3">Link de Redefinição Inválido</h2>
+                        <p class="lead text-muted">
+                            O link de redefinição de senha era inválido ou já expirou. Isso pode ocorrer se você já usou este link anteriormente.
+                        </p>
+                        <hr class="my-4">
+                        <a href="{% url 'password_reset' %}" class="btn btn-warning btn-lg shadow-sm w-75">
+                            <i class="fas fa-redo me-2"></i> Solicitar Nova Redefinição
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    {# Script para adicionar a classe form-control a todos os widgets de formulário automaticamente #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var formFields = document.querySelectorAll('form input');
+            formFields.forEach(function(field) {
+                if (!field.classList.contains('form-control')) {
+                    field.classList.add('form-control');
+                }
+            });
+            var selectFields = document.querySelectorAll('form select');
+            selectFields.forEach(function(field) {
+                if (!field.classList.contains('form-select')) {
+                    field.classList.add('form-select');
+                }
+            });
+            var textareaFields = document.querySelectorAll('form textarea');
+            textareaFields.forEach(function(field) {
+                if (!field.classList.contains('form-control')) {
+                    field.classList.add('form-control');
+                }
+            });
+        });
+    </script>
+{% endblock extra_js %}

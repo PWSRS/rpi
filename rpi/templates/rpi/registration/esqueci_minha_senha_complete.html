@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Redefinição Concluída{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-8 col-lg-6">
+        {# Card de Confirmação #}
+        <div class="card text-center shadow-lg border-0 p-4">
+            <div class="card-body">
+                
+                {# Ícone de Sucesso (requer Font Awesome ou similar) #}
+                <i class="fas fa-check-circle text-success mb-3" style="font-size: 4rem;"></i>
+                
+                <h2 class="card-title text-success fw-bold mb-3">Senha Alterada com Sucesso!</h2>
+                
+                <p class="lead text-muted">
+                    Sua senha foi redefinida. Por motivos de segurança, use a nova senha imediatamente para acessar sua conta.
+                </p>
+                
+                <hr class="my-4">
+                
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg shadow-sm w-75">
+                    <i class="fas fa-sign-in-alt me-2"></i> Fazer Login
+                </a>
+                
+                <p class="small mt-3 text-secondary">
+                    Você será redirecionado para a página de login.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
