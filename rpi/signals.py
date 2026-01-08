@@ -22,7 +22,7 @@ def avisar_novo_cadastro(sender, instance, created, **kwargs):
             send_mail(
                 assunto,
                 mensagem,
-                'sistema.rpi@bm.rs.gov.br', # Remetente
+                'pablo.weber@hotmail.com', # Remetente
                 [email_admin],
                 fail_silently=True,
             )

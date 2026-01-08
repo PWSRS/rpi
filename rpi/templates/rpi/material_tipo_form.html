@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <h1 class="mb-4">
         {% if form.instance.pk %}
-            <i class="fas fa-edit"></i> Editar Material ID: {{ form.instance.pk }}
+            <i class="fas fa-edit"></i> Editar Material: {{ form.instance.nome }} - ID: {{ form.instance.pk }}
         {% else %}
             <i class="fas fa-plus-circle"></i> Registro de Material
         {% endif %}

@@ -75,7 +75,7 @@ def ativar_policial(request, user_id):
         assunto = "Acesso Liberado - Sistema RPI"
         mensagem = f"Olá {policial.first_name},\n\nSua solicitação de acesso ao Sistema RPI da ARI Sul foi aprovada. Você já pode realizar o login com seu e-mail institucional."
         
-        send_mail(assunto, mensagem, 'admin.rpi@bm.rs.gov.br', [policial.email], fail_silently=True)
+        send_mail(assunto, mensagem, 'pablo.weber@hotmail.com', [policial.email], fail_silently=True)
         
         messages.success(request, f"O policial {policial.first_name} foi ativado com sucesso!")
     else:
