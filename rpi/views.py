@@ -7,6 +7,10 @@ from collections import Counter
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.db import IntegrityError
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import user_passes_test
+from django.core.mail import send_mail
 
 
 # 2. Bibliotecas de terceiros (Third-party)
@@ -58,32 +62,78 @@ from .forms import (
     CadastroUsuarioForm,
 )
 
+@user_passes_test(lambda u: u.is_staff)
+def ativar_policial(request, user_id):
+    # Busca o usuário ou retorna 404 se não existir
+    policial = get_object_or_404(User, id=user_id)
+    
+    if not policial.is_active:
+        policial.is_active = True
+        policial.save()
+        
+        # Opcional: Avisar o policial por e-mail
+        assunto = "Acesso Liberado - Sistema RPI"
+        mensagem = f"Olá {policial.first_name},\n\nSua solicitação de acesso ao Sistema RPI da ARI Sul foi aprovada. Você já pode realizar o login com seu e-mail institucional."
+        
+        send_mail(assunto, mensagem, 'admin.rpi@bm.rs.gov.br', [policial.email], fail_silently=True)
+        
+        messages.success(request, f"O policial {policial.first_name} foi ativado com sucesso!")
+    else:
+        messages.info(request, "Este policial já está ativo.")
+        
+    return redirect('painel_gestao')
+
+User = get_user_model()
+@user_passes_test(lambda u: u.is_staff)
+def painel_gestao(request):
+    pendentes = User.objects.filter(is_active=False).order_by('-date_joined')
+    return render(request, 'rpi/dashboard_admin.html', {'pendentes': pendentes})
+
+@login_required
+def dashboard_admin(request):
+    if not request.user.is_staff:
+        return redirect('ocorrencia_list')
+    
+    # Busca apenas os policiais que se cadastraram mas ainda não foram aprovados
+    pendentes = User.objects.filter(is_active=False).order_by('-date_joined')
+    
+    return render(request, 'rpi/dashboard_admin.html', {'pendentes': pendentes})
+
 def registro_usuario(request):
-    """
-    View para lidar com o cadastro de novos usuários.
-    """
     if request.method == "POST":
-        # Usa o formulário personalizado
         form = CadastroUsuarioForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save(commit=False) # Não salva no banco ainda
+            
+            # REGRA DE SEGURANÇA CRÍTICA:
+            user.is_active = False # O usuário nasce desativado
+            
+            user.save()
 
-            messages.success(
+            messages.warning(
                 request,
-                "Sua conta foi criada com sucesso! Você pode fazer login agora.",
+                "Solicitação enviada! Sua conta está em análise pela administração. "
+                "Você receberá um aviso assim que seu acesso for liberado."
             )
-
             return redirect("login")
-
     else:
-        # Exibe o formulário personalizado vazio
         form = CadastroUsuarioForm()
 
-    return render(
-        request, "rpi/registro.html", {"form": form, "titulo": "Criar Conta"}
-    )
+    return render(request, "rpi/registro.html", {"form": form})
 
-
+class EmailBackend(ModelBackend):
+    def authenticate(self, request, username=None, password=None, **kwargs):
+        UserModel = get_user_model()
+        try:
+            # Tenta encontrar o usuário pelo e-mail
+            user = UserModel.objects.get(email=username)
+        except UserModel.DoesNotExist:
+            return None
+        
+        # Verifica a senha
+        if user.check_password(password):
+            return user
+        return None
 
 # --- GERENCIAMENTO DO RELATÓRIO ---
 

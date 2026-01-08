@@ -139,3 +139,11 @@ LOGOUT_REDIRECT_URL = (
 # 🟢 NOVO: Redirecionamento após a alteração de senha!
 # Vamos redirecionar para a raiz (onde o LOGIN_REDIRECT_URL aponta)
 PASSWORD_CHANGE_REDIRECT_URL = "/"
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend', # Mantém o padrão (opcional)
+    'rpi.views.EmailBackend',                # Adiciona o seu busca-por-email
+]
+
+# No settings.py
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

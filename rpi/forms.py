@@ -1,7 +1,8 @@
 from django import forms
 from django.forms import inlineformset_factory
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from .models import (
     Ocorrencia,
     Envolvido,
@@ -17,12 +18,11 @@ User = get_user_model()
 
 
 class CadastroUsuarioForm(UserCreationForm):
-    # Campos adicionais com labels em português e atributos
+    # Definição dos campos
     first_name = forms.CharField(label="Primeiro nome", max_length=150, required=False)
     last_name = forms.CharField(label="Último nome", max_length=150, required=False)
     email = forms.EmailField(label="Endereço de email", max_length=254, required=True)
 
-    # Customizando a label da Confirmação de senha
     password2 = forms.CharField(
         label="Confirmação de senha",
         widget=forms.PasswordInput(),
@@ -31,32 +31,54 @@ class CadastroUsuarioForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model = User
-
-        # 1. Lista os campos na ordem correta, garantindo que 'password' e 'password2'
-        # VENHAM DEPOIS dos campos de informação pessoal.
-        # Usa o 'UserCreationForm.Meta.fields' para INCLUIR os campos de senha
-        # (que são ('password', 'password2')) de uma só vez, no final.
         fields = (
             "username",
             "email",
             "first_name",
             "last_name",
-        ) + UserCreationForm.Meta.fields  # Isso adiciona ('password', 'password2') no final.
+        ) + UserCreationForm.Meta.fields
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # 1. Configurações de auxílio e Placeholders
+        self.fields['email'].help_text = "Obrigatório: utilize seu e-mail institucional @bm.rs.gov.br"
+        self.fields["first_name"].widget.attrs["placeholder"] = "Seu primeiro nome"
+        self.fields["last_name"].widget.attrs["placeholder"] = "Seu último nome"
+        self.fields["email"].widget.attrs["placeholder"] = "usuario@bm.rs.gov.br"
 
-        # Aplica a classe form-control a TODOS os campos
+        # 2. Aplica a classe CSS form-control do Bootstrap a TODOS os campos
         for field_name, field in self.fields.items():
             field.widget.attrs["class"] = "form-control"
 
-        # Adiciona placeholders
-        self.fields["first_name"].widget.attrs["placeholder"] = "Seu primeiro nome"
-        self.fields["last_name"].widget.attrs["placeholder"] = "Seu último nome"
-        self.fields["email"].widget.attrs["placeholder"] = "exemplo@dominio.com"
+    # --- VALIDAÇÕES (CLEAN METHODS) ---
 
+    def clean_email(self):
+        email = self.cleaned_data.get('email').lower()
+        dominio_oficial = "@bm.rs.gov.br"
+        
+        if not email.endswith(dominio_oficial):
+            raise forms.ValidationError(
+                f"Acesso negado. O e-mail deve pertencer ao domínio {dominio_oficial}."
+            )
+        return email
 
+    def clean_first_name(self):
+        nome = self.cleaned_data.get('first_name')
+        return nome.upper() if nome else nome
 
+    def clean_last_name(self):
+        sobrenome = self.cleaned_data.get('last_name')
+        return sobrenome.upper() if sobrenome else sobrenome
+
+class EmailLoginForm(AuthenticationForm):
+    username = forms.EmailField(widget=forms.EmailInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'usuario@bm.rs.gov.br'
+    }))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'class': 'form-control',
+    }))
 
 
 # --- 1. CLASSES DE FORMULÁRIOS ---

@@ -28,6 +28,8 @@ from .views import (
 urlpatterns = [
     # Registro no Sistema
     path("registro/", views.registro_usuario, name="registro"),
+    path("gestao/", views.painel_gestao, name="painel_gestao"),
+    path("gestao/ativar/<int:user_id>/", views.ativar_policial, name="ativar_policial"),
     # Listagem (EXISTENTE)
     path("", OcorrenciaListView.as_view(), name="ocorrencia_list"),
     # Criação (EXISTENTE)

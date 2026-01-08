@@ -1,107 +1,16 @@
-/* Fundo escuro com gradiente tecnológico */
-body {
-    background: linear-gradient(135deg, #0d0d0d, #1a1f2b, #0f2b3a);
-    background-size: 400% 400%;
-    animation: gradientMove 12s ease infinite;
-    color: #fff !important;
-}
-
-@keyframes gradientMove {
-    0% {
-        background-position: 0% 50%;
+    /* Estilo específico para a tela de login */
+    .card-login {
+        border-top: 5px solid #002d5b; /* Azul Marinho Institucional */
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
-    50% {
-        background-position: 100% 50%;
+    .btn-pm {
+        background-color: #002d5b;
+        color: white;
+        border: none;
     }
-    100% {
-        background-position: 0% 50%;
+    .btn-pm:hover {
+        background-color: #001f3f;
+        color: white;
     }
-}
-
-/* Card futurista */
-.login-card {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
-    border-radius: 15px;
-    transition: all 0.3s ease;
-}
-
-.login-card:hover {
-    box-shadow: 0 0 35px rgba(0, 255, 255, 0.35);
-    transform: translateY(-3px);
-}
-
-/* Cabeçalho futurista */
-.login-header {
-    background: linear-gradient(90deg, #0077ff, #00eaff);
-    color: #fff;
-    border-radius: 15px 15px 0 0 !important;
-    text-shadow: 0px 0px 12px rgba(255, 255, 255, 0.5);
-}
-
-/* Inputs “neon” */
-.form-control {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: #fff !important;
-}
-
-.form-control:focus {
-    border-color: #00eaff !important;
-    box-shadow: 0 0 8px #00eaff !important;
-    background-color: rgba(255, 255, 255, 0.15) !important;
-    color: #fff !important;
-}
-
-.form-floating label {
-    color: rgba(255, 255, 255, 0.85) !important;
-}
-
-/* Botão neon */
-.btn-login {
-    background: linear-gradient(90deg, #005eff, #00eaff);
-    color: #fff;
-    font-size: 1.1rem;
-    border: none;
-    box-shadow: 0 0 12px rgba(0, 204, 255, 0.5);
-    transition: 0.3s;
-}
-
-.btn-login:hover {
-    box-shadow: 0 0 20px rgba(0, 204, 255, 0.9);
-    transform: translateY(-2px);
-}
-
-/* Links */
-a {
-    color: #00d4ff !important;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-.card-footer .small,
-.card-footer .small a {
-    color: #e6f7ff !important; /* azul bem claro */
-}
-
-.card-footer .small a:hover {
-    color: #00eaff !important; /* neon ao passar o mouse */
-}
-
-/* === REGRAS DE LAYOUT (MOVidas do HTML para o CSS) === */
-
-/* 🔑 ESSENCIAL PARA CENTRALIZAÇÃO VERTICAL 🔑 */
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-/* Garante que o container de login com largura fixa fique CENTRALIZADO HORIZONTALMENTE */
-.login-container {
-    margin-left: auto !important;
-    margin-right: auto !important;
-}
+    /* Ocultar a navbar apenas na tela de login se necessário */
+    nav, .navbar { display: none !important; }

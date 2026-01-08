@@ -14,6 +14,13 @@
                 <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Olá, {{ user.username }}!</h5> 
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
+            {% if user.is_staff %}
+                <li class="nav-item">
+                    <a class="nav-link text-warning fw-bold" href="{% url 'painel_gestao' %}">
+                        <i class="fa-solid fa-gears"></i> PAINEL DE GESTÃO
+                    </a>
+                </li>
+            {% endif %}
             
             <div class="offcanvas-body">
                 
@@ -71,9 +78,9 @@
         </div>
 </nav>
 {% else %}
-<nav class="navbar bg-body-tertiary" data-bs-theme="dark">
+<!--<nav class="navbar bg-body-tertiary" data-bs-theme="dark">
     <div class="container-fluid justify-content-end">
         <a class="btn btn-primary" href="{% url 'login' %}">Entrar</a>
     </div>
-</nav>
+</nav>-->
 {% endif %}

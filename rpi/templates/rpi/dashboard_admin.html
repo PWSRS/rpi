@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Painel de Gestão - ARI SUL{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="fa-solid fa-chart-line me-2"></i>Gestão ARI SUL</h2>
+        <span class="badge bg-primary">Operador: {{ user.username }}</span>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0 small fw-bold"><i class="fa-solid fa-user-clock me-2"></i>SOLICITAÇÕES DE ACESSO AGUARDANDO</h5>
+        </div>
+        <div class="card-body">
+            {% if pendentes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Policial</th>
+                                <th>E-mail Institucional</th>
+                                <th>Data</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in pendentes %}
+                            <tr>
+                                <td>{{ p.first_name }} {{ p.last_name }}</td>
+                                <td>{{ p.email }}</td>
+                                <td>{{ p.date_joined|date:"d/m/Y" }}</td>
+                                <td>
+                                    <a href="{% url 'ativar_policial' p.id %}" class="btn btn-sm btn-success fw-bold">
+                                        <i class="fa-solid fa-check-double me-1"></i> APROVAR ACESSO
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center my-3">Não há solicitações pendentes no momento.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
