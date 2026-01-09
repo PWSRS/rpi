@@ -18,11 +18,13 @@ from .views import (
     InstrumentoDeleteView,
     salvar_instrumento_ajax,
     salvar_material_apreendido_ajax,
+    buscar_naturezas_ajax,
     MaterialApreendidoTipoCreateView,
     MaterialApreendidoTipoListView,
     MaterialApreendidoTipoUpdateView,
     MaterialApreendidoTipoDeleteView,
     registro_usuario,
+    cadastrar_natureza_rapida,
 )
 
 urlpatterns = [
@@ -71,5 +73,8 @@ urlpatterns = [
     path("material_apreendido/<int:pk>/deletar/", MaterialApreendidoTipoDeleteView.as_view(), name="delete_material_apreendido_tipo"),
     # Add novo material apreendido via AJAX
     path("material_apreendido/adicionar_ajax/",views.salvar_material_apreendido_ajax,name="adicionar_material_apreendido_ajax"),
-]   
-    
+    # Busca dinâmica de naturezas via AJAX
+    path('api/naturezas/buscar/', views.buscar_naturezas_ajax, name='buscar_naturezas_ajax'),
+    # Cadastro rápido de natureza
+    path('naturezas/novo/', views.cadastrar_natureza_rapida, name='cadastrar_natureza_rapida'),
+]

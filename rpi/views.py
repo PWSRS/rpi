@@ -5,7 +5,7 @@ from datetime import datetime, time
 from pathlib import Path
 from collections import Counter
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.db import IntegrityError
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
@@ -19,7 +19,7 @@ from weasyprint import HTML, CSS
 # 3. Framework Django - Core, Modelos e Banco de Dados
 from django.conf import settings
 from django.db import transaction
-from django.db.models import F, Prefetch
+from django.db.models import F, Prefetch, Q
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
@@ -49,7 +49,7 @@ from django.contrib.staticfiles.finders import find
 from django.forms import modelformset_factory, inlineformset_factory
 
 # 7. Importações do seu App Local (Internal)
-from .models import Ocorrencia, Envolvido, RelatorioDiario, Apreensao, OcorrenciaImagem, Instrumento, MaterialApreendidoTipo
+from .models import Ocorrencia, Envolvido, RelatorioDiario, Apreensao, OcorrenciaImagem, Instrumento, MaterialApreendidoTipo, NaturezaOcorrencia
 from .forms import (
     OcorrenciaForm,
     EnvolvidoForm,
@@ -60,6 +60,7 @@ from .forms import (
     InstrumentoForm,
     MaterialApreendidoTipoForm,
     CadastroUsuarioForm,
+    NaturezaOcorrenciaForm,
 )
 
 @user_passes_test(lambda u: u.is_staff)
@@ -974,3 +975,80 @@ def salvar_material_apreendido_ajax(request):
         },
         status=200
     )
+    
+    
+    
+@require_GET
+def buscar_naturezas_ajax(request):
+    # 1. Obter o termo de busca (query)
+    query = request.GET.get('q', '').strip()
+    
+    # 2. Configura a filtragem
+    if query:
+        # Usa o Q object para realizar uma busca OR (nome OU tags_busca)
+        # icontains: busca o termo em qualquer parte da string, sem distinção de caixa
+        filtros = Q(nome__icontains=query) | Q(tags_busca__icontains=query)
+        naturezas = NaturezaOcorrencia.objects.filter(filtros).order_by('nome')[:30] # Limita a 30 resultados
+    else:
+        # Se não houver termo, mostra as 15 naturezas mais comuns (ou as primeiras)
+        # Otimização: Ajuste este filtro para mostrar crimes frequentes
+        naturezas = NaturezaOcorrencia.objects.all().order_by('nome')[:15]
+
+    # 3. Formatar os resultados para o Select2
+    results = []
+    for nat in naturezas:
+        results.append({
+            'id': nat.pk, # Select2 usa 'id' para o valor
+            'text': nat.nome, # Select2 usa 'text' para o que é exibido
+        })
+
+    # 4. Retorna a resposta JSON
+    return JsonResponse({'results': results, 'pagination': {'more': False}})
+
+
+
+
+@csrf_exempt # OBS: Mantenha este decorador apenas se o token CSRF estiver falhando no JS. 
+             # A melhor prática é usá-lo no template com {% csrf_token %}.
+@require_POST
+def cadastrar_natureza_rapida(request):
+    """
+    Processa a requisição AJAX para salvar rapidamente uma nova NaturezaOcorrencia.
+    Retorna 200 (Sucesso), 400 (Erro de Validação) ou 500 (Erro de Servidor/Banco).
+    """
+    
+    form = NaturezaOcorrenciaForm(request.POST)
+    
+    if form.is_valid():
+        try:
+            # 1. Tenta salvar no banco de dados
+            nova_natureza = form.save()
+            
+            # 2. Retorno de sucesso (Status 200 OK)
+            return JsonResponse({
+                'success': True,
+                'id': nova_natureza.pk,
+                'text': str(nova_natureza), 
+            }, status=200)
+        
+        except Exception as e:
+            # 3. Captura erros do banco (ex: Integridade/UNIQUE constraint)
+            # Imprime o erro no console do servidor para debug
+            print(f"Erro no banco ao salvar Natureza: {e}")
+            
+            # Retorno de erro interno (Status 500)
+            return JsonResponse({
+                'success': False,
+                'errors': {'__all__': [f"Erro interno de servidor: Falha ao salvar a Natureza. ({e})"]}
+            }, status=500)
+            
+    else:
+        # 4. Erro de validação do formulário (campos obrigatórios ausentes/inválidos)
+        # Retorno de erro de cliente (Status 400 Bad Request)
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors, 
+        }, status=400)
+    
+    # OBS: O código NÃO PRECISA de um return final aqui, pois @require_POST 
+    # já lida com métodos HTTP incorretos, e o if/else garante um retorno para POST.

@@ -65,6 +65,13 @@ class NaturezaOcorrencia(models.Model):
     tipo_impacto = models.CharField(
         max_length=1, choices=IMPACTO_CHOICES, verbose_name="Aspecto"
     )
+    # Armazena termos de busca alternativos, separados por vírgula (ex: HOMICIDIO, HD, 121)
+    tags_busca = models.CharField(
+        max_length=500,
+        blank=True,
+        verbose_name="Tags de Busca (Opcional)",
+        help_text="Termos alternativos para pesquisa, separados por vírgula."
+    )
 
     def __str__(self):
         return f"[{self.get_tipo_impacto_display()}] {self.nome}"
