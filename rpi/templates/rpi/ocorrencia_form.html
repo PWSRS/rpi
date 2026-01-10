@@ -88,7 +88,7 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6 col-lg-5 mb-3">
-                                <label for="{{ form.natureza.id_for_label }}" class="form-label required">Natureza:</label>
+                                <label for="{{ form.natureza.id_for_label }}" class="form-label required">Natureza</label>
                                 
                                 <div class="input-group flex-nowrap">
                                     {{ form.natureza }}
@@ -102,44 +102,44 @@
                                 
                             </div>
                             <div class="col-md-6 col-lg-4 mb-3">
-                                <label for="{{ form.opm.id_for_label }}" class="form-label required">OPM:</label>
+                                <label for="{{ form.opm.id_for_label }}" class="form-label required">OPM</label>
                                 {{ form.opm }}
                             </div>
                             <div class="col-md-6 col-lg-3 mb-3">
-                                <label for="{{ form.data_hora_bruta.id_for_label }}" class="form-label required">Data/Hora:</label>
+                                <label for="{{ form.data_hora_bruta.id_for_label }}" class="form-label required">Data/Hora</label>
                                 {{ form.data_hora_bruta }}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-12 col-lg-6 mb-3">
-                                <label for="{{ form.rua.id_for_label }}" class="form-label">Endereço:</label>
+                                <label for="{{ form.rua.id_for_label }}" class="form-label">Endereço</label>
                                 {{ form.rua }}
                             </div>
                             <div class="col-md-6 col-lg-2 mb-3">
-                                <label for="{{ form.numero.id_for_label }}" class="form-label">Número:</label>
+                                <label for="{{ form.numero.id_for_label }}" class="form-label">Número</label>
                                 {{ form.numero }}
                             </div>
                             <div class="col-md-6 col-lg-4 mb-3">
-                                <label for="{{ form.bairro.id_for_label }}" class="form-label">Bairro:</label>
+                                <label for="{{ form.bairro.id_for_label }}" class="form-label">Bairro</label>
                                 {{ form.bairro }}
                             </div>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 col-lg-2 mb-3">
-                                <label for="{{ form.tipo_acao.id_for_label }}" class="form-label">Tipo do Fato:</label>
+                                <label for="{{ form.tipo_acao.id_for_label }}" class="form-label">Tipo do Fato</label>
                                 {{ form.tipo_acao }}
                             </div>
                         
                             <div class="col-md-6 col-lg-7 mb-3" id="div_titulo_sumario">
-                                <label for="{{ form.resumo_cabecalho.id_for_label }}" class="form-label required">Título Sumário:</label>
+                                <label for="{{ form.resumo_cabecalho.id_for_label }}" class="form-label required">Título Sumário</label>
                                 {{ form.resumo_cabecalho }}
                             </div>
 
                             <div class="col-md-6 col-lg-3 mb-3" id="div_instrumento" style="display: none;">
                                 <label class="form-label fw-bold text-danger">
-                                    <i class="bi bi-shield-fill-exclamation"></i> Instrumentos Usados (CVLI)
+                                    <i class="bi bi-shield-fill-exclamation"></i> Instrumento Usado (CVLI)
                                 </label>
                                 
                                 <div class="input-group">
@@ -164,7 +164,7 @@
                                             
                         <div class="row">
                             <div class="col-12 mb-3">
-                                <label for="{{ form.relato_historico.id_for_label }}" class="form-label required">Histórico da Ocorrência:</label>
+                                <label for="{{ form.relato_historico.id_for_label }}" class="form-label required">Histórico da Ocorrência</label>
                                 {{ form.relato_historico }}
                             </div>
                         </div>
@@ -189,11 +189,11 @@
                                 <p class="text-muted small">Preencha apenas a tipo criminal e o aspecto para o cadastro rápido.</p>
                                 
                                 <div class="mb-3">
-                                    <label for="id_natureza_nome_modal" class="form-label required">Tipo Criminal:</label>
+                                    <label for="id_natureza_nome_modal" class="form-label required">Tipo Criminal</label>
                                     <input type="text" class="form-control" id="id_natureza_nome_modal" name="nome" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="id_natureza_aspecto_modal" class="form-label required">Aspecto/Impacto:</label>
+                                    <label for="id_natureza_aspecto_modal" class="form-label required">Aspecto/Impacto</label>
                                     <select class="form-select" id="id_natureza_aspecto_modal" name="tipo_impacto" required>
                                         
                                         <option value="" disabled selected>Selecione o Aspecto...</option> 
@@ -232,9 +232,9 @@
                                     {% for hidden in form_envolvido.hidden_fields %} {{ hidden }} {% endfor %}
                                     <div class="row">
                                         <div class="col-md-2">{{ form_envolvido.tipo_participante.label_tag }} {{ form_envolvido.tipo_participante }}</div>
-                                        <div class="col-md-3">{{ form_envolvido.nome.label_tag }} {{ form_envolvido.nome }}</div>
+                                        <div class="col-md-6">{{ form_envolvido.nome.label_tag }} {{ form_envolvido.nome }}</div>
                                         <div class="col-md-1">{{ form_envolvido.idade.label_tag }} {{ form_envolvido.idade }}</div>
-                                        <div class="col-md-5">{{ form_envolvido.antecedentes.label_tag }} {{ form_envolvido.antecedentes }}</div>
+                                        <div class="col-md-2">{{ form_envolvido.antecedentes.label_tag }} {{ form_envolvido.antecedentes }}</div>
                                         <div class="col-md-1 d-flex align-items-end">
                                             <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos"><i class="fas fa-trash"></i></button>
                                         </div>
@@ -268,7 +268,7 @@
                             <div class="form-apreensao-item mb-3 p-3 border rounded bg-light">
                                 {% for hidden in form_apreensao.hidden_fields %}{{ hidden }}{% endfor %}
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label">Material</label>
                                         <div class="input-group">
                                             {{ form_apreensao.material_tipo }}
@@ -279,7 +279,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-md-5">
                                         <label class="form-label">Descrição</label>
                                         {{ form_apreensao.descricao_adicional }}
                                     </div>
@@ -356,8 +356,8 @@
                                 <div class="card p-3 mb-3 imagem-form-bloco">
                                     {% for hidden in form_imagem.hidden_fields %} {{ hidden }} {% endfor %}
                                     <div class="row">
-                                        <div class="col-md-6">Arquivo: {{ form_imagem.imagem }}</div>
-                                        <div class="col-md-5">Legenda: {{ form_imagem.legenda }}</div>
+                                        <div class="col-md-6">Arquivo {{ form_imagem.imagem }}</div>
+                                        <div class="col-md-5">Legenda {{ form_imagem.legenda }}</div>
                                         <div class="col-md-1 d-flex align-items-end">
                                             <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="imagens"><i class="fas fa-trash"></i></button>
                                         </div>
@@ -390,10 +390,10 @@
 <template id="envolvido-template">
     <div class="envolvido-form border rounded p-3 mb-3 bg-light">
         <div class="row">
-            <div class="col-md-2">{{ envolvido_formset.empty_form.tipo_participante }}</div>
-            <div class="col-md-3">{{ envolvido_formset.empty_form.nome }}</div>
-            <div class="col-md-1">{{ envolvido_formset.empty_form.idade }}</div>
-            <div class="col-md-5">{{ envolvido_formset.empty_form.antecedentes }}</div>
+            <div class="col-md-2">Tipo participante {{ envolvido_formset.empty_form.tipo_participante }}</div>
+            <div class="col-md-6">Nome {{ envolvido_formset.empty_form.nome }}</div>
+            <div class="col-md-1">Idade {{ envolvido_formset.empty_form.idade }}</div>
+            <div class="col-md-2">Antecedentes Criminais {{ envolvido_formset.empty_form.antecedentes }}</div>
             <div class="col-md-1 d-flex align-items-end">
                 <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos"><i class="fas fa-trash"></i></button>
             </div>
@@ -404,10 +404,10 @@
 <template id="apreensao-template">
     <div class="form-apreensao-item mb-3 p-3 border rounded bg-light">
         <div class="row">
-            <div class="col-md-4">{{ apreensao_formset.empty_form.material_tipo }}</div>
-            <div class="col-md-4">{{ apreensao_formset.empty_form.descricao_adicional }}</div>
-            <div class="col-md-1">{{ apreensao_formset.empty_form.quantidade }}</div>
-            <div class="col-md-3">{{ apreensao_formset.empty_form.unidade_medida }}</div>
+            <div class="col-md-3">Material {{ apreensao_formset.empty_form.material_tipo }}</div>
+            <div class="col-md-5">Descrição {{ apreensao_formset.empty_form.descricao_adicional }}</div>
+            <div class="col-md-1">Qtd {{ apreensao_formset.empty_form.quantidade }}</div>
+            <div class="col-md-2">Un {{ apreensao_formset.empty_form.unidade_medida }}</div>
             <div class="col-md-1 d-flex align-items-end">
                 <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="apreensoes"><i class="fas fa-trash"></i></button>
             </div>
@@ -418,8 +418,8 @@
 <template id="imagem-template">
     <div class="card p-3 mb-3 imagem-form-bloco">
         <div class="row">
-            <div class="col-md-6">{{ imagem_formset.empty_form.imagem }}</div>
-            <div class="col-md-5">{{ imagem_formset.empty_form.legenda }}</div>
+            <div class="col-md-6">Arquivo {{ imagem_formset.empty_form.imagem }}</div>
+            <div class="col-md-5">Legenda {{ imagem_formset.empty_form.legenda }}</div>
             <div class="col-md-1 d-flex align-items-end">
                 <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="imagens"><i class="fas fa-trash"></i></button>
             </div>
@@ -540,7 +540,6 @@ $(document).ready(function () {
             "ROUBO A ESTABELECIMENTO COM MORTE",
             "ROUBO A ESTABELECIMENTO BANCÁRIO COM MORTE",
             "INSTIGAÇÃO AO SUICÍDIO",
-            "LATROCÍNIO",
         ];
 
         const texto = $('#id_natureza option:selected').text().toUpperCase();
