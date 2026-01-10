@@ -35,6 +35,13 @@
                                     <a href="{% url 'ativar_policial' p.id %}" class="btn btn-sm btn-success fw-bold">
                                         <i class="fa-solid fa-check-double me-1"></i> APROVAR ACESSO
                                     </a>
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-danger" 
+                                        data-toggle="modal" 
+                                        data-target="#modalDeletar"
+                                        data-user-id="{{ policial.id }}" data-user-nome="{{ policial.first_name }}">Deletar
+                                    </button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -47,4 +54,62 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="modalDeletar" tabindex="-1" role="dialog" aria-labelledby="modalDeletarLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDeletarLabel">Confirmar Deleção</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Tem certeza que deseja deletar <strong id="modalPolicialNome"></strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmarDelecaoBtn">Deletar</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
+<script>
+var userIdToDelete = null;
+var rowToRemove = null;
+
+// Quando abre o modal, seta o id e nome
+$('#modalDeletar').on('show.bs.modal', function (event) {
+  var button = $(event.relatedTarget); // Botão que acionou o modal
+  userIdToDelete = button.data('user-id');
+  var userNome = button.data('user-nome');
+  $('#modalPolicialNome').text(userNome);
+  rowToRemove = button.closest('tr'); // Ajuste se não for em TR, mas em card, etc...
+});
+
+// Ao clicar em "Deletar"
+$('#confirmarDelecaoBtn').click(function(){
+  if (userIdToDelete) {
+    $.ajax({
+      url: "{% url 'deletar_usuario' 0 %}".replace('0', userIdToDelete),
+      method: "POST",
+      data: {
+        'csrfmiddlewaretoken': '{{ csrf_token }}'
+      },
+      success: function(response) {
+        if(response.success){
+          $('#modalDeletar').modal('hide');
+          rowToRemove.remove(); // Remove a linha da tabela
+          // Feedback (pode usar toastr ou alert)
+          alert(response.message);
+        } else {
+          alert("Erro ao deletar.");
+        }
+      },
+      error: function() {
+        alert("Erro na requisição.");
+      }
+    });
+  }
+});
+</script>

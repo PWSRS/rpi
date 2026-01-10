@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Usuários - ARI SUL{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="fa-solid fa-chart-line me-2"></i>Usuários Ativos - ARI SUL</h2>
+        <span class="badge bg-primary">Operador: {{ user.username }}</span>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0 small fw-bold"><i class="fa-solid fa-user-clock me-2"></i>USUÁRIOS ATIVOS NO SISTEMA RPI</h5>
+        </div>
+        <div class="card-body">
+            {% if usuarios %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Policial</th>
+                                <th>E-mail Institucional</th>
+                                <th>Data</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in usuarios %}
+                            <tr>
+                                <td>{{ u.first_name }} {{ u.last_name }}</td>
+                                <td>{{ u.email }}</td>
+                                <td>{{ u.date_joined|date:"d/m/Y" }}</td>
+                                <td>
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-danger" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalDeletar"
+                                        data-user-id="{{ u.id }}" data-user-nome="{{ u.first_name }}">Deletar
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center my-3">Não há usuários ativos no momento.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalDeletar" tabindex="-1" aria-labelledby="modalDeletarLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDeletarLabel">Confirmar Deleção</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza que deseja deletar <strong id="modalPolicialNome"></strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmarDelecaoBtn">Deletar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(function(){
+  var userIdToDelete = null;
+  var rowToRemove = null;
+
+  $('#modalDeletar').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    userIdToDelete = button.data('user-id');
+    var userNome = button.data('user-nome');
+    $('#modalPolicialNome').text(userNome);
+    rowToRemove = button.closest('tr');
+  });
+
+  $('#confirmarDelecaoBtn').click(function(){
+    if (userIdToDelete) {
+      $.ajax({
+        url: "{% url 'deletar_usuario' 0 %}".replace('0', userIdToDelete),
+        method: "POST",
+        data: {
+          'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+          if(response.success){
+            $('#modalDeletar').modal('hide');
+            rowToRemove.remove();
+            alert(response.message);
+          } else {
+            alert("Erro ao deletar.");
+          }
+        },
+        error: function() {
+          alert("Erro na requisição.");
+        }
+      });
+    }
+  });
+});
+</script>
+{% endblock %}
+

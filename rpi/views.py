@@ -62,12 +62,16 @@ from .forms import (
     CadastroUsuarioForm,
     NaturezaOcorrenciaForm,
 )
-
+# O @user_passes_test verifica se o usuário é staff (admin)
+# Apenas usuários staff podem ativar policiais
+# lambda é uma função anônima que retorna True se o usuário for staff
+# u: representa o usuário atual e u.is_staff verifica se ele é staff
 @user_passes_test(lambda u: u.is_staff)
 def ativar_policial(request, user_id):
     # Busca o usuário ou retorna 404 se não existir
     policial = get_object_or_404(User, id=user_id)
     
+    # Se não estiver ativo, ativa e salva
     if not policial.is_active:
         policial.is_active = True
         policial.save()
@@ -84,14 +88,35 @@ def ativar_policial(request, user_id):
         
     return redirect('painel_gestao')
 
+@user_passes_test(lambda u: u.is_staff)
+def deletar_usuario(request, user_id):
+    policial = get_object_or_404(User, id=user_id)
+    
+    if request.method == "POST":
+        policial_nome = policial.first_name  # Salva antes de deletar!
+        policial.delete()
+        return JsonResponse({'success': True, 'message': f"O policial {policial_nome} foi deletado com sucesso!"})
+    
+    return JsonResponse({'success': False, 'error': 'Requisição inválida.'}, status=400)
+
+@user_passes_test(lambda u: u.is_staff)
+def listar_usuarios(request):
+    usuarios = User.objects.filter(is_active=True).order_by('-date_joined')
+    return render(request, 'rpi/lista_usuarios.html', {'usuarios': usuarios})
+
+
+#User = get_user_model() # Obtém o modelo de usuário customizado ou o padrão do Django
 User = get_user_model()
 @user_passes_test(lambda u: u.is_staff)
 def painel_gestao(request):
+    # User.objects.filter(is_active=False).order_by('-date_joined') busca todos os usuários inativos (pendentes)
+    # -date_joined é usado para ordenar do mais recente ao mais antigo
     pendentes = User.objects.filter(is_active=False).order_by('-date_joined')
     return render(request, 'rpi/dashboard_admin.html', {'pendentes': pendentes})
 
 @login_required
 def dashboard_admin(request):
+    # Se não for staff, redireciona para a lista de ocorrências
     if not request.user.is_staff:
         return redirect('ocorrencia_list')
     

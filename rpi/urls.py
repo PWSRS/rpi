@@ -25,6 +25,8 @@ from .views import (
     MaterialApreendidoTipoDeleteView,
     registro_usuario,
     cadastrar_natureza_rapida,
+    listar_usuarios,
+    deletar_usuario,
 )
 
 urlpatterns = [
@@ -77,4 +79,9 @@ urlpatterns = [
     path('api/naturezas/buscar/', views.buscar_naturezas_ajax, name='buscar_naturezas_ajax'),
     # Cadastro rápido de natureza
     path('naturezas/novo/', views.cadastrar_natureza_rapida, name='cadastrar_natureza_rapida'),
+    # lista os usuários cadastrados no banco de dados
+    path('listar_usuarios/', views.listar_usuarios, name='listar_usuarios'),
+    # deletar usuário do sistema
+    path('usuario/<int:user_id>/deletar/', views.deletar_usuario, name='deletar_usuario'),
+    
 ]
