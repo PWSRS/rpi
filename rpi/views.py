@@ -265,39 +265,48 @@ def iniciar_dia(request):
 
     if request.method == "POST" and not relatorio_aberto:
         agora = timezone.now()
-
+        
         # 1. FIXA O PERÍODO: 07:00 de hoje até 07:00 de amanhã
         inicio_plantao = timezone.make_aware(
             datetime.combine(agora.date(), time(7, 0, 0))
         )
         fim_plantao = inicio_plantao + timezone.timedelta(days=1)
 
-        # 2. LÓGICA DE INCREMENTO ANUAL (Reset automático)
+        # 2. LÓGICA DO DIA DO ANO (Ordinal)
+        # tm_yday retorna 1 para 1º de Jan, 16 para 16 de Jan, etc.
+        
+        # o número do relatório seja baseado no início do plantão(mesmo que aberto após a meia-noite)
+        # o dia_do_ano = inicio_plantao.date().timetuple().tm_yday
+        dia_do_ano = agora.date().timetuple().tm_yday
         ano_atual = agora.year
-        ultimo = (
-            RelatorioDiario.objects.filter(ano_criacao=ano_atual)
-            .order_by("nr_relatorio")
-            .last()
-        )
-        proximo_numero = (ultimo.nr_relatorio + 1) if ultimo else 1
 
-        # 3. CRIAÇÃO DO RELATÓRIO
+        # 3. VERIFICAÇÃO DE SEGURANÇA (Opcional)
+        # Verifica se já existe um relatório com esse número para evitar duplicidade no mesmo dia
+        existe_hoje = RelatorioDiario.objects.filter(
+            nr_relatorio=dia_do_ano, 
+            ano_criacao=ano_atual
+        ).exists()
+
+        if existe_hoje:
+            messages.error(request, f"Já existe um relatório (Nº {dia_do_ano}) iniciado para a data de hoje.")
+            return redirect("alguma_view_de_lista") # Redirecione para onde preferir
+
+        # 4. CRIAÇÃO DO RELATÓRIO
         relatorio_aberto = RelatorioDiario.objects.create(
-            nr_relatorio=proximo_numero,
+            nr_relatorio=dia_do_ano, # Agora é o dia do ano, não mais incremento +1
             ano_criacao=ano_atual,
             data_inicio=inicio_plantao,
             data_fim=fim_plantao,
             usuario_responsavel=request.user,
-            finalizado=False,  # Garante que inicie aberto
+            finalizado=False,
         )
 
         messages.success(
-            request, f"Relatório {proximo_numero}/{ano_atual} iniciado com sucesso!"
+            request, f"Relatório {dia_do_ano}/{ano_atual} iniciado com sucesso!"
         )
         return redirect("ocorrencia_create")
 
     return render(request, "rpi/iniciar_dia.html", {"relatorio": relatorio_aberto})
-
 
 # --- OCORRÊNCIAS ---
 

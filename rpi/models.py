@@ -289,7 +289,7 @@ class Envolvido(models.Model):
         max_length=1,
         choices=ANTECEDENTES_CHOICES,
         default="I",
-        verbose_name="Antecedentes Criminais",
+        verbose_name="Antec. Criminais",
     )
     nome = models.CharField(max_length=255)
     tipo_participante = models.CharField(
