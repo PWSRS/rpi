@@ -276,6 +276,7 @@ class Envolvido(models.Model):
     TIPO_PARTICIPANTE_CHOICES = [
         ("V", "Vítima"),
         ("A", "Autor"),
+        ("M", "Menor Infrator"),
         ("P", "Preso"),
         ("T", "Testemunha"),
         ("S", "Suspeito"),
@@ -283,17 +284,31 @@ class Envolvido(models.Model):
     ANTECEDENTES_CHOICES = [
         ("S", "Sim"),
         ("N", "Não"),
-        ("I", "Não Informado"),  # Opção para casos em que o status é desconhecido
+        ("I", "N/D"),  # Opção para casos em que o status é desconhecido
     ]
+    
+    TIPO_DOCUMENTO = [
+        ("1", "RG"),
+        ("2", "CPF"),
+    ]
+    
+    tipo_documento = models.CharField(
+        max_length=1,
+        choices=TIPO_DOCUMENTO,
+        verbose_name="Documento",
+    )
+    
+    nr_documento = models.CharField(max_length=14, blank=True, null=True, verbose_name="Nr",)
+    
     antecedentes = models.CharField(
         max_length=1,
         choices=ANTECEDENTES_CHOICES,
         default="I",
-        verbose_name="Antec. Criminais",
+        verbose_name="Antec.",
     )
     nome = models.CharField(max_length=255)
     tipo_participante = models.CharField(
-        max_length=1, choices=TIPO_PARTICIPANTE_CHOICES
+        max_length=1, choices=TIPO_PARTICIPANTE_CHOICES, verbose_name="Tipo",
     )
     ocorrencia = models.ForeignKey(
         Ocorrencia, on_delete=models.CASCADE, related_name="envolvidos"

@@ -64,7 +64,7 @@
                         <td class="text-center align-middle"><strong>{{ item.quantidade }}</strong></td>
                         <td class="text-center align-middle">{{ item.unidade_medida|default:"-" }}</td>
                         <td class="text-center align-middle">{{ item.material_tipo.nome }}</td>
-                        <td class="text-center align-middle">{{ item.descricao_adicional }}</td>
+                        <td class="text-center align-middle">{% if not item.descricao_adicional %} - {% else %} {{ item.descricao_adicional }} {% endif %}</td>
                         <td class="text-center align-middle">
                             <a href="{% url 'ocorrencia_update' item.ocorrencia.id %}" 
                                class="btn btn-sm btn-outline-warning me-1" 
@@ -89,6 +89,42 @@
                         <td colspan="5" class="text-center py-4 text-muted">
                             Nenhum material encontrado para o período selecionado.
                         </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mt-4 border-info">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Consolidado de Apreensões</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Material</th>
+                        <th class="text-center">Quantidade Total Acumulada</th>
+                        <th class="text-center">Unidade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for resumo in resumo_totais %}
+                    <tr>
+                        <td class="fw-bold">{{ resumo.material_tipo__nome }}</td>
+                        <td class="text-center text-primary">
+                            <span class="badge bg-primary rounded-pill fs-6">
+                                {{ resumo.total_quantidade }}
+                            </span>
+                        </td>
+                        <td class="text-center text-muted">{{ resumo.unidade_medida|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-3 text-muted">Nenhum dado para totalizar.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

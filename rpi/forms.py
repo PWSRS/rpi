@@ -111,7 +111,7 @@ class ApreensaoForm(forms.ModelForm):
 class EnvolvidoForm(forms.ModelForm):
     class Meta:
         model = Envolvido
-        fields = ("nome", "tipo_participante", "idade", "antecedentes")
+        fields = ("nome", "tipo_participante", "idade", "tipo_documento", "nr_documento", "antecedentes")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

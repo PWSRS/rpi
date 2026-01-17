@@ -27,6 +27,7 @@ from .views import (
     cadastrar_natureza_rapida,
     listar_usuarios,
     deletar_usuario,
+    listar_prisoes,
 )
 
 urlpatterns = [
@@ -83,5 +84,7 @@ urlpatterns = [
     path('listar_usuarios/', views.listar_usuarios, name='listar_usuarios'),
     # deletar usuário do sistema
     path('usuario/<int:user_id>/deletar/', views.deletar_usuario, name='deletar_usuario'),
+    # Prisões
+    path('prisoes/', views.listar_prisoes, name='listar_prisoes'),
     
 ]

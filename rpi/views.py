@@ -1,66 +1,71 @@
 # 1. Bibliotecas padrão do Python (Standard Library)
 import urllib.parse
 import urllib.request
+from collections import Counter
 from datetime import datetime, time
 from pathlib import Path
-from collections import Counter
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST, require_GET
-from django.db import IntegrityError
-from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import user_passes_test
-from django.core.mail import send_mail
-
 
 # 2. Bibliotecas de terceiros (Third-party)
-from weasyprint import HTML, CSS
+from weasyprint import CSS, HTML
 
-# 3. Framework Django - Core, Modelos e Banco de Dados
+# 3. Django Core e Utilitários
 from django.conf import settings
-from django.db import transaction
-from django.db.models import F, Prefetch, Q
-from django.http import HttpResponse, JsonResponse
-from django.utils import timezone
-from django.utils.dateparse import parse_date
-
-# 4. Django - Views, Mixins e Decoradores
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.staticfiles.finders import find
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import (
-    ListView,
-    CreateView,
-    DetailView,
-    UpdateView,
-    DeleteView,
-)
+from django.core.mail import send_mail
 
-# 5. Django - URLs e Templates
+# 4. Django Banco de Dados e Modelos
+from django.db import IntegrityError, transaction
+from django.db.models import F, Prefetch, Q, Sum, Count
+
+# 5. Django HTTP e View Helpers
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
-from django.contrib.staticfiles.finders import find
+from django.utils import timezone
+from django.utils.dateparse import parse_date
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 
-# 6. Django - Formulários e Formsets
-from django.forms import modelformset_factory, inlineformset_factory
+# 6. Django Generic Views e Formulários
+from django.forms import inlineformset_factory, modelformset_factory
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    UpdateView,
+)
 
 # 7. Importações do seu App Local (Internal)
-from .models import Ocorrencia, Envolvido, RelatorioDiario, Apreensao, OcorrenciaImagem, Instrumento, MaterialApreendidoTipo, NaturezaOcorrencia
 from .forms import (
-    OcorrenciaForm,
-    EnvolvidoForm,
-    EnvolvidoFormSet,
     ApreensaoForm,
     ApreensaoFormSet,
+    CadastroUsuarioForm,
+    EnvolvidoForm,
+    EnvolvidoFormSet,
     ImagemFormSet,
     InstrumentoForm,
     MaterialApreendidoTipoForm,
-    CadastroUsuarioForm,
     NaturezaOcorrenciaForm,
+    OcorrenciaForm,
+)
+from .models import (
+    Apreensao,
+    Envolvido,
+    Instrumento,
+    MaterialApreendidoTipo,
+    NaturezaOcorrencia,
+    Ocorrencia,
+    OcorrenciaImagem,
+    RelatorioDiario,
 )
 # O @user_passes_test verifica se o usuário é staff (admin)
 # Apenas usuários staff podem ativar policiais
@@ -604,27 +609,30 @@ class OcorrenciaDeleteView(LoginRequiredMixin, DeleteView):
 
 
 def listar_materiais_apreendidos(request):
-    # Iniciamos com todos os materiais, usando select_related para performance
+    # Busca todos os materiais apreendidos, com filtros opcionais por data
     materiais = Apreensao.objects.select_related("material_tipo", "ocorrencia").all()
 
-    # Captura as datas vindas do formulário de filtro (GET)
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
 
-    # Aplica os filtros apenas se as datas forem fornecidas
     if data_inicio:
-        # Filtra ocorrências com data maior ou igual à data_inicio
         materiais = materiais.filter(ocorrencia__data_hora_fato__date__gte=data_inicio)
-
     if data_fim:
-        # Filtra ocorrências com data menor ou igual à data_fim
         materiais = materiais.filter(ocorrencia__data_hora_fato__date__lte=data_fim)
 
-    # Ordenar por data mais recente para facilitar a visualização
+    # --- NOVO: Lógica de Resumo ---
+    # Agrupa por tipo de material e soma as quantidades
+    resumo_totais = (
+        materiais.values("material_tipo__nome", "unidade_medida")
+        .annotate(total_quantidade=Sum("quantidade"))# annotate para somar as quantidades
+        .order_by("material_tipo__nome")
+    )
+
     materiais = materiais.order_by("-ocorrencia__data_hora_fato")
 
     context = {
         "materiais": materiais,
+        "resumo_totais": resumo_totais, # Enviando o resumo para o template
     }
 
     return render(request, "rpi/lista_materiais_apreendidos.html", context)
@@ -638,6 +646,39 @@ def deletar_materiais_apreendidos(request, apreensao_id):
         messages.success(request, "Material apreendido excluído com sucesso.")
 
     return redirect("listar_materiais_apreendidos")
+
+def listar_prisoes(request):
+    # 1. Filtramos apenas quem é Preso ou Suspeito (ou os tipos que você desejar)
+    envolvidos = Envolvido.objects.filter(
+        tipo_participante__in=["P", "S", "M", "A"]
+    ).select_related("ocorrencia")
+
+    # 2. Captura as datas
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
+
+    if data_inicio:
+        envolvidos = envolvidos.filter(ocorrencia__data_hora_fato__date__gte=data_inicio)
+    if data_fim:
+        envolvidos = envolvidos.filter(ocorrencia__data_hora_fato__date__lte=data_fim)
+
+    # 3. Lógica de Resumo: Contar quantos de cada tipo
+    # Aqui agrupamos por tipo (Preso, Suspeito) e contamos as ocorrências
+    resumo_totais = (
+        envolvidos.values("tipo_participante")
+        .annotate(total=Count("id"))
+        .order_by("tipo_participante")
+    )
+
+    envolvidos = envolvidos.order_by("-ocorrencia__data_hora_fato")
+
+    context = {
+        "envolvidos": envolvidos,
+        "resumo_totais": resumo_totais,
+    }
+
+    return render(request, "rpi/lista_prisoes.html", context)
+
 
 
 def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):

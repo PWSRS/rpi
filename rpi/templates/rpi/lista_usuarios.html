@@ -5,13 +5,13 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold"><i class="fa-solid fa-chart-line me-2"></i>Usuários Ativos - ARI SUL</h2>
+        <h2 class="fw-bold"><i class="fa-solid fa-chart-line me-2"></i>Usuários Ativos - RPI - ARI SUL</h2>
         <span class="badge bg-primary">Operador: {{ user.username }}</span>
     </div>
 
     <div class="card shadow-sm border-0">
         <div class="card-header bg-dark text-white">
-            <h5 class="mb-0 small fw-bold"><i class="fa-solid fa-user-clock me-2"></i>USUÁRIOS ATIVOS NO SISTEMA RPI</h5>
+            <h5 class="mb-0 small fw-bold"><i class="fa-solid fa-user-clock me-2"></i>USUÁRIOS DO SISTEMA RPI</h5>
         </div>
         <div class="card-body">
             {% if usuarios %}
@@ -19,7 +19,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Policial</th>
+                                <th>Usuário</th>
                                 <th>E-mail Institucional</th>
                                 <th>Data</th>
                                 <th>Ação</th>
