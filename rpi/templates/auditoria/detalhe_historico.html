@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+            <h2 class="mb-0 text-primary"><i class="fa-solid fa-timeline"></i> Linha do Tempo</h2>
+            <p class="text-muted mb-0">Objeto: <strong>{{ objeto }}</strong> | ID: <span class="badge bg-dark">{{ objeto.pk }}</span></p>
+        </div>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary shadow-sm">
+            <i class="fa-solid fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    <div class="timeline-container">
+        {% for registro in historico %}
+        <div class="timeline-item">
+            <div class="card mb-3 border-start border-4 {% if registro.history_type == '+' %}border-success{% elif registro.history_type == '~' %}border-warning{% else %}border-danger{% endif %} shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">
+                            <i class="fa-regular fa-clock"></i> {{ registro.history_date|date:"d/m/Y H:i:s" }}
+                        </h6>
+                        <div>
+                            {% if registro.history_type == "+" %}
+                                <span class="badge bg-success shadow-sm">CRIAÇÃO</span>
+                            {% elif registro.history_type == "~" %}
+                                <span class="badge bg-warning text-dark shadow-sm">EDIÇÃO</span>
+                            {% else %}
+                                <span class="badge bg-danger shadow-sm">EXCLUSÃO</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <p class="card-text mb-3">
+                        <i class="fa-solid fa-circle-user text-secondary"></i> <strong>Responsável:</strong> 
+                        <span class="text-primary">{{ registro.history_user|default:"Sistema / Automatizado" }}</span>
+                    </p>
+
+                    <div class="bg-light p-3 rounded border">
+                        {% if registro.history_type == "~" %}
+                            <ul class="list-unstyled mb-0">
+                            {% for item in registro.mudancas_processadas %}
+                                <li class="mb-2 pb-2 border-bottom border-white">
+                                    <span class="badge bg-secondary-subtle text-secondary border">{{ item.campo }}</span>:
+                                    <span class="text-danger-emphasis text-decoration-line-through small">{{ item.antigo|default:"Vazio" }}</span>
+                                    <i class="fa-solid fa-arrow-right text-muted mx-2"></i>
+                                    <span class="text-success-emphasis fw-bold">{{ item.novo|default:"Vazio" }}</span>
+                                </li>
+                            {% empty %}
+                                <li class="text-muted small italic">
+                                    <i class="fa-solid fa-info-circle"></i> Nenhuma alteração de valor detectada nos campos principais.
+                                </li>
+                            {% endfor %}
+                            </ul>
+                        {% elif registro.history_type == "+" %}
+                            <span class="text-success fw-medium"><i class="fa-solid fa-check-double"></i> Registro criado e persistido no banco de dados.</span>
+                        {% else %}
+                            <span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i> Este registro foi deletado do sistema nesta data.</span>
+                        {% endif %}
+                    </div> </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-warning shadow-sm">
+            <i class="fa-solid fa-circle-exclamation"></i> Nenhum registro de auditoria encontrado para este item.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    /* Estilização da Linha Vertical da Timeline */
+    .timeline-container {
+        position: relative;
+        padding-left: 30px;
+        border-left: 2px solid #dee2e6;
+        margin-left: 15px;
+    }
+    .timeline-item {
+        position: relative;
+    }
+    /* A bolinha na linha do tempo */
+    .timeline-item::before {
+        content: "";
+        position: absolute;
+        left: -41px;
+        top: 20px;
+        width: 20px;
+        height: 20px;
+        background: #fff;
+        border: 4px solid #6c757d;
+        border-radius: 50%;
+        z-index: 1;
+    }
+    .card { transition: all 0.2s ease-in-out; }
+    .card:hover { 
+        transform: translateX(5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+</style>
+{% endblock %}

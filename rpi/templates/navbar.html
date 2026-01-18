@@ -25,6 +25,20 @@
                                 <i class="fa-solid fa-user-secret"></i> Usuários Ativos
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-success fw-bold" href="{% url 'auditoria_geral' %}">
+                                <i class="fa-solid fa-clipboard-check"></i> Auditoria Geral
+                            </a>
+                        </li>
+                        
+                        {# Só tenta renderizar este link se o objeto 'ocorrencia' realmente existir no contexto da página #}
+                            {% if ocorrencia and ocorrencia.pk %}
+                            <li class="nav-item">
+                                <a class="nav-link text-info fw-bold" href="{% url 'ver_auditoria' ocorrencia.pk %}">
+                                    <i class="fa-solid fa-history"></i> Histórico desta Ocorrência
+                                </a>
+                            </li>
+                            {% endif %}
                     {% endif %}
                     <li class="nav-item">
                         <a class="nav-link active" aria-current="page" href="{% url 'ocorrencia_list' %}">

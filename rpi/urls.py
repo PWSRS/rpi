@@ -28,6 +28,8 @@ from .views import (
     listar_usuarios,
     deletar_usuario,
     listar_prisoes,
+    lista_auditoria_objeto,
+    auditoria_geral,
 )
 
 urlpatterns = [
@@ -86,5 +88,10 @@ urlpatterns = [
     path('usuario/<int:user_id>/deletar/', views.deletar_usuario, name='deletar_usuario'),
     # Prisões
     path('prisoes/', views.listar_prisoes, name='listar_prisoes'),
+    # Auditoria simplificada
+    path('auditoria/<int:pk>/', views.lista_auditoria_objeto, name='ver_auditoria'),
+    # Auditoria geral
+    path('auditoria/geral/', views.auditoria_geral, name='auditoria_geral'),
+    
     
 ]

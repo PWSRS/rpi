@@ -2,6 +2,7 @@ from datetime import datetime
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from simple_history.models import HistoricalRecords
 
 User = get_user_model()
 
@@ -72,7 +73,7 @@ class NaturezaOcorrencia(models.Model):
         verbose_name="Tags de Busca (Opcional)",
         help_text="Termos alternativos para pesquisa, separados por vírgula."
     )
-
+    history = HistoricalRecords()
     def __str__(self):
         return f"[{self.get_tipo_impacto_display()}] {self.nome}"
 
@@ -85,7 +86,7 @@ class Municipio(models.Model):
     nome = models.CharField(
         max_length=100, unique=True, verbose_name="Nome do Município"
     )
-
+    history = HistoricalRecords()
     def __str__(self):
         return self.nome
 
@@ -100,7 +101,7 @@ class OPM(models.Model):
     municipio = models.ForeignKey(
         Municipio, on_delete=models.PROTECT, related_name="opms"
     )
-
+    history = HistoricalRecords()
     def __str__(self):
         return f"{self.sigla} - {self.municipio.nome}"
 
@@ -125,6 +126,7 @@ class RelatorioDiario(models.Model):
     usuario_responsavel = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="relatorios_diarios"
     )
+    history = HistoricalRecords()
 
     @classmethod
     def obter_relatorio_atual(cls, usuario):
@@ -179,6 +181,7 @@ class OcorrenciaImagem(models.Model):
 
 class Instrumento(models.Model):
     nome = models.CharField(max_length=100, unique=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.nome
@@ -245,6 +248,8 @@ class Ocorrencia(models.Model):
     bairro = models.CharField(
         max_length=100, verbose_name="Bairro", blank=True, null=True
     )
+    
+    history = HistoricalRecords()
 
     def __str__(self):
         data_str = (
@@ -314,6 +319,7 @@ class Envolvido(models.Model):
         Ocorrencia, on_delete=models.CASCADE, related_name="envolvidos"
     )
     idade = models.PositiveIntegerField(null=True, blank=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.nome} ({self.get_tipo_participante_display()})"
@@ -334,6 +340,7 @@ class MaterialApreendidoTipo(models.Model):
     nome = models.CharField(
         max_length=255, unique=True, verbose_name="Tipo de Material"
     )
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.nome
@@ -370,6 +377,7 @@ class Apreensao(models.Model):
     descricao_adicional = models.CharField(
         max_length=255, blank=True, null=True, verbose_name="Descrição Adicional"
     )
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.quantidade} {self.unidade_medida} de {self.material_tipo.nome}"
@@ -377,3 +385,4 @@ class Apreensao(models.Model):
     class Meta:
         verbose_name = "Apreensão"
         verbose_name_plural = "Apreensões"
+

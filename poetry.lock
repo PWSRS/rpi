@@ -292,6 +292,21 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-simple-history"
+version = "3.11.0"
+description = "Store model history and view/revert changes from admin site."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "django_simple_history-3.11.0-py3-none-any.whl", hash = "sha256:f3c298db49e418ffce7fb709a5e83108452ea2179ec5c4b9232484c25427192a"},
+    {file = "django_simple_history-3.11.0.tar.gz", hash = "sha256:2c587479cf2c3071e9aa555d0d11b73676994db4910770958f57659ade2deffe"},
+]
+
+[package.dependencies]
+django = ">=4.2"
+
+[[package]]
 name = "django-widget-tweaks"
 version = "1.5.0"
 description = "Tweak the form field rendering in templates, not in python-level form definitions."
@@ -668,4 +683,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11"
-content-hash = "489c3b7038e6ed67ec7efb4f3606f8db34b6e5d4ea6c1bcd3e8c51140a40ad78"
+content-hash = "5753ae2e3cfaff6bdbee394a3c50e18ad7c3eccf8ed0618d5e82b74aa332f545"

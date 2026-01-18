@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <h2><i class="fa-solid fa-clock-rotate-left"></i> Auditoria Geral do Sistema</h2>
+        <span class="badge bg-secondary">{{ historico|length }} últimos registros</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover border align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Usuário</th>
+                    <th>Ocorrência Relacionada</th>
+                    <th>Ação</th>
+                    <th>Mudanças Detalhadas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registro in historico %}
+                <tr>
+                    <td class="text-nowrap small">{{ registro.history_date|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <span class="badge bg-light text-dark border">
+                            <i class="fa-solid fa-user-circle"></i> {{ registro.history_user|default:"Sistema" }}
+                        </span>
+                    </td>
+                    <td>
+                        <strong>ID #{{ registro.history_object.pk|default:registro.pk }}</strong><br>
+                        <small class="text-muted">{{ registro.instance|truncatechars:30 }}</small>
+                        <br>
+                        <a href="{% url 'ver_auditoria' registro.history_object.pk|default:registro.pk %}" class="btn btn-sm btn-link p-0 text-info text-decoration-none">
+                            <i class="fa-solid fa-magnifying-glass-plus"></i> Ver linha do tempo
+                        </a>
+                    </td>
+                    <td>
+                        {% if registro.history_type == "+" %}
+                            <span class="badge bg-success-subtle text-success border">Criado</span>
+                        {% elif registro.history_type == "~" %}
+                            <span class="badge bg-warning-subtle text-warning border">Editado</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger border">Excluído</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if registro.history_type == "~" %}
+                            <ul class="mb-0 small list-unstyled">
+                            {% for item in registro.mudancas_processadas %}
+                                <li class="mb-1">
+                                    <span class="fw-bold text-secondary">{{ item.campo }}:</span> 
+                                    <span class="text-danger"><del>{{ item.antigo|default:"Vazio" }}</del></span> 
+                                    <i class="fa-solid fa-arrow-right-long mx-1 text-muted small"></i> 
+                                    <span class="text-success">{{ item.novo|default:"Vazio" }}</span>
+                                </li>
+                            {% empty %}
+                                <li class="text-muted small italic">Nenhuma mudança detectada nos campos monitorados.</li>
+                            {% endfor %}
+                            </ul>
+                        {% elif registro.history_type == "+" %}
+                            <small class="text-muted">Cadastro inicial efetuado.</small>
+                        {% else %}
+                            <small class="text-danger">Registro removido do banco.</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

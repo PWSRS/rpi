@@ -392,12 +392,12 @@
 <template id="envolvido-template">
     <div class="envolvido-form border rounded p-3 mb-3 bg-light">
         <div class="row">
-            <div class="col-md-2">Participante {{ envolvido_formset.empty_form.tipo_participante }}</div>
+            <div class="col-md-2">Tipo {{ envolvido_formset.empty_form.tipo_participante }}</div>
             <div class="col-md-4">Nome {{ envolvido_formset.empty_form.nome }}</div>
             <div class="col-md-1">Idade {{ envolvido_formset.empty_form.idade }}</div>
             <div class="col-md-1">Documento {{ envolvido_formset.empty_form.tipo_documento }}</div>
             <div class="col-md-2">Nr {{ envolvido_formset.empty_form.nr_documento}}</div>
-            <div class="col-md-1">Antec. Criminais {{ envolvido_formset.empty_form.antecedentes }}</div>
+            <div class="col-md-1">Antec.{{ envolvido_formset.empty_form.antecedentes }}</div>
             <div class="col-md-1 d-flex align-items-end">
                 <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos"><i class="fas fa-trash"></i></button>
             </div>

@@ -9,6 +9,7 @@ dependencies = [
     "django>=5.1.0,<6.0.0",
     "weasyprint>=63.0",
     "django-widget-tweaks>=1.5.0",
+    "django-simple-history (>=3.11.0,<4.0.0)",
 ]
 
 [tool.poetry]

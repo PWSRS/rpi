@@ -1127,3 +1127,109 @@ def cadastrar_natureza_rapida(request):
     
     # OBS: O código NÃO PRECISA de um return final aqui, pois @require_POST 
     # já lida com métodos HTTP incorretos, e o if/else garante um retorno para POST.
+    
+@user_passes_test(lambda u: u.is_superuser)
+def lista_auditoria_objeto(request, pk):
+    objeto = get_object_or_404(Ocorrencia, pk=pk)
+    # Filtra o histórico apenas deste objeto
+    historico = objeto.history.select_related('history_user').filter(id=pk)
+    
+    for registro in historico:
+        # Criamos a mesma lista processada que usamos na Geral
+        lista_final_mudancas = []
+        
+        if registro.history_type == '~':
+            try:
+                anterior = registro.prev_record
+                if anterior:
+                    delta = registro.diff_against(anterior)
+                    
+                    for change in delta.changes:
+                        field_obj = Ocorrencia._meta.get_field(change.field)
+                        nome_campo = field_obj.verbose_name.capitalize()
+                        v_antigo = change.old
+                        v_novo = change.new
+
+                        # 1. TRATA CHOICES (Selects fixos)
+                        if field_obj.choices:
+                            choices_dict = dict(field_obj.choices)
+                            v_antigo = choices_dict.get(change.old, change.old)
+                            v_novo = choices_dict.get(change.new, change.new)
+                        
+                        # 2. TRATA FOREIGN KEYS (Cidade, OPM, etc)
+                        elif field_obj.is_relation and field_obj.many_to_one:
+                            modelo_relacionado = field_obj.related_model
+                            try:
+                                if v_antigo:
+                                    v_antigo = str(modelo_relacionado.objects.get(pk=v_antigo))
+                                if v_novo:
+                                    v_novo = str(modelo_relacionado.objects.get(pk=v_novo))
+                            except modelo_relacionado.DoesNotExist:
+                                pass 
+
+                        lista_final_mudancas.append({
+                            'campo': nome_campo,
+                            'antigo': v_antigo,
+                            'novo': v_novo
+                        })
+            except Exception:
+                pass
+        
+        # Atribuímos ao mesmo nome de variável para manter o padrão
+        registro.mudancas_processadas = lista_final_mudancas
+                
+    return render(request, 'auditoria/detalhe_historico.html', {
+        'objeto': objeto,
+        'historico': historico
+    })
+
+from django.apps import apps # Import necessário no topo do arquivo
+
+@user_passes_test(lambda u: u.is_superuser)
+def auditoria_geral(request):
+    historico = Ocorrencia.history.select_related('history_user').all()[:100]
+    
+    for registro in historico:
+        lista_final_mudancas = []
+        if registro.history_type == '~': 
+            try:
+                anterior = registro.prev_record
+                if anterior:
+                    delta = registro.diff_against(anterior)
+                    for change in delta.changes:
+                        field_obj = Ocorrencia._meta.get_field(change.field)
+                        nome_campo = field_obj.verbose_name.capitalize()
+                        v_antigo = change.old
+                        v_novo = change.new
+
+                        # 1. TRATA CHOICES (Selects fixos no Model)
+                        if field_obj.choices:
+                            choices_dict = dict(field_obj.choices)
+                            v_antigo = choices_dict.get(change.old, change.old)
+                            v_novo = choices_dict.get(change.new, change.new)
+                        
+                        # 2. TRATA FOREIGN KEYS (Cidade, OPM, etc)
+                        elif field_obj.is_relation and field_obj.many_to_one:
+                            # Buscamos o modelo relacionado (ex: Cidade)
+                            modelo_relacionado = field_obj.related_model
+                            try:
+                                if v_antigo:
+                                    obj_antigo = modelo_relacionado.objects.get(pk=v_antigo)
+                                    v_antigo = str(obj_antigo)
+                                if v_novo:
+                                    obj_novo = modelo_relacionado.objects.get(pk=v_novo)
+                                    v_novo = str(obj_novo)
+                            except modelo_relacionado.DoesNotExist:
+                                pass # Mantém o ID se o objeto foi excluído do sistema
+
+                        lista_final_mudancas.append({
+                            'campo': nome_campo,
+                            'antigo': v_antigo,
+                            'novo': v_novo
+                        })
+            except Exception:
+                pass
+        
+        registro.mudancas_processadas = lista_final_mudancas
+
+    return render(request, 'auditoria/lista_geral.html', {'historico': historico})
