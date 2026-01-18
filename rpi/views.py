@@ -170,9 +170,7 @@ class EmailBackend(ModelBackend):
 
 @login_required
 def finalizar_relatorio(request, pk):
-    relatorio = get_object_or_404(
-        RelatorioDiario, pk=pk, usuario_responsavel=request.user
-    )
+    relatorio = get_object_or_404(RelatorioDiario, pk=pk)
 
     if request.method == "POST":
         # Trava de segurança: impede finalizar sem dados
@@ -200,9 +198,7 @@ def download_pdf_relatorio(request, pk):
     View que aciona a função de geração do PDF.
     Recebe 'request' e 'pk' da URL.
     """
-    relatorio = get_object_or_404(
-        RelatorioDiario, pk=pk, usuario_responsavel=request.user
-    )
+    relatorio = get_object_or_404(RelatorioDiario, pk=pk)
 
     # CORREÇÃO: Passa 'relatorio' e 'request' para a função de geração de PDF
     response = gerar_pdf_relatorio_weasyprint(relatorio, request)
@@ -214,9 +210,7 @@ def download_pdf_relatorio(request, pk):
 # NOVO: Reverte o status de finalização do relatório para permitir a edição
 @login_required
 def reabrir_relatorio(request, pk):
-    relatorio = get_object_or_404(
-        RelatorioDiario, pk=pk, usuario_responsavel=request.user
-    )
+    relatorio = get_object_or_404(RelatorioDiario, pk=pk)
 
     if request.method == "POST":
         relatorio.finalizado = False
@@ -239,9 +233,7 @@ def reexportar_pdf(request, pk):
     Gera o PDF do Relatório Diário, ignorando o status 'finalizado'.
     Retorna o HttpResponse do PDF para download.
     """
-    relatorio = get_object_or_404(
-        RelatorioDiario, pk=pk, usuario_responsavel=request.user
-    )
+    relatorio = get_object_or_404(RelatorioDiario, pk=pk)
 
     # 1. Tenta gerar e retornar o PDF (Download)
     try:
@@ -321,9 +313,7 @@ class OcorrenciaListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         # 1. Busca APENAS o relatório que está ABERTO agora
-        relatorio_aberto = RelatorioDiario.objects.filter(
-            usuario_responsavel=self.request.user, finalizado=False
-        ).last()
+        relatorio_aberto = RelatorioDiario.objects.filter(finalizado=False).last()
 
         # 2. Se houver um aberto, mostra apenas as ocorrências dele
         if relatorio_aberto:
@@ -333,11 +323,7 @@ class OcorrenciaListView(LoginRequiredMixin, ListView):
         # você pode optar por mostrar as do ÚLTIMO finalizado para não ver a tela vazia,
         # OU retornar vazio para forçar o início de um novo dia.
         ultimo_finalizado = (
-            RelatorioDiario.objects.filter(
-                usuario_responsavel=self.request.user, finalizado=True
-            )
-            .order_by("-data_inicio")
-            .first()
+            RelatorioDiario.objects.filter(finalizado=True).order_by("-data_inicio").first()
         )
 
         if ultimo_finalizado:
@@ -350,10 +336,10 @@ class OcorrenciaListView(LoginRequiredMixin, ListView):
         # Busca o mesmo relatório para o template decidir se mostra os botões de Editar/Excluir
         relatorio = (
             RelatorioDiario.objects.filter(
-                usuario_responsavel=self.request.user, finalizado=False
+               finalizado=False
             ).last()
             or RelatorioDiario.objects.filter(
-                usuario_responsavel=self.request.user, finalizado=True
+               finalizado=True
             )
             .order_by("-data_inicio")
             .first()
@@ -372,7 +358,7 @@ class OcorrenciaCreateView(LoginRequiredMixin, CreateView):
     def dispatch(self, request, *args, **kwargs):
         # Usa o filtro de finalizado=False para ter certeza que o relatório permite novas inserções
         self.relatorio_atual = RelatorioDiario.objects.filter(
-            usuario_responsavel=request.user, finalizado=False
+            finalizado=False
         ).last()
 
         if not self.relatorio_atual:
@@ -882,7 +868,6 @@ class RelatorioListView(LoginRequiredMixin, ListView):
         usando parâmetros GET.
         """
         queryset = RelatorioDiario.objects.filter(
-            usuario_responsavel=self.request.user,
             finalizado=True,  # MOSTRA SOMENTE RELATÓRIOS FINALIZADOS
         )
 
@@ -918,7 +903,7 @@ class RelatorioDetailView(LoginRequiredMixin, DetailView):
         """
         Garante que o usuário só veja relatórios dele.
         """
-        return RelatorioDiario.objects.filter(usuario_responsavel=self.request.user)
+        return RelatorioDiario.objects.all()
 
     def get_context_data(self, **kwargs):
         """
@@ -1129,11 +1114,10 @@ def cadastrar_natureza_rapida(request):
 @user_passes_test(lambda u: u.is_superuser)
 def lista_auditoria_objeto(request, pk):
     objeto = get_object_or_404(Ocorrencia, pk=pk)
-    # Filtra o histórico apenas deste objeto
-    historico = objeto.history.select_related('history_user').filter(id=pk)
+    # Filtra o histórico apenas deste objeto usando o ID original
+    historico = objeto.history.select_related('history_user').filter(id=pk).order_by('-history_date')
     
     for registro in historico:
-        # Criamos a mesma lista processada que usamos na Geral
         lista_final_mudancas = []
         
         if registro.history_type == '~':
@@ -1141,29 +1125,35 @@ def lista_auditoria_objeto(request, pk):
                 anterior = registro.prev_record
                 if anterior:
                     delta = registro.diff_against(anterior)
-                    
                     for change in delta.changes:
-                        field_obj = Ocorrencia._meta.get_field(change.field)
-                        nome_campo = field_obj.verbose_name.capitalize()
+                        # Normalização do campo
+                        field_name = change.field
+                        clean_field_name = field_name[:-3] if field_name.endswith('_id') else field_name
+                        
+                        try:
+                            field_obj = Ocorrencia._meta.get_field(clean_field_name)
+                            nome_campo = field_obj.verbose_name.capitalize()
+                        except:
+                            nome_campo = field_name.capitalize()
+                            field_obj = None
+
                         v_antigo = change.old
                         v_novo = change.new
 
-                        # 1. TRATA CHOICES (Selects fixos)
-                        if field_obj.choices:
+                        # Lógica de tradução de IDs para Nomes
+                        if field_obj and hasattr(field_obj, 'choices') and field_obj.choices:
                             choices_dict = dict(field_obj.choices)
-                            v_antigo = choices_dict.get(change.old, change.old)
-                            v_novo = choices_dict.get(change.new, change.new)
+                            v_antigo = choices_dict.get(v_antigo, v_antigo)
+                            v_novo = choices_dict.get(v_novo, v_novo)
                         
-                        # 2. TRATA FOREIGN KEYS (Cidade, OPM, etc)
-                        elif field_obj.is_relation and field_obj.many_to_one:
+                        elif field_obj and field_obj.is_relation:
                             modelo_relacionado = field_obj.related_model
-                            try:
-                                if v_antigo:
-                                    v_antigo = str(modelo_relacionado.objects.get(pk=v_antigo))
-                                if v_novo:
-                                    v_novo = str(modelo_relacionado.objects.get(pk=v_novo))
-                            except modelo_relacionado.DoesNotExist:
-                                pass 
+                            if v_antigo:
+                                obj_ant = modelo_relacionado.objects.filter(pk=v_antigo).first()
+                                v_antigo = str(obj_ant) if obj_ant else f"ID {v_antigo}"
+                            if v_novo:
+                                obj_nov = modelo_relacionado.objects.filter(pk=v_novo).first()
+                                v_novo = str(obj_nov) if obj_nov else f"ID {v_novo}"
 
                         lista_final_mudancas.append({
                             'campo': nome_campo,
@@ -1173,14 +1163,12 @@ def lista_auditoria_objeto(request, pk):
             except Exception:
                 pass
         
-        # Atribuímos ao mesmo nome de variável para manter o padrão
         registro.mudancas_processadas = lista_final_mudancas
                 
     return render(request, 'auditoria/detalhe_historico.html', {
         'objeto': objeto,
         'historico': historico
     })
-
 from django.apps import apps # Import necessário no topo do arquivo
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -1189,36 +1177,46 @@ def auditoria_geral(request):
     
     for registro in historico:
         lista_final_mudancas = []
+        
+        # Só processamos mudanças se for uma EDIÇÃO (~)
         if registro.history_type == '~': 
             try:
                 anterior = registro.prev_record
                 if anterior:
                     delta = registro.diff_against(anterior)
                     for change in delta.changes:
-                        field_obj = Ocorrencia._meta.get_field(change.field)
-                        nome_campo = field_obj.verbose_name.capitalize()
+                        # Normaliza o nome do campo (remove _id se houver)
+                        field_name = change.field
+                        clean_field_name = field_name[:-3] if field_name.endswith('_id') else field_name
+                        
+                        try:
+                            field_obj = Ocorrencia._meta.get_field(clean_field_name)
+                            nome_campo = field_obj.verbose_name.capitalize()
+                        except:
+                            nome_campo = field_name.replace('_', ' ').capitalize()
+                            field_obj = None
+
                         v_antigo = change.old
                         v_novo = change.new
 
-                        # 1. TRATA CHOICES (Selects fixos no Model)
-                        if field_obj.choices:
+                        # TRATA CHOICES (ex: Consumado/Tentado)
+                        if field_obj and hasattr(field_obj, 'choices') and field_obj.choices:
                             choices_dict = dict(field_obj.choices)
-                            v_antigo = choices_dict.get(change.old, change.old)
-                            v_novo = choices_dict.get(change.new, change.new)
+                            v_antigo = choices_dict.get(v_antigo, v_antigo)
+                            v_novo = choices_dict.get(v_novo, v_novo)
                         
-                        # 2. TRATA FOREIGN KEYS (Cidade, OPM, etc)
-                        elif field_obj.is_relation and field_obj.many_to_one:
-                            # Buscamos o modelo relacionado (ex: Cidade)
+                        # TRATA RELAÇÕES (Select2, ForeignKeys)
+                        elif field_obj and field_obj.is_relation:
                             modelo_relacionado = field_obj.related_model
                             try:
                                 if v_antigo:
-                                    obj_antigo = modelo_relacionado.objects.get(pk=v_antigo)
-                                    v_antigo = str(obj_antigo)
+                                    obj_ant = modelo_relacionado.objects.filter(pk=v_antigo).first()
+                                    v_antigo = str(obj_ant) if obj_ant else f"ID {v_antigo} (Removido)"
                                 if v_novo:
-                                    obj_novo = modelo_relacionado.objects.get(pk=v_novo)
-                                    v_novo = str(obj_novo)
-                            except modelo_relacionado.DoesNotExist:
-                                pass # Mantém o ID se o objeto foi excluído do sistema
+                                    obj_nov = modelo_relacionado.objects.filter(pk=v_novo).first()
+                                    v_novo = str(obj_nov) if obj_nov else f"ID {v_novo} (Removido)"
+                            except:
+                                pass
 
                         lista_final_mudancas.append({
                             'campo': nome_campo,
@@ -1231,13 +1229,3 @@ def auditoria_geral(request):
         registro.mudancas_processadas = lista_final_mudancas
 
     return render(request, 'auditoria/lista_geral.html', {'historico': historico})
-
-
-def deletar_auditoria_geral(request, historico_id):
-    auditoria = get_object_or_404(Ocorrencia, id=historico_id)
-
-    if request.method == "POST":
-        auditoria.delete()
-        messages.success(request, "Item da auditoria excluído com sucesso.")
-
-    return redirect("auditoria_geral")
