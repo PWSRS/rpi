@@ -168,8 +168,6 @@ class EmailBackend(ModelBackend):
 
 # --- GERENCIAMENTO DO RELATÓRIO ---
 
-
-# CÓDIGO CORRIGIDO (Finalização e Verificação Robustas)
 @login_required
 def finalizar_relatorio(request, pk):
     relatorio = get_object_or_404(
@@ -196,7 +194,7 @@ def finalizar_relatorio(request, pk):
 
     return redirect("ocorrencia_list")
 
-
+@login_required
 def download_pdf_relatorio(request, pk):
     """
     View que aciona a função de geração do PDF.
@@ -1233,3 +1231,13 @@ def auditoria_geral(request):
         registro.mudancas_processadas = lista_final_mudancas
 
     return render(request, 'auditoria/lista_geral.html', {'historico': historico})
+
+
+def deletar_auditoria_geral(request, historico_id):
+    auditoria = get_object_or_404(Ocorrencia, id=historico_id)
+
+    if request.method == "POST":
+        auditoria.delete()
+        messages.success(request, "Item da auditoria excluído com sucesso.")
+
+    return redirect("auditoria_geral")

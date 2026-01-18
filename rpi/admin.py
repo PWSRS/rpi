@@ -10,6 +10,7 @@ from .models import (
     Apreensao,
     MaterialApreendidoTipo,
     Instrumento,
+    AuditCleanupLog,
 )
 
 # ----------------- 1. CONFIGURAÇÃO DE INLINES -----------------
@@ -186,3 +187,10 @@ class InstrumentoAdmin(admin.ModelAdmin):
 
 
 
+@admin.register(AuditCleanupLog)
+class AuditCleanupLogAdmin(admin.ModelAdmin):
+    list_display = ('executed_at', 'records_deleted', 'status')
+    readonly_fields = ('executed_at', 'records_deleted', 'status', 'message')
+
+    # Impede que o admin crie logs manuais ou edite os existentes
+    def has_add_permission(self, request): return False

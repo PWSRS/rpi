@@ -386,3 +386,15 @@ class Apreensao(models.Model):
         verbose_name = "Apreensão"
         verbose_name_plural = "Apreensões"
 
+class AuditCleanupLog(models.Model):
+    executed_at = models.DateTimeField(auto_now_add=True)
+    records_deleted = models.PositiveIntegerField()
+    status = models.CharField(max_length=20, default='Sucesso')
+    message = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "Log de Limpeza de Auditoria"
+        ordering = ['-executed_at']
+
+    def __str__(self):
+        return f"Limpeza em {self.executed_at} - {self.records_deleted} removidos"
