@@ -184,8 +184,8 @@ class OcorrenciaImagemForm(forms.ModelForm):
         fields = ("imagem", "legenda")
         widgets = {
             # ESSENCIAL: Garante que o input de arquivo tenha o estilo form-control
-            "imagem": forms.FileInput(attrs={"class": "form-control"}),
-            "legenda": forms.TextInput(attrs={"class": "form-control"}),
+            'imagem': forms.FileInput(attrs={'class': 'form-control form-control-sm', 'onchange': 'previewImage(this)'}),
+            'legenda': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Digite a legenda...'}),
         }
 
 

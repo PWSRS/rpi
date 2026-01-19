@@ -347,43 +347,73 @@
 
             {# --- ABA 4: MÍDIA E SALVAR --- #}
             <div class="tab-pane fade" id="midia" role="tabpanel">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="mb-0"><i class="fas fa-camera"></i> Fotos e Finalização</h5>
-                    </div>
-                    <div class="card-body">
-                        {{ imagem_formset.management_form }}
-                        <div id="imagens-container">
-                            {% for form_imagem in imagem_formset %}
-                                <div class="card p-3 mb-3 imagem-form-bloco">
-                                    {% for hidden in form_imagem.hidden_fields %} {{ hidden }} {% endfor %}
-                                    <div class="row">
-                                        <div class="col-md-6">Arquivo {{ form_imagem.imagem }}</div>
-                                        <div class="col-md-5">Legenda {{ form_imagem.legenda }}</div>
-                                        <div class="col-md-1 d-flex align-items-end">
-                                            <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="imagens"><i class="fas fa-trash"></i></button>
-                                        </div>
-                                        <div class="d-none">{{ form_imagem.DELETE }}</div> 
-                                    </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white d-flex align-items-center">
+                <i class="fas fa-camera me-2"></i>
+                <h5 class="mb-0">Fotos e Finalização</h5>
+            </div>
+            <div class="card-body bg-light">
+                {{ imagem_formset.management_form }}
+                <div id="imagens-container">
+                    {% for form in imagem_formset %}
+                    <div class="card p-3 mb-3 imagem-form-bloco shadow-sm border-0">
+                        {{ form.id }}
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <div class="preview-container border rounded bg-white d-flex align-items-center justify-content-center" style="height: 80px; width: 100%; overflow: hidden;">
+                                    <i class="fas fa-image text-muted fa-2x preview-icon"></i>
+                                    <img src="" class="img-fluid d-none img-preview" style="max-height: 80px;">
                                 </div>
-                            {% endfor %}
-                        </div>
-                        <button type="button" id="add-imagem-btn" class="btn btn-outline-success mb-4"><i class="fas fa-plus"></i> Adicionar Foto</button>
-
-                        <div class="alert alert-warning border-warning">
-                            <h5 class="alert-heading">Revisão Final</h5>
-                            <p>Verifique se os dados das abas anteriores estão corretos antes de clicar em Salvar.</p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <button type="button" class="btn btn-secondary prev-tab"><i class="fas fa-arrow-left"></i> Voltar</button>
-                                <div>
-                                    <a href="{% url 'ocorrencia_list' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
-                                    <button type="submit" class="btn btn-success btn-lg px-5 shadow"><i class="fas fa-save"></i> SALVAR OCORRÊNCIA</button>
-                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold small">Arquivo</label>
+                                {{ form.imagem }}
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold small">Legenda</label>
+                                {{ form.legenda }}
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end justify-content-center">
+                                <button type="button" class="btn btn-outline-danger remove-formset-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
+                    {% endfor %}
+                </div>
+
+                <button type="button" class="btn btn-outline-primary mt-2" id="add-imagem-btn">
+                    <i class="fas fa-plus-circle me-1"></i> Adicionar Outra Foto
+                </button>
+
+                <hr class="my-4">
+                
+                <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center" role="alert">
+                    <i class="fas fa-exclamation-triangle me-3 fa-2x"></i>
+                    <div>
+                        <strong>Atenção:</strong> Revise cuidadosamente todas as abas (Fato, Participantes, Materiais e Mídia) antes de salvar. Uma vez salva, a ocorrência será registrada no sistema.
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <button type="button" class="btn btn-secondary btn-lg prev-tab">
+                        <i class="fas fa-arrow-left me-2"></i> Voltar: Materiais
+                    </button>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'ocorrencia_list' %}" class="btn btn-outline-secondary btn-lg">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg px-5 shadow">
+                            <i class="fas fa-save me-2"></i> SALVAR OCORRÊNCIA
+                        </button>
+                    </div>
                 </div>
             </div>
+    </div>
+</div>
+
         </div>
     </form>
 </div>
@@ -392,14 +422,34 @@
 <template id="envolvido-template">
     <div class="envolvido-form border rounded p-3 mb-3 bg-light">
         <div class="row">
-            <div class="col-md-2">Tipo {{ envolvido_formset.empty_form.tipo_participante }}</div>
-            <div class="col-md-4">Nome {{ envolvido_formset.empty_form.nome }}</div>
-            <div class="col-md-1">Idade {{ envolvido_formset.empty_form.idade }}</div>
-            <div class="col-md-1">Documento {{ envolvido_formset.empty_form.tipo_documento }}</div>
-            <div class="col-md-2">Nr {{ envolvido_formset.empty_form.nr_documento}}</div>
-            <div class="col-md-1">Antec.{{ envolvido_formset.empty_form.antecedentes }}</div>
+            <div class="col-md-2">
+                <label class="form-label">Tipo</label>
+                {{ envolvido_formset.empty_form.tipo_participante }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Nome</label>
+                {{ envolvido_formset.empty_form.nome }}
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Idade</label>
+                {{ envolvido_formset.empty_form.idade }}
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Doc.</label>
+                {{ envolvido_formset.empty_form.tipo_documento }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Nr</label>
+                {{ envolvido_formset.empty_form.nr_documento }}
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Antec.</label>
+                {{ envolvido_formset.empty_form.antecedentes }}
+            </div>
             <div class="col-md-1 d-flex align-items-end">
-                <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos"><i class="fas fa-trash"></i></button>
+                <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -408,28 +458,62 @@
 <template id="apreensao-template">
     <div class="form-apreensao-item mb-3 p-3 border rounded bg-light">
         <div class="row">
-            <div class="col-md-3">Material {{ apreensao_formset.empty_form.material_tipo }}</div>
-            <div class="col-md-5">Descrição {{ apreensao_formset.empty_form.descricao_adicional }}</div>
-            <div class="col-md-1">Qtd {{ apreensao_formset.empty_form.quantidade }}</div>
-            <div class="col-md-2">Un {{ apreensao_formset.empty_form.unidade_medida }}</div>
+            <div class="col-md-3">
+                <label class="form-label">Material</label>
+                <div class="input-group">
+                    {{ apreensao_formset.empty_form.material_tipo }}
+                    <button type="button" class="btn btn-outline-secondary" onclick="abrirModalMaterial(this)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label">Descrição</label>
+                {{ apreensao_formset.empty_form.descricao_adicional }}
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Qtd</label>
+                {{ apreensao_formset.empty_form.quantidade }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Un</label>
+                {{ apreensao_formset.empty_form.unidade_medida }}
+            </div>
             <div class="col-md-1 d-flex align-items-end">
-                <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="apreensoes"><i class="fas fa-trash"></i></button>
+                <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="apreensoes">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
     </div>
 </template>
 
 <template id="imagem-template">
-    <div class="card p-3 mb-3 imagem-form-bloco">
-        <div class="row">
-            <div class="col-md-6">Arquivo {{ imagem_formset.empty_form.imagem }}</div>
-            <div class="col-md-5">Legenda {{ imagem_formset.empty_form.legenda }}</div>
-            <div class="col-md-1 d-flex align-items-end">
-                <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="imagens"><i class="fas fa-trash"></i></button>
+    <div class="card p-3 mb-3 imagem-form-bloco shadow-sm border-0">
+        <div class="row align-items-center">
+            <div class="col-md-2 text-center">
+                <div class="preview-container border rounded bg-white d-flex align-items-center justify-content-center" style="height: 80px; width: 100%; overflow: hidden;">
+                    <i class="fas fa-image text-muted fa-2x preview-icon"></i>
+                    <img src="" class="img-fluid d-none img-preview" style="max-height: 80px;">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold small">Arquivo</label>
+                {{ imagem_formset.empty_form.imagem }}
+            </div>
+            <div class="col-md-5">
+                <label class="form-label fw-bold small">Legenda</label>
+                {{ imagem_formset.empty_form.legenda }}
+            </div>
+            <div class="col-md-1 d-flex align-items-end justify-content-center">
+                <button type="button" class="btn btn-outline-danger remove-formset-row">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
     </div>
 </template>
+
 {% endblock content %}
 
 {% block extra_js %}
@@ -471,6 +555,27 @@ $(document).ready(function () {
                 },
                 cache: true,
             }, // -------------------------
+        });
+        // Delegar evento de mudança no input de arquivo (funciona para campos novos e antigos)
+        $(document).on('change', 'input[type="file"]', function(e) {
+            const input = this;
+            const container = $(input).closest('.imagem-form-bloco');
+            const previewImg = container.find('.img-preview');
+            const previewIcon = container.find('.preview-icon');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    previewImg.attr('src', e.target.result).removeClass('d-none');
+                    previewIcon.addClass('d-none');
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                previewImg.addClass('d-none');
+                previewIcon.removeClass('d-none');
+            }
         });
 
         $('#id_opm').select2({
@@ -550,32 +655,56 @@ $(document).ready(function () {
 
     // ... (Mantido)
     function addRow(prefix) {
-        const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
-        const index = parseInt(totalForms.val());
+    const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
+    const index = parseInt(totalForms.val());
 
-        const templateId = {
-            envolvidos: 'envolvido-template',
-            apreensoes: 'apreensao-template',
-            imagens: 'imagem-template',
-        }[prefix];
+    const templateId = {
+        envolvidos: 'envolvido-template',
+        apreensoes: 'apreensao-template',
+        imagens: 'imagem-template',
+    }[prefix];
 
-        let html = $(`#${templateId}`)
-            .html()
-            .replace(/__prefix__/g, index);
+    // 1. Pega o HTML e substitui o prefixo
+    let rawHtml = $(`#${templateId}`).html().replace(/__prefix__/g, index);
+    let $newRow = $(rawHtml);
 
-        const container = {
-            envolvidos: '#envolvidos-container',
-            apreensoes: '#apreensoes-formset-container',
-            imagens: '#imagens-container',
-        }[prefix];
+    const containerId = {
+        envolvidos: '#envolvidos-container',
+        apreensoes: '#apreensoes-formset-container',
+        imagens: '#imagens-container',
+    }[prefix];
 
-        $(container).append(html);
-        totalForms.val(index + 1);
+    // 2. Insere no DOM
+    $(containerId).append($newRow);
+    totalForms.val(index + 1);
 
-        if (prefix !== 'imagens' && $.fn.select2) {
-            $(container).find('select').select2({ theme: 'bootstrap-5', width: '100%' });
-        }
+    // 3. Inicializa plugins na nova linha
+    if (prefix !== 'imagens' && $.fn.select2) {
+        $newRow.find('select').select2({ 
+            theme: 'bootstrap-5', 
+            width: '100%' 
+        });
     }
+}
+
+// HANDLER DE PREVIEW MELHORADO
+$(document).on('change', '.imagem-form-bloco input[type="file"]', function() {
+    const input = this;
+    const container = $(input).closest('.imagem-form-bloco');
+    const previewImg = container.find('.img-preview');
+    const previewIcon = container.find('.preview-icon');
+    const previewBox = container.find('.preview-container');
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.attr('src', e.target.result).removeClass('d-none');
+            previewIcon.addClass('d-none');
+            previewBox.addClass('border-primary'); // Destaque visual
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+});
 
     $('#add-envolvido-btn').click(() => addRow('envolvidos'));
     $('#add-apreensao-btn').click(() => addRow('apreensoes'));
