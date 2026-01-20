@@ -22,9 +22,9 @@
                 <div class="card-header bg-primary text-white font-weight-bold text-uppercase">Informações Principais</div>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item"><strong>Data/Hora:</strong> {{ ocorrencia.data_hora_bruta }}</li>
-                    <li class="list-group-item"><strong>Natureza:</strong> {{ ocorrencia.natureza.nome }}</li>
-                    <li class="list-group-item"><strong>OPM:</strong> {{ ocorrencia.opm.sigla }}</li>
+                    <li class="list-group-item"><strong>Fato:</strong> {{ ocorrencia.natureza.nome }}</li>
                     <li class="list-group-item"><strong>Tipo do Fato:</strong> {{ ocorrencia.get_tipo_acao_display }}</li>
+                    <li class="list-group-item"><strong>OPM:</strong> {{ ocorrencia.opm.sigla }}</li>
                     <!--<li class="list-group-item"><strong>Sumário:</strong> {{ ocorrencia.resumo_cabecalho }}</li>-->
                 </ul>
             </div>
@@ -34,13 +34,14 @@
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item"><strong>Endereço:</strong> {{ ocorrencia.rua|default:"N/A" }}, {{ ocorrencia.numero|default:"S/N" }}</li>
                     <li class="list-group-item"><strong>Bairro:</strong> {{ ocorrencia.bairro|default:"N/A" }}</li>
+                    <li class="list-group-item"><strong>Cidade:</strong> {{ ocorrencia.opm.municipio|default:"N/A" }}</li>
                 </ul>
             </div>
         </div>
         
         <div class="col-md-7">
             <div class="card mb-4 shadow-sm border-info">
-                <div class="card-header bg-info text-white font-weight-bold text-uppercase">Relato Histórico</div>
+                <div class="card-header bg-info text-white font-weight-bold text-uppercase">Histórico</div>
                 <div class="card-body">
                     <p class="text-justify" style="white-space: pre-wrap;">{{ ocorrencia.relato_historico }}</p>
                 </div>

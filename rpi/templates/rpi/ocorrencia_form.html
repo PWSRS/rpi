@@ -88,7 +88,7 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6 col-lg-5 mb-3">
-                                <label for="{{ form.natureza.id_for_label }}" class="form-label required">Natureza</label>
+                                <label for="{{ form.natureza.id_for_label }}" class="form-label required">Fato</label>
                                 
                                 <div class="input-group flex-nowrap">
                                     {{ form.natureza }}
@@ -518,12 +518,15 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     /* ==========================================================
    DOCUMENT READY
 ========================================================== */
 $(document).ready(function () {
+   
     /* ---------- 1. SELECT2 ---------- */ function inicializarSelects() {
+        
         if (!$.fn.select2) return;
 
         $('#id_natureza').select2({
@@ -556,6 +559,7 @@ $(document).ready(function () {
                 cache: true,
             }, // -------------------------
         });
+        
         // Delegar evento de mudança no input de arquivo (funciona para campos novos e antigos)
         $(document).on('change', 'input[type="file"]', function(e) {
             const input = this;

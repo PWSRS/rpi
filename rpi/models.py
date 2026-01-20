@@ -61,7 +61,7 @@ class NaturezaOcorrencia(models.Model):
         ("P", "Positivo"),
     ]
     nome = models.CharField(
-        max_length=255, unique=True, verbose_name="Natureza do Fato"
+        max_length=255, unique=True, verbose_name="Fato"
     )
     tipo_impacto = models.CharField(
         max_length=1, choices=IMPACTO_CHOICES, verbose_name="Aspecto"
