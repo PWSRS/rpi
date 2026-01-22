@@ -1,7 +1,7 @@
 # 1. Bibliotecas padrão do Python (Standard Library)
 import urllib.parse
 import urllib.request
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import datetime, time
 from pathlib import Path
 
@@ -22,7 +22,7 @@ from django.core.mail import send_mail
 
 # 4. Django Banco de Dados e Modelos
 from django.db import IntegrityError, transaction
-from django.db.models import F, Prefetch, Q, Sum, Count
+from django.db.models import F, Prefetch, Q, Sum, Count, ProtectedError
 
 # 5. Django HTTP e View Helpers
 from django.http import HttpResponse, JsonResponse
@@ -66,6 +66,8 @@ from .models import (
     Ocorrencia,
     OcorrenciaImagem,
     RelatorioDiario,
+    Municipio,
+    OPM,
 )
 # O @user_passes_test verifica se o usuário é staff (admin)
 # Apenas usuários staff podem ativar policiais
@@ -470,7 +472,32 @@ class OcorrenciaCreateView(LoginRequiredMixin, CreateView):
                     imagem_formset=imagem_formset,  # CRÍTICO: Passar o formset de imagem
                 )
             )
+            
+def ajax_carregar_municipios(request):
+    opm_id = request.GET.get('opm_id')
+    
+    if not opm_id:
+        return JsonResponse([], safe=False)
 
+    try:
+        # 1. Buscamos a OPM específica
+        opm = OPM.objects.get(id=opm_id)
+        
+        # 2. Pegamos todos os municípios associados a essa OPM
+        # Como é ManyToMany, usamos .all() no campo municipios
+        municipios = opm.municipios.all().order_by('nome')
+        
+        # 3. Formatamos para JSON
+        data = [
+            {'id': m.id, 'nome': m.nome} 
+            for m in municipios
+        ]
+        return JsonResponse(data, safe=False)
+        
+    except OPM.DoesNotExist:
+        return JsonResponse({'error': 'OPM não encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 class OcorrenciaDetailView(LoginRequiredMixin, DetailView):
     model = Ocorrencia
@@ -663,6 +690,63 @@ def listar_prisoes(request):
 
     return render(request, "rpi/lista_prisoes.html", context)
 
+def listar_prisoes_por_opm(request):
+    envolvidos = Envolvido.objects.filter(
+        tipo_participante__in=["P", "S", "M", "A"]
+    ).select_related("ocorrencia", "ocorrencia__opm")  # inclui prefetch da OPM
+
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
+
+    if data_inicio:
+        envolvidos = envolvidos.filter(
+            ocorrencia__data_hora_fato__date__gte=data_inicio
+        )
+    if data_fim:
+        envolvidos = envolvidos.filter(
+            ocorrencia__data_hora_fato__date__lte=data_fim
+        )
+
+    envolvidos = envolvidos.order_by(
+        "ocorrencia__opm__nome",
+        "-ocorrencia__data_hora_fato"
+    )
+
+    totais_query = (
+        envolvidos
+        .values("ocorrencia__opm__nome", "tipo_participante")
+        .annotate(total=Count("id"))
+    )
+
+    totais_opm = defaultdict(lambda: {
+        "P": 0, "S": 0, "A": 0, "M": 0, "total": 0
+    })
+
+    for row in totais_query:
+        opm_nome = row["ocorrencia__opm__nome"] or "OPM não informada"
+        tipo = row["tipo_participante"]
+        total = row["total"]
+
+        totais_opm[opm_nome][tipo] = total
+        totais_opm[opm_nome]["total"] += total
+
+    envolvidos_por_opm = defaultdict(lambda: {
+        "lista": [],
+        "resumo": {"P": 0, "S": 0, "A": 0, "M": 0, "total": 0}
+    })
+
+    for envolvido in envolvidos:
+        opm_obj = envolvido.ocorrencia.opm
+        opm_nome = getattr(opm_obj, "nome", None) or "OPM não informada"
+        envolvidos_por_opm[opm_nome]["lista"].append(envolvido)
+        envolvidos_por_opm[opm_nome]["resumo"] = totais_opm[opm_nome]
+
+    context = {
+        "envolvidos_por_opm": dict(envolvidos_por_opm),
+    }
+
+    return render(request, "rpi/lista_prisoes_por_opm.html", context)
+
 
 
 def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
@@ -717,8 +801,8 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
     # ============================================================
 
     ocorrencias_qs = (
-        relatorio_diario.ocorrencias.select_related("natureza", "opm", "opm__municipio")
-        .prefetch_related("envolvidos", "apreensoes", "imagens")
+        relatorio_diario.ocorrencias.select_related("natureza", "opm") # municipio saiu daqui
+        .prefetch_related("envolvidos", "apreensoes", "imagens", "opm__municipios") # municipios (plural) entrou aqui
         .order_by("data_hora_fato")
     )
 
@@ -782,7 +866,8 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
         if n_vitimas == 0:
             n_vitimas = 1
 
-        municipio = ocorrencia.opm.municipio.nome if ocorrencia.opm else ""
+        #municipio = ocorrencia.opm.municipio.nome if ocorrencia.opm else ""
+        municipio = ocorrencia.municipio.nome if ocorrencia.municipio else ""
         opm = item["sigla_opm_limpa"]
 
         contador_opm[opm] += n_vitimas
@@ -972,7 +1057,7 @@ class MaterialApreendidoTipoCreateView(LoginRequiredMixin, CreateView):
     model = MaterialApreendidoTipo
     form_class = MaterialApreendidoTipoForm
     template_name = "rpi/material_tipo_form.html"
-    success_url = reverse_lazy("ocorrencia_create")
+    success_url = reverse_lazy("list_material_apreendido_tipo")
 
     def form_valid(self, form):
         messages.success(self.request, "Tipo de material cadastrado com sucesso!")
@@ -989,9 +1074,20 @@ class MaterialApreendidoTipoDeleteView(LoginRequiredMixin, DeleteView):
     model = MaterialApreendidoTipo
     success_url = reverse_lazy("list_material_apreendido_tipo")
 
-    def delete(self, request, *args, **kwargs):
-        messages.success(self.request, "Tipo de material excluído com sucesso.")
-        return super().delete(request, *args, **kwargs)
+    def post(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+            success_url = self.get_success_url()
+            self.object.delete()
+            messages.success(request, "Tipo de material excluído com sucesso.")
+            return redirect(success_url)
+        except ProtectedError:
+            material = self.get_object()
+            messages.error(
+                request, 
+                f"Não é possível excluir '{material.nome}'. Existem apreensões vinculadas."
+            )
+        return redirect(self.success_url)
     
 class MaterialApreendidoTipoDetailView(LoginRequiredMixin, DetailView):
     model = MaterialApreendidoTipo

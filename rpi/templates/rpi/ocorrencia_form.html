@@ -87,7 +87,7 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-6 col-lg-5 mb-3">
+                            <div class="col-md-6 col-lg-4 mb-3">
                                 <label for="{{ form.natureza.id_for_label }}" class="form-label required">Fato</label>
                                 
                                 <div class="input-group flex-nowrap">
@@ -101,9 +101,13 @@
                                 {% endif %}
                                 
                             </div>
-                            <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="col-md-6 col-lg-2 mb-3">
                                 <label for="{{ form.opm.id_for_label }}" class="form-label required">OPM</label>
                                 {{ form.opm }}
+                            </div>
+                            <div class="col-md-6 col-lg-3 mb-3">
+                                <label for="{{ form.municipio.id_for_label }}" class="form-label required">Município</label>
+                                {{ form.municipio }}
                             </div>
                             <div class="col-md-6 col-lg-3 mb-3">
                                 <label for="{{ form.data_hora_bruta.id_for_label }}" class="form-label required">Data/Hora</label>
@@ -334,7 +338,7 @@
                     <button type="button" class="btn btn-secondary btn-sm"
                             onclick="fecharModalMaterial()">Cancelar</button>
                     <button type="button" class="btn btn-primary btn-sm" data-url="{% url 'adicionar_material_apreendido_ajax' %}"
-                            onclick="salvarMaterialRapido()">
+                            onclick="salvarMaterialRapido(this)">
                             Salvar
                     </button>
                 </div>
@@ -560,6 +564,7 @@ $(document).ready(function () {
             }, // -------------------------
         });
         
+        
         // Delegar evento de mudança no input de arquivo (funciona para campos novos e antigos)
         $(document).on('change', 'input[type="file"]', function(e) {
             const input = this;
@@ -582,9 +587,54 @@ $(document).ready(function () {
             }
         });
 
-        $('#id_opm').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
+        /* ---------- INICIALIZAÇÃO DOS SELECTS ---------- */
+$('#id_opm').select2({
+    theme: 'bootstrap-5',
+    width: '100%',
+    placeholder: 'Selecione a OPM'
+});
+
+$('#id_municipio').select2({
+    theme: 'bootstrap-5',
+    width: '100%',
+    placeholder: 'Selecione a OPM primeiro'
+});
+
+/* ---------- FILTRO DINÂMICO OPM -> MUNICÍPIO ---------- */
+        $(document).on('change', '#id_opm', function() {
+            const opmId = $(this).val();
+            const $municipioSelect = $('#id_municipio');
+
+            // 1. Limpa o select e desabilita temporariamente para dar feedback visual
+            $municipioSelect.html('<option value="">Carregando...</option>').prop('disabled', true).trigger('change');
+
+            if (!opmId) {
+                $municipioSelect.html('<option value="">---------</option>').prop('disabled', false).trigger('change');
+                return;
+            }
+
+            // 2. Chamada AJAX
+            $.ajax({
+                url: "{% url 'ajax_carregar_municipios' %}", 
+                type: 'GET',
+                data: { 'opm_id': opmId },
+                dataType: 'json',
+                success: function(data) {
+                    let options = '<option value="">---------</option>';
+                    
+                    // 3. Itera sobre os dados (Lembre-se: sua View deve retornar [{'id':..., 'nome':...}])
+                    $.each(data, function(index, item) {
+                        options += `<option value="${item.id}">${item.nome}</option>`;
+                    });
+
+                    // 4. Atualiza o HTML, reabilita o campo e limpa o valor selecionado
+                    $municipioSelect.html(options).prop('disabled', false).val('').trigger('change');
+                },
+                error: function(xhr, status, error) {
+                    console.error("Erro no AJAX:", error);
+                    $municipioSelect.html('<option value="">Erro ao carregar</option>').prop('disabled', false).trigger('change');
+                }
+            });
         });
     }
     inicializarSelects();
@@ -861,14 +911,9 @@ function salvarMaterialRapido() {
         return;
     }
 
-    const urlEl = document.querySelector('[data-url]');
-    if (!urlEl) {
-        console.error('data-url não encontrado no botão.');
-        alert('Erro interno de configuração.');
-        return;
-    }
-
-    const url = urlEl.getAttribute('data-url');
+    // EM VEZ DE procurar na página, use a URL correta diretamente
+    // Verifique no seu urls.py se o nome da rota é este mesmo:
+    const url = "{% url 'adicionar_material_apreendido_ajax' %}"; 
 
     fetch(url, {
         method: 'POST',
@@ -878,55 +923,38 @@ function salvarMaterialRapido() {
         },
         body: 'nome=' + encodeURIComponent(nome),
     })
-        .then((response) => {
-            // Caso Django tenha redirecionado (login, APPEND_SLASH, etc.)
-            if (response.redirected) {
-                console.error('Redirect detectado:', response.url);
-                alert('Sua sessão expirou. Faça login novamente.');
-                window.location.href = response.url;
-                return null;
-            }
+    .then((response) => {
+        if (!response.ok) {
+            return response.json().then((data) => {
+                // Se o erro de tipo_impacto aparecer aqui agora, 
+                // saberemos que a View no Python está errada.
+                console.error('Erro retornado pelo servidor:', data);
+                throw new Error('HTTP ' + response.status);
+            });
+        }
+        return response.json();
+    })
+    .then((data) => {
+        if (!data.id) {
+            alert(data.error || 'Erro ao salvar material');
+            return;
+        }
 
-            if (!response.ok) {
-                return response.text().then((text) => {
-                    console.error('Erro HTTP:', response.status, text);
-                    throw new Error('HTTP ' + response.status);
-                });
-            }
+        const option = new Option(data.nome, data.id, true, true);
+        selectMaterialAtual.append(option);
+        $(selectMaterialAtual).trigger('change');
 
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                return response.text().then((text) => {
-                    console.error('Resposta não é JSON:', text);
-                    throw new Error('Resposta inesperada do servidor');
-                });
-            }
+        if (!data.created) {
+            alert('Material já existia e foi selecionado.');
+        }
 
-            return response.json();
-        })
-        .then((data) => {
-            if (!data.id) {
-                alert(data.error || 'Erro ao salvar material');
-                return;
-            }
-
-            const option = new Option(data.nome, data.id, true, true);
-            selectMaterialAtual.append(option);
-            $(selectMaterialAtual).trigger('change');
-
-            if (!data.created) {
-                alert('Material já existia e foi selecionado.');
-            }
-
-            fecharModalMaterial();
-        })
-
-        .catch((err) => {
-            console.error('Falha AJAX Material:', err);
-            alert('Erro ao salvar material.');
-        });
+        fecharModalMaterial();
+    })
+    .catch((err) => {
+        console.error('Falha AJAX Material:', err);
+        alert('Erro ao salvar material. Verifique o console.');
+    });
 }
-
 </script>
 
 {% endblock %}

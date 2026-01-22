@@ -132,6 +132,7 @@ class OcorrenciaForm(forms.ModelForm):
             "tipo_acao",
             "instrumento",  # Agora ele carregará todos os Instrumentos do banco
             "opm",
+            "municipio",
             "rua",
             "numero",
             "bairro",

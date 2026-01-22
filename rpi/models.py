@@ -98,17 +98,25 @@ class Municipio(models.Model):
 class OPM(models.Model):
     nome = models.CharField(max_length=100, verbose_name="Nome da OPM")
     sigla = models.CharField(max_length=20, verbose_name="Sigla da OPM", unique=True)
-    municipio = models.ForeignKey(
-        Municipio, on_delete=models.PROTECT, related_name="opms"
+    
+    # ALTERAÇÃO AQUI: De ForeignKey para ManyToManyField
+    municipios = models.ManyToManyField(
+        Municipio, 
+        related_name="opms",
+        verbose_name="Municípios Atendidos"
     )
+    
     history = HistoricalRecords()
+
     def __str__(self):
-        return f"{self.sigla} - {self.municipio.nome}"
+        # Como agora são vários, o __str__ precisa mudar para não dar erro
+        return self.sigla
 
     class Meta:
         verbose_name = "OPM"
         verbose_name_plural = "OPMs"
-        unique_together = ("nome", "municipio")
+        # REMOVA o unique_together antigo, pois ele não funcionará com ManyToMany
+        # unique_together = ("nome", "municipio")
 
 
 # --- MODELO DE AGRUPAMENTO (RELATÓRIO) ---
@@ -228,13 +236,8 @@ class Ocorrencia(models.Model):
     relatorio_diario = models.ForeignKey(
         RelatorioDiario, on_delete=models.PROTECT, related_name="ocorrencias"
     )
-    opm = models.ForeignKey(
-        OPM,
-        on_delete=models.PROTECT,
-        related_name="ocorrencias",
-        verbose_name="OPM do Fato",
-    )
-
+    opm = models.ForeignKey(OPM, on_delete=models.PROTECT, related_name="ocorrencias")
+    municipio = models.ForeignKey(Municipio, on_delete=models.PROTECT)
     relato_historico = models.TextField(blank=True, verbose_name="Histórico Detalhado")
     resumo_cabecalho = models.CharField(
         max_length=255, blank=True, verbose_name="Resumo para Sumário"

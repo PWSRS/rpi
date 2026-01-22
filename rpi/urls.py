@@ -19,6 +19,7 @@ from .views import (
     salvar_instrumento_ajax,
     salvar_material_apreendido_ajax,
     buscar_naturezas_ajax,
+    ajax_carregar_municipios,
     MaterialApreendidoTipoCreateView,
     MaterialApreendidoTipoListView,
     MaterialApreendidoTipoUpdateView,
@@ -30,6 +31,7 @@ from .views import (
     listar_prisoes,
     lista_auditoria_objeto,
     auditoria_geral,
+    listar_prisoes_por_opm,
 )
 
 urlpatterns = [
@@ -88,10 +90,14 @@ urlpatterns = [
     path('usuario/<int:user_id>/deletar/', views.deletar_usuario, name='deletar_usuario'),
     # Prisões
     path('prisoes/', views.listar_prisoes, name='listar_prisoes'),
+    # Prisões por OPM
+    path('prisoes/opm/', views.listar_prisoes_por_opm, name='listar_prisoes_por_opm'),
     # Auditoria simplificada
     path('auditoria/<int:pk>/', views.lista_auditoria_objeto, name='ver_auditoria'),
     # Auditoria geral
     path('auditoria/geral/', views.auditoria_geral, name='auditoria_geral'),
+    # Carregar municipio
+    path('ajax/municipios/', views.ajax_carregar_municipios, name='ajax_carregar_municipios'),
     
     
 ]

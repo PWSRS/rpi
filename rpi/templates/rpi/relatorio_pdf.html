@@ -13,10 +13,12 @@
     margin: 2cm;
 
      @top-left {
-        content: ' Conituação do RPI Nº {{relatorio.nr_relatorio}}/ARI SUL - SISTEMA DE INTELIGÊNCIA - BRIGADA MILITAR';
+        content: ' Continuação do RPI Nº {{relatorio.nr_relatorio}}/ARI SUL - SISTEMA DE INTELIGÊNCIA - CRPM SUL - BRIGADA MILITAR';
         font-family: Arial, sans-serif;
         font-size: 9pt;
         color: #999;
+        text-decoration: underline;
+
     }
 
     @bottom-right {
@@ -44,9 +46,10 @@
 
 <header>
     <img src="{{ logo_uri }}" alt="Logo da Brigada Militar" class="logo">
-    <p>ESTADO DO RIO GRANDE DO SUL</p>
-    <p>SECRETARIA DA SEGURANÇA PÚBLICA</p>
-    <p>BRIGADA MILITAR - SISTEMA DE INTELIGÊNCIA</p>
+    <p><strong>ESTADO DO RIO GRANDE DO SUL</strong></p>
+    <p><strong>SECRETARIA DA SEGURANÇA PÚBLICA</strong></p>
+    <p><strong>BRIGADA MILITAR</strong></p>
+    <p><strong>SISTEMA DE INTELIGÊNCIA</strong></p>
     <h1>
         RELATÓRIO PERIÓDICO DE INTELIGÊNCIA Nº
         {{ relatorio.nr_relatorio }}/{{ relatorio.ano_criacao }}/ARI SUL -
@@ -67,7 +70,7 @@
     <a href="#ocorrencia_{{ forloop.counter }}" class="sumario-link">
         {{ forloop.counter }}.
         {{ item.ocorrencia.natureza.nome|upper }} –
-        {{ item.ocorrencia.opm.municipio.nome|upper }}
+        {{ item.ocorrencia.municipio|upper }}
         ({{ item.sigla_opm_limpa|upper }})
     </a>
 </p>
@@ -97,7 +100,7 @@
 <p class="titulo">
     {{ forloop.counter }}.
     {{ ocorrencia.natureza.nome|upper }} –
-    {{ ocorrencia.opm.municipio.nome|upper }}
+    {{ ocorrencia.municipio|upper }}
     ({{ item.sigla_opm_limpa|upper }})
 </p>
 
@@ -105,7 +108,7 @@
     <strong>Em {{ ocorrencia.data_hora_bruta }},</strong>
     na {{ ocorrencia.rua }}, nº {{ ocorrencia.numero }},
     bairro {{ ocorrencia.bairro }},
-    na cidade de {{ ocorrencia.opm.municipio.nome }},
+    na cidade de {{ ocorrencia.municipio }},
     {{ ocorrencia.relato_historico }}
     <a href="#inicio_sumario" class="voltar-link">(VOLTAR)</a>
 </p>
@@ -209,7 +212,7 @@
 <p class="titulo">
     {{ item.letra }})
     {{ ocorrencia.natureza.nome|upper }} –
-    {{ ocorrencia.opm.municipio.nome|upper }}
+    {{ ocorrencia.municipio|upper }}
     ({{ item.sigla_opm_limpa|upper }})
 </p>
 

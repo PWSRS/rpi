@@ -63,10 +63,24 @@ class MunicipioAdmin(admin.ModelAdmin):
 
 @admin.register(OPM)
 class OPMAdmin(admin.ModelAdmin):
-    list_display = ("sigla", "nome", "municipio")
-    list_filter = ("municipio",)
+    # 1. No list_display, você não pode colocar um ManyToMany direto. 
+    # Criamos um método auxiliar 'exibir_municipios'.
+    list_display = ("sigla", "nome", "exibir_municipios")
+    
+    # 2. O filtro lateral muda para 'municipios'
+    list_filter = ("municipios",)
     search_fields = ("sigla", "nome")
-    fields = ("sigla", "nome", "municipio")
+    
+    # 3. Adicione filter_horizontal para facilitar a seleção de vários municípios
+    filter_horizontal = ("municipios",)
+    
+    # 4. Ajuste os campos do formulário
+    fields = ("sigla", "nome", "municipios")
+
+    def exibir_municipios(self, obj):
+        # Retorna uma string com os nomes dos municípios separados por vírgula
+        return ", ".join([m.nome for m in obj.municipios.all()])
+    exibir_municipios.short_description = "Municípios Atendidos"
 
 
 @admin.register(RelatorioDiario)
@@ -127,7 +141,7 @@ class OcorrenciaAdmin(admin.ModelAdmin):
         "natureza__tipo_impacto", 
         "tipo_acao",
         "instrumento", 
-        "opm__municipio", 
+        "opm__municipios", # Adicionado o 's' no final
         "opm", 
         "natureza"
     )

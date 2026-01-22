@@ -11,6 +11,12 @@ header {
     margin-bottom: 5px;
 }
 
+header p {
+    margin: 5px 0;
+    font-size: 10pt;
+    font-weight: bold;
+}
+
 header img {
     max-width: 150px;
     height: auto;
@@ -113,7 +119,9 @@ table tr {
     background-clip: padding-box;
     border: var(--bs-border-width) solid var(--bs-border-color);
     border-radius: var(--bs-border-radius);
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    transition:
+        border-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
 }
 
 /* CSS para corrigir a desconfiguração na EDIÇÃO */
