@@ -1,0 +1,17 @@
+/* Estilização para o input de arquivo do Django */
+.imagem-form-bloco input[type='file'] {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+
+/* Esconde os links de "Atualmente" e "Limpar" que o Django cria automaticamente
+   se você quiser um visual mais minimalista (opcional) */
+.imagem-form-bloco a {
+    font-size: 0.75rem;
+    display: block;
+    margin-bottom: 5px;
+    text-decoration: none;
+    color: #6c757d;
+}
