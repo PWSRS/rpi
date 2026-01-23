@@ -93,8 +93,8 @@ class ApreensaoForm(forms.ModelForm):
             "quantidade": forms.TextInput(
                 attrs={"placeholder": "1.00 ou 100", "class": "form-control"}
             ),
-            "unidade_medida": forms.TextInput(
-                attrs={"placeholder": "Un, g, Kg...", "class": "form-control"}
+            "unidade_medida": forms.Select(
+                attrs={"class": "form-control"} # Removi o placeholder (não funciona aqui)
             ),
             "descricao_adicional": forms.TextInput(
                 attrs={"placeholder": "Descrição adicional...", "class": "form-control"}
@@ -103,9 +103,25 @@ class ApreensaoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # 1. ORDENANDO AS CHOICES:
+        # Pega as choices atuais, remove a primeira (que costuma ser o "---------")
+        # e ordena pelo rótulo (item [1] da tupla)
+        choices = list(self.fields['unidade_medida'].choices)
+        blank_choice = choices[0] if choices[0][0] == '' else ('', '---------')
+        
+        # Ordena o restante da lista alfabeticamente pelo nome (ex: g, kg, pé, un)
+        other_choices = sorted([c for c in choices if c[0] != ''], key=lambda x: x[1])
+        
+        # Reidrata o campo com a nova ordem
+        self.fields['unidade_medida'].choices = [blank_choice] + other_choices
+
+        # 2. SEU CÓDIGO DE ESTILIZAÇÃO (AJUSTADO):
         for field_name, field in self.fields.items():
             if field_name not in ["quantidade", "descricao_adicional", "unidade_medida"]:
-                field.widget.attrs["class"] = "form-control"
+                field.widget.attrs["class"] = "form-control"  
+
+
 
 
 class EnvolvidoForm(forms.ModelForm):
@@ -216,6 +232,9 @@ class InstrumentoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs["class"] = "form-control"
+    
+            
+            
             
 class MaterialApreendidoTipoForm(forms.ModelForm):
     class Meta:

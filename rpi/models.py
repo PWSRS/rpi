@@ -356,6 +356,12 @@ class MaterialApreendidoTipo(models.Model):
 
 # --- ENTIDADE DE RELACIONAMENTO (APREENSÃO) ---
 class Apreensao(models.Model):
+    TIPO_MEDIDA = [
+        ("un", "un"),
+        ("kg", "kg"),
+        ("g", "g"),
+        ("pe", "pé"),
+    ]
     ocorrencia = models.ForeignKey(
         "Ocorrencia", on_delete=models.CASCADE, related_name="apreensoes"
     )
@@ -371,10 +377,8 @@ class Apreensao(models.Model):
         help_text="Use vírgula para separar (Ex: 10.50 ou 1)",
         default=1,
     )
-
-    # Exemplo: 'unidades', 'gramas', 'metros', 'reais'
     unidade_medida = models.CharField(
-        max_length=50, blank=True, verbose_name="Unidade de Medida"
+        max_length=2, blank=True, choices=TIPO_MEDIDA, verbose_name="Unidade de Medida"
     )
     
     descricao_adicional = models.CharField(

@@ -40,7 +40,8 @@
     <div class="card mb-2">
         <div class="card-body">
             <strong>{{ ocorrencia.natureza.nome }}</strong><br>
-            OPM: {{ ocorrencia.opm.sigla }} |
+            {{ ocorrencia.opm.sigla }} |
+            {{ ocorrencia.municipio }} |
             Data: {{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}
         </div>
     </div>

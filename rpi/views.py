@@ -70,7 +70,7 @@ from .models import (
     OPM,
 )
 # O @user_passes_test verifica se o usuário é staff (admin)
-# Apenas usuários staff podem ativar policiais
+# Apenas usuários staff podem ativar o cadastro de novos usuários
 # lambda é uma função anônima que retorna True se o usuário for staff
 # u: representa o usuário atual e u.is_staff verifica se ele é staff
 @user_passes_test(lambda u: u.is_staff)
@@ -85,7 +85,7 @@ def ativar_policial(request, user_id):
         
         # Opcional: Avisar o policial por e-mail
         assunto = "Acesso Liberado - Sistema RPI"
-        mensagem = f"Olá {policial.first_name},\n\nSua solicitação de acesso ao Sistema RPI da ARI Sul foi aprovada. Você já pode realizar o login com seu e-mail institucional."
+        mensagem = f"Olá {policial.first_name},\n\nSua solicitação de acesso ao Sistema RPI da ARI Sul foi aprovada. Você já pode realizar o login com seu e-mail institucional e senha cadastrada."
         
         send_mail(assunto, mensagem, 'pablo.weber@hotmail.com', [policial.email], fail_silently=True)
         
@@ -1325,3 +1325,4 @@ def auditoria_geral(request):
         registro.mudancas_processadas = lista_final_mudancas
 
     return render(request, 'auditoria/lista_geral.html', {'historico': historico})
+

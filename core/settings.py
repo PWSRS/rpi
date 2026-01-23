@@ -153,4 +153,4 @@ AUTHENTICATION_BACKENDS = [
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Política de Retenção de Auditoria (em dias)
-AUDIT_LOG_RETENTION_DAYS = 90
+AUDIT_LOG_RETENTION_DAYS = 1
