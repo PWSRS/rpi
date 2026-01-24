@@ -531,17 +531,24 @@ class OcorrenciaUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "rpi/ocorrencia_form.html"
     success_url = reverse_lazy("ocorrencia_list")
 
+    def dispatch(self, request, *args, **kwargs):
+        """ Impede a edição se o relatório estiver finalizado """
+        obj = self.get_object()
+        if obj.relatorio_diario.finalizado:
+            messages.error(request, "Este relatório já está finalizado e não pode ser editado.")
+            return redirect('ocorrencia_list')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
 
-        # Definição das fábricas de Formset (Mantidas na View, conforme seu código)
+        # Definição das fábricas de Formset
         EnvolvidoFormSet = inlineformset_factory(
             self.model, Envolvido, form=EnvolvidoForm, extra=1, can_delete=True
         )
         ApreensaoFormSet = inlineformset_factory(
             self.model, Apreensao, form=ApreensaoForm, extra=1, can_delete=True
         )
-        # NOVO: Fábrica do Formset de Imagens (Definida na View, conforme seu código)
         OcorrenciaImagemFormSet = inlineformset_factory(
             self.model,
             OcorrenciaImagem,
@@ -551,14 +558,12 @@ class OcorrenciaUpdateView(LoginRequiredMixin, UpdateView):
         )
 
         if self.request.POST:
-            # Instancia Formsets existentes com POST data
             data["envolvido_formset"] = EnvolvidoFormSet(
                 self.request.POST, instance=self.object, prefix="envolvidos"
             )
             data["apreensao_formset"] = ApreensaoFormSet(
                 self.request.POST, instance=self.object, prefix="apreensoes"
             )
-            # CRÍTICO: Instancia Formset de Imagens com request.POST e request.FILES
             data["imagem_formset"] = OcorrenciaImagemFormSet(
                 self.request.POST,
                 self.request.FILES,
@@ -566,14 +571,12 @@ class OcorrenciaUpdateView(LoginRequiredMixin, UpdateView):
                 prefix="imagens",
             )
         else:
-            # Instancia Formsets existentes com dados do objeto
             data["envolvido_formset"] = EnvolvidoFormSet(
                 instance=self.object, prefix="envolvidos"
             )
             data["apreensao_formset"] = ApreensaoFormSet(
                 instance=self.object, prefix="apreensoes"
             )
-            # NOVO: Instancia Formset de Imagens
             data["imagem_formset"] = OcorrenciaImagemFormSet(
                 instance=self.object, prefix="imagens"
             )
@@ -583,41 +586,43 @@ class OcorrenciaUpdateView(LoginRequiredMixin, UpdateView):
         context = self.get_context_data()
         envolvido_formset = context["envolvido_formset"]
         apreensao_formset = context["apreensao_formset"]
-        imagem_formset = context["imagem_formset"]  # NOVO: Pega o formset
+        imagem_formset = context["imagem_formset"]
 
         if (
             form.is_valid()
             and envolvido_formset.is_valid()
             and apreensao_formset.is_valid()
-            and imagem_formset.is_valid()  # CRÍTICO: Validação do formset de imagem
+            and imagem_formset.is_valid()
         ):
-            # Salva a ocorrência
             self.object = form.save()
-            # Salva os formsets
             envolvido_formset.save()
             apreensao_formset.save()
-            imagem_formset.save()  # NOVO: Salva as imagens (atualizações, exclusões e adições)
+            imagem_formset.save()
 
             messages.success(self.request, "Ocorrência atualizada com sucesso!")
             return redirect(self.get_success_url())
         else:
-            # Caso algum formset seja inválido, volta para a página exibindo os erros
             return self.render_to_response(self.get_context_data(form=form))
 
 
 class OcorrenciaDeleteView(LoginRequiredMixin, DeleteView):
     """Permite excluir uma ocorrência."""
-
     model = Ocorrencia
     success_url = reverse_lazy("ocorrencia_list")
 
+    def dispatch(self, request, *args, **kwargs):
+        """ Impede a exclusão se o relatório estiver finalizado """
+        obj = self.get_object()
+        if obj.relatorio_diario.finalizado:
+            messages.error(request, "Não é possível excluir ocorrências de um relatório finalizado.")
+            return redirect('ocorrencia_list')
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
-        # A exclusão ocorre automaticamente ao receber o POST
         messages.success(
             self.request, f"Ocorrência {self.object.pk} excluída com sucesso."
         )
         return super().form_valid(form)
-
 
 def listar_materiais_apreendidos(request):
     # Busca todos os materiais apreendidos, com filtros opcionais por data

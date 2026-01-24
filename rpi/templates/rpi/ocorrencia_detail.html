@@ -6,16 +6,23 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2><i class="fas fa-file-alt"></i> Detalhes da Ocorrência - {{ ocorrencia.natureza.nome }}</h2>
         <div>
-            <a href="{% url 'ocorrencia_update' ocorrencia.pk %}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Editar
-            </a>
-            <a href="javascript:history.back()" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Voltar
-            </a>
+            {% if not ocorrencia.relatorio_diario.finalizado %}
+                <a href="{% url 'ocorrencia_update' ocorrencia.pk %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+            {% else %}
+                <span data-toggle="tooltip" data-placement="top" title="Relatório finalizado não permite edição">
+                    <button class="btn btn-danger" style="pointer-events: none;" disabled>
+                        <i class="fas fa-lock"></i> Finalizado
+                    </button>
+                </span>
+            {% endif %}
+                <a href="javascript:history.back()" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
         </div>
     </div>
     <hr>
-
     <div class="row">
         <div class="col-md-5">
             <div class="card mb-4 shadow-sm">

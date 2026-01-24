@@ -68,7 +68,7 @@
                       action="{% url 'reabrir_relatorio' relatorio_atual.pk %}"
                       style="margin: 0;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-warning">
+                    <button type="submit" class="btn btn-outline-dark">
                         🔓 Reabrir Relatório
                     </button>
                 </form>
@@ -148,6 +148,7 @@
                                     title="Excluir Ocorrência"
                                     data-bs-toggle="modal"
                                     data-bs-target="#deleteConfirmModal"
+                                    data-nome="{{ ocorrencia.natureza.nome}}"  {# Adicione esta linha #}
                                     data-delete-url="{% url 'ocorrencia_delete' ocorrencia.pk %}"
                                     data-ocorrencia-id="{{ ocorrencia.pk }}">
                                 <i class="fas fa-trash-alt"></i>

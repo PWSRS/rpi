@@ -145,6 +145,7 @@ table tr {
     gap: 6px;
     margin-top: 6px;
     page-break-inside: avoid;
+    /*page-break-inside: auto; /* Permite que a galeria quebre se necessário */
 }
 
 .bloco-imagem {
@@ -187,7 +188,28 @@ table tr {
 .page-break {
     display: block;
     page-break-before: always;
+    clear: both;
 }
+
+/* NOVO: Classe para o título do CVLI para garantir que ele não fique 'órfão' */
+.titulo-secao-cvli {
+    text-align: left;
+    font-size: 12pt;
+    font-weight: bold;
+    margin-top: 20px; /* Dá um espaçamento da última ocorrência comum */
+    margin-bottom: 10px;
+    page-break-after: avoid; /* Tenta não deixar o título sozinho no fim de uma página */
+}
+
+/* Garante que o bloco de CVLI não force quebra a menos que não caiba */
+.bloco-cvli {
+    page-break-inside: auto;
+    page-break-before: auto !important;
+    display: block;
+    clear: both; /* Garante que não haja elementos flutuando que empurrem o bloco */
+    position: relative;
+}
+
 .tabela-sumario {
     width: 100%;
     margin-bottom: 0 !important; /* Remove margem que pode empurrar a quebra */

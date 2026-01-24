@@ -88,7 +88,8 @@
 </p>
 {% endif %}
 
-<div style="page-break-before: always;"></div>
+<!--<div style="page-break-before: always;"></div>-->
+<div class="page-break"></div>
 
 <!-- ================= OCORRÊNCIAS NORMAIS ================= -->
 
@@ -133,20 +134,26 @@
     </div>
     {% endif %}
 
-    {% if ocorrencia.apreensoes.all %}
-    <div class="detalhes-tecnicos"
-         style="margin-top: 5px; margin-left: 20px; font-size: 0.9em;">
-        <strong>Material Apreendido:</strong>
-        <ul style="list-style: none; padding: 0;">
-            {% for mat in ocorrencia.apreensoes.all %}
-            <li>
-                * {{ mat.quantidade }} {{ mat.unidade_medida }}
-                {{ mat.material_tipo }}.
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+{% if ocorrencia.apreensoes.all %}
+<div class="detalhes-tecnicos" style="margin-top: 5px; margin-left: 20px; font-size: 0.9em;">
+    <strong>Material Apreendido:</strong>
+    <ul style="list-style: none; padding: 0;">
+        {% for mat in ocorrencia.apreensoes.all %}
+        <li>
+            * {% if mat.unidade_medida == 'R$' or mat.unidade_medida == 'US$' or mat.unidade_medida == '€' %}
+                {# Moedas: Exibe o símbolo ANTES da quantidade #}
+                {{ mat.unidade_medida }} {{ mat.quantidade }}
+            {% else %}
+                {# Outras medidas: Exibe a quantidade ANTES da unidade (kg, un, g) #}
+                {{ mat.quantidade }} {{ mat.unidade_medida }}
+            {% endif %}
+            
+            {{ mat.material_tipo }}{% if mat.descricao_adicional %}, {{ mat.descricao_adicional }}{% endif %}.
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
 
     <div class="galeria-imagens">
         {% for imagem in item.imagens %}
@@ -166,7 +173,8 @@
 <!-- ================= SEÇÃO CVLI ================= -->
 
 {% if ocorrencias_cvli %}
-<div style="page-break-before: always;"></div>
+<!--<div style="page-break-before: always;"></div>-->
+<div class="bloco-cvli">
 
 <div id="secao_cvli">
 
@@ -252,8 +260,15 @@
         <ul style="list-style: none; padding: 0;">
             {% for mat in ocorrencia.apreensoes.all %}
             <li>
-                * {{ mat.quantidade }} {{ mat.unidade_medida }}
-                {{ mat.material_tipo }}.
+                * {% if mat.unidade_medida == 'R$' or mat.unidade_medida == 'US$' or mat.unidade_medida == '€' %}
+                    {# Moedas: Exibe o símbolo ANTES da quantidade #}
+                    {{ mat.unidade_medida }} {{ mat.quantidade }}
+                {% else %}
+                    {# Outras medidas: Exibe a quantidade ANTES da unidade (kg, un, g) #}
+                    {{ mat.quantidade }} {{ mat.unidade_medida }}
+                {% endif %}
+                
+                {{ mat.material_tipo }}{% if mat.descricao_adicional %}, {{ mat.descricao_adicional }}{% endif %}.
             </li>
             {% endfor %}
         </ul>

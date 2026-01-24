@@ -361,6 +361,10 @@ class Apreensao(models.Model):
         ("kg", "kg"),
         ("g", "g"),
         ("pe", "pé"),
+        ("R$", "Real (R$)"),
+        ("US$", "Dólar (US$)"),
+        ("€", "Euro (€)"),
+        ("ARS", "Peso Arg ($)"),
     ]
     ocorrencia = models.ForeignKey(
         "Ocorrencia", on_delete=models.CASCADE, related_name="apreensoes"
@@ -378,7 +382,7 @@ class Apreensao(models.Model):
         default=1,
     )
     unidade_medida = models.CharField(
-        max_length=2, blank=True, choices=TIPO_MEDIDA, verbose_name="Unidade de Medida"
+        max_length=3, blank=True, choices=TIPO_MEDIDA, verbose_name="Unidade de Medida"
     )
     
     descricao_adicional = models.CharField(
