@@ -15,3 +15,46 @@
     text-decoration: none;
     color: #6c757d;
 }
+
+/* Garante que o grupo não ultrapasse os limites e oculte o excesso de texto */
+.input-group.flex-nowrap {
+    width: 100%;
+    min-width: 0; /* Importante para o flexbox permitir encolhimento */
+}
+
+/* Força o Select2 ou Select a respeitar o limite e colocar reticências (...) */
+.input-group.flex-nowrap .select2-container,
+.input-group.flex-nowrap select {
+    flex: 1 1 auto;
+    width: 1% !important; /* Truque do Bootstrap para forçar o preenchimento do espaço restante */
+    min-width: 0;
+}
+
+/* 1. Cor para O Fato (Ex: Azul) */
+.nav-pills .nav-link.tab-fato.active {
+    background-color: #0d6efd !important;
+    color: white !important;
+}
+
+/* 2. Cor para Participantes (Ex: Laranja/Amarelo) */
+.nav-pills .nav-link.tab-participantes.active {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+/* 3. Cor para Materiais (Ex: Verde) */
+.nav-pills .nav-link.tab-materiais.active {
+    background-color: #ffc107 !important;
+    color: white !important;
+}
+
+/* 4. Cor para Mídia (Ex: Roxo ou Cinza Escuro) */
+.nav-pills .nav-link.tab-midia.active {
+    background-color: #212529 !important;
+    color: white !important;
+}
+
+/* Ajuste opcional: cor do texto quando NÃO está ativa para melhorar leitura */
+.nav-link:not(.active) {
+    color: #575049;
+}

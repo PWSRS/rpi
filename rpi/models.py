@@ -75,7 +75,7 @@ class NaturezaOcorrencia(models.Model):
     )
     history = HistoricalRecords()
     def __str__(self):
-        return f"[{self.get_tipo_impacto_display()}] {self.nome}"
+        return self.nome
 
     class Meta:
         verbose_name = "Natureza da Ocorrência"
