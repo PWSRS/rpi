@@ -157,17 +157,15 @@ class OcorrenciaForm(forms.ModelForm):
         ]
         widgets = {
             "relato_historico": forms.Textarea(
-                attrs={"rows": 5, "placeholder": "Relate detalhadamente o fato..."}
+                attrs={"rows": 5, "placeholder": "inicie o histórico da ocorrência com letra minúscula..."}
             ),
-            "resumo_cabecalho": forms.TextInput(
-                attrs={"placeholder": "Breve título para o sumário"}
-            ),
+            "resumo_cabecalho": forms.TextInput(),
             "data_hora_bruta": forms.TextInput(
                 attrs={"placeholder": "Ex: 151435DEZ25", "maxlength": "15"}
             ),
-            "rua": forms.TextInput(attrs={"placeholder": "Nome da rua/avenida"}),
-            "numero": forms.TextInput(attrs={"placeholder": "Nº"}),
-            "bairro": forms.TextInput(attrs={"placeholder": "Bairro"}),
+            "rua": forms.TextInput(attrs={"placeholder": "Rua, Av. ..."}),
+            "numero": forms.TextInput(),
+            "bairro": forms.TextInput(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -232,8 +230,8 @@ class InstrumentoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs["class"] = "form-control"
-    
-            
+ 
+          
             
             
 class MaterialApreendidoTipoForm(forms.ModelForm):
@@ -246,12 +244,9 @@ class MaterialApreendidoTipoForm(forms.ModelForm):
         for field in self.fields.values():
             field.widget.attrs["class"] = "form-control"
             
-
-
 class NaturezaOcorrenciaForm(forms.ModelForm):
     class Meta:
         model = NaturezaOcorrencia
-        # Certifique-se de que 'nome' e 'tipo_impacto' são suficientes para o modelo.
         # Incluir 'tags_busca' aqui está OK, se for necessário para a criação.
         fields = ['nome', 'tipo_impacto', 'tags_busca']
         
@@ -266,27 +261,11 @@ class NaturezaOcorrenciaForm(forms.ModelForm):
     # ✅ __init__ MOVIDO PARA FORA do Meta class
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        # Otimização: Aplicar a classe CSS genérica apenas para campos
-        # que VOCÊ NÃO DEFINIU explicitamente em 'widgets',
-        # ou se precisar de uma customização avançada, mas
-        # neste caso, pode ser simplificado.
-        
-        # Exemplo se você QUISER garantir a classe em TODOS (incluindo tags_busca)
-        # e ignorar a redundância:
+
         for field in self.fields.values():
-             # O 'form-select' em tipo_impacto será sobrescrito por form-control, 
-             # o que pode ser um bug. Otimize assim:
              if 'class' not in field.widget.attrs:
                  field.widget.attrs['class'] = 'form-control'
              elif 'form-select' not in field.widget.attrs['class']:
                  field.widget.attrs['class'] += ' form-control'
              
-             # Melhor ainda: se os widgets já estão definidos, remova o loop
-             # ou use-o apenas para setar placeholders.
-             
-             # Se seu 'tags_busca' é o único que precisa do 'form-control', 
-             # a melhor prática é definir o widget dele no 'class Meta'.
-             
-        # Sugestão: Se você definiu os widgets, pode remover esse __init__
-        # se ele não tiver outra finalidade (como setar initial data ou placeholders dinâmicos).
+ 
