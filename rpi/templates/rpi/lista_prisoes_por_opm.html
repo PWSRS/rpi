@@ -13,31 +13,42 @@
 </div>
 
 <!-- Filtro por período -->
+<div class="alert alert-info d-flex align-items-center shadow-sm" role="alert">
+    <i class="fas fa-user-shield me-2 fs-4"></i>
+    <div>
+        <strong>Produtividade do Plantão:</strong> 
+        Exibindo registros das 07:00 do dia <strong>{{ data_inicio_full|date:"d/m/Y" }}</strong> 
+        até as 06:59 do dia <strong>{{ data_fim_full|date:"d/m/Y" }}</strong>.
+    </div>
+</div>
+
 <div class="card shadow-sm mb-4 border-primary">
     <div class="card-header bg-primary text-white py-2">
         <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Filtrar por Período</h6>
     </div>
     <div class="card-body">
         <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small fw-bold">Data Inicial</label>
-                <input type="date" name="data_inicio" class="form-control"
-                       value="{{ request.GET.data_inicio }}">
+            <div class="col-md-3">
+                <label for="data_inicio" class="form-label small fw-bold">Data Inicial:</label>
+                <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ data_inicio }}">
             </div>
-            <div class="col-md-4">
-                <label class="form-label small fw-bold">Data Final</label>
-                <input type="date" name="data_fim" class="form-control"
-                       value="{{ request.GET.data_fim }}">
+            <div class="col-md-3">
+                <label for="data_fim" class="form-label small fw-bold">Data Final:</label>
+                <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ data_fim }}">
             </div>
-            <div class="col-md-4">
-                <button class="btn btn-primary w-100">
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
                     <i class="fas fa-search me-1"></i> Filtrar
                 </button>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'listar_prisoes_por_opm' %}" class="btn btn-outline-dark w-100">
+                    <i class="fas fa-calendar-day me-1"></i> Plantão Atual
+                </a>
             </div>
         </form>
     </div>
 </div>
-
 <!-- Lista de envolvidos por OPM -->
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-dark text-white">

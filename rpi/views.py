@@ -2,8 +2,9 @@
 import urllib.parse
 import urllib.request
 from collections import Counter, defaultdict
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from pathlib import Path
+
 
 # 2. Bibliotecas de terceiros (Third-party)
 from weasyprint import CSS, HTML
@@ -30,6 +31,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from .utils import calcular_janela_plantao
 from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
@@ -625,34 +627,35 @@ class OcorrenciaDeleteView(LoginRequiredMixin, DeleteView):
         return super().form_valid(form)
 
 def listar_materiais_apreendidos(request):
-    # Busca todos os materiais apreendidos, com filtros opcionais por data
-    materiais = Apreensao.objects.select_related("material_tipo", "ocorrencia").all()
+    # 1. Chama a função utilitária para resolver as datas
+    plantao = calcular_janela_plantao(
+        request.GET.get("data_inicio"), 
+        request.GET.get("data_fim")
+    )
 
-    data_inicio = request.GET.get("data_inicio")
-    data_fim = request.GET.get("data_fim")
+    # 2. Aplica os filtros usando o dicionário retornado (plantao)
+    materiais = Apreensao.objects.select_related("material_tipo", "ocorrencia").filter(
+        ocorrencia__data_hora_fato__range=(plantao["dt_inicio"], plantao["dt_fim"])
+    )
 
-    if data_inicio:
-        materiais = materiais.filter(ocorrencia__data_hora_fato__date__gte=data_inicio)
-    if data_fim:
-        materiais = materiais.filter(ocorrencia__data_hora_fato__date__lte=data_fim)
-
-    # --- NOVO: Lógica de Resumo ---
-    # Agrupa por tipo de material e soma as quantidades
+    # 3. Resumo de totais
     resumo_totais = (
         materiais.values("material_tipo__nome", "unidade_medida")
-        .annotate(total_quantidade=Sum("quantidade"))# annotate para somar as quantidades
+        .annotate(total_quantidade=Sum("quantidade"))
         .order_by("material_tipo__nome")
     )
 
-    materiais = materiais.order_by("-ocorrencia__data_hora_fato")
-
+    # 4. Contexto organizado
     context = {
-        "materiais": materiais,
-        "resumo_totais": resumo_totais, # Enviando o resumo para o template
+        "materiais": materiais.order_by("-ocorrencia__data_hora_fato"),
+        "resumo_totais": resumo_totais,
+        "data_inicio_full": plantao["dt_inicio"],  # Usado na legenda HTML
+        "data_fim_full": plantao["dt_fim"],        # Usado na legenda HTML
+        "data_inicio": plantao["data_inicio_str"], # Usado no valor do input date
+        "data_fim": plantao["data_fim_str"],       # Usado no valor do input date
     }
 
     return render(request, "rpi/lista_materiais_apreendidos.html", context)
-
 
 def deletar_materiais_apreendidos(request, apreensao_id):
     apreensao = get_object_or_404(Apreensao, id=apreensao_id)
@@ -664,95 +667,68 @@ def deletar_materiais_apreendidos(request, apreensao_id):
     return redirect("listar_materiais_apreendidos")
 
 def listar_prisoes(request):
-    # 1. Filtramos apenas quem é Preso ou Suspeito (ou os tipos que você desejar)
+    # 1. Resolve a lógica de datas em uma linha
+    plantao = calcular_janela_plantao(request.GET.get("data_inicio"), request.GET.get("data_fim"))
+
+    # 2. Filtra envolvidos pela janela do plantão
     envolvidos = Envolvido.objects.filter(
-        tipo_participante__in=["P", "S", "M", "A"]
+        tipo_participante__in=["P", "S", "M", "A"],
+        ocorrencia__data_hora_fato__range=(plantao["dt_inicio"], plantao["dt_fim"])
     ).select_related("ocorrencia")
 
-    # 2. Captura as datas
-    data_inicio = request.GET.get("data_inicio")
-    data_fim = request.GET.get("data_fim")
-
-    if data_inicio:
-        envolvidos = envolvidos.filter(ocorrencia__data_hora_fato__date__gte=data_inicio)
-    if data_fim:
-        envolvidos = envolvidos.filter(ocorrencia__data_hora_fato__date__lte=data_fim)
-
-    # 3. Lógica de Resumo: Contar quantos de cada tipo
-    # Aqui agrupamos por tipo (Preso, Suspeito) e contamos as ocorrências
+    # 3. Resumo totalizado
     resumo_totais = (
         envolvidos.values("tipo_participante")
         .annotate(total=Count("id"))
         .order_by("tipo_participante")
     )
 
-    envolvidos = envolvidos.order_by("-ocorrencia__data_hora_fato")
-
     context = {
-        "envolvidos": envolvidos,
+        "envolvidos": envolvidos.order_by("-ocorrencia__data_hora_fato"),
         "resumo_totais": resumo_totais,
+        "data_inicio_full": plantao["dt_inicio"],
+        "data_fim_full": plantao["dt_fim"],
+        "data_inicio": plantao["data_inicio_str"],
+        "data_fim": plantao["data_fim_str"],
     }
-
     return render(request, "rpi/lista_prisoes.html", context)
 
+
 def listar_prisoes_por_opm(request):
+    # 1. Resolve a lógica de datas
+    plantao = calcular_janela_plantao(request.GET.get("data_inicio"), request.GET.get("data_fim"))
+
+    # 2. Query principal usando o range do plantão
     envolvidos = Envolvido.objects.filter(
-        tipo_participante__in=["P", "S", "M", "A"]
-    ).select_related("ocorrencia", "ocorrencia__opm")  # inclui prefetch da OPM
+        tipo_participante__in=["P", "S", "M", "A"],
+        ocorrencia__data_hora_fato__range=(plantao["dt_inicio"], plantao["dt_fim"])
+    ).select_related("ocorrencia", "ocorrencia__opm")
 
-    data_inicio = request.GET.get("data_inicio")
-    data_fim = request.GET.get("data_fim")
-
-    if data_inicio:
-        envolvidos = envolvidos.filter(
-            ocorrencia__data_hora_fato__date__gte=data_inicio
-        )
-    if data_fim:
-        envolvidos = envolvidos.filter(
-            ocorrencia__data_hora_fato__date__lte=data_fim
-        )
-
-    envolvidos = envolvidos.order_by(
-        "ocorrencia__opm__nome",
-        "-ocorrencia__data_hora_fato"
-    )
-
-    totais_query = (
-        envolvidos
-        .values("ocorrencia__opm__nome", "tipo_participante")
-        .annotate(total=Count("id"))
-    )
-
-    totais_opm = defaultdict(lambda: {
-        "P": 0, "S": 0, "A": 0, "M": 0, "total": 0
-    })
-
+    # 3. Lógica de Totais por OPM
+    totais_query = envolvidos.values("ocorrencia__opm__nome", "tipo_participante").annotate(total=Count("id"))
+    
+    totais_opm = defaultdict(lambda: {"P": 0, "S": 0, "A": 0, "M": 0, "total": 0})
     for row in totais_query:
         opm_nome = row["ocorrencia__opm__nome"] or "OPM não informada"
         tipo = row["tipo_participante"]
-        total = row["total"]
+        totais_opm[opm_nome][tipo] = row["total"]
+        totais_opm[opm_nome]["total"] += row["total"]
 
-        totais_opm[opm_nome][tipo] = total
-        totais_opm[opm_nome]["total"] += total
-
-    envolvidos_por_opm = defaultdict(lambda: {
-        "lista": [],
-        "resumo": {"P": 0, "S": 0, "A": 0, "M": 0, "total": 0}
-    })
-
-    for envolvido in envolvidos:
-        opm_obj = envolvido.ocorrencia.opm
-        opm_nome = getattr(opm_obj, "nome", None) or "OPM não informada"
+    # 4. Agrupamento para o Template
+    envolvidos_por_opm = defaultdict(lambda: {"lista": [], "resumo": {}})
+    for envolvido in envolvidos.order_by("ocorrencia__opm__nome", "-ocorrencia__data_hora_fato"):
+        opm_nome = getattr(envolvido.ocorrencia.opm, "nome", "OPM não informada")
         envolvidos_por_opm[opm_nome]["lista"].append(envolvido)
         envolvidos_por_opm[opm_nome]["resumo"] = totais_opm[opm_nome]
 
     context = {
         "envolvidos_por_opm": dict(envolvidos_por_opm),
+        "data_inicio_full": plantao["dt_inicio"],
+        "data_fim_full": plantao["dt_fim"],
+        "data_inicio": plantao["data_inicio_str"],
+        "data_fim": plantao["data_fim_str"],
     }
-
     return render(request, "rpi/lista_prisoes_por_opm.html", context)
-
-
 
 def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
     """
