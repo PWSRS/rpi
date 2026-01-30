@@ -679,7 +679,7 @@ def listar_prisoes(request):
     # 3. Resumo totalizado
     resumo_totais = (
         envolvidos.values("tipo_participante")
-        .annotate(total=Count("id"))
+        .annotate(total=Count("id")) # annotate faz a contagem
         .order_by("tipo_participante")
     )
 
