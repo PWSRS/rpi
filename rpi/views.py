@@ -8,6 +8,7 @@ from pathlib import Path
 
 # 2. Bibliotecas de terceiros (Third-party)
 from weasyprint import CSS, HTML
+from itertools import chain
 
 # 3. Django Core e Utilitários
 from django.conf import settings
@@ -28,6 +29,7 @@ from django.db.models import F, Prefetch, Q, Sum, Count, ProtectedError
 # 5. Django HTTP e View Helpers
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -1192,55 +1194,62 @@ def cadastrar_natureza_rapida(request):
 @user_passes_test(lambda u: u.is_superuser)
 def lista_auditoria_objeto(request, pk):
     objeto = get_object_or_404(Ocorrencia, pk=pk)
-    # Filtra o histórico apenas deste objeto usando o ID original
-    historico = objeto.history.select_related('history_user').filter(id=pk).order_by('-history_date')
     
+    # Busca histórico da Ocorrência e de todos os seus itens relacionados
+    h_ocorr = objeto.history.select_related('history_user').all()
+    h_env = Envolvido.history.select_related('history_user').filter(ocorrencia_id=pk)
+    h_apr = Apreensao.history.select_related('history_user').filter(ocorrencia_id=pk)
+    
+    historico_list = sorted(
+        chain(h_ocorr, h_env, h_apr),
+        key=lambda x: x.history_date,
+        reverse=True
+    )
+    
+    paginator = Paginator(historico_list, 15)
+    page = request.GET.get('page')
+    try:
+        historico = paginator.page(page)
+    except (PageNotAnInteger, EmptyPage):
+        historico = paginator.page(1)
+    
+    # O loop de processamento é IDÊNTICO ao da view anterior
     for registro in historico:
         lista_final_mudancas = []
-        
         if registro.history_type == '~':
             try:
                 anterior = registro.prev_record
                 if anterior:
                     delta = registro.diff_against(anterior)
+                    modelo_origem = registro.instance.__class__
+                    
                     for change in delta.changes:
-                        # Normalização do campo
                         field_name = change.field
                         clean_field_name = field_name[:-3] if field_name.endswith('_id') else field_name
-                        
                         try:
-                            field_obj = Ocorrencia._meta.get_field(clean_field_name)
+                            field_obj = modelo_origem._meta.get_field(clean_field_name)
                             nome_campo = field_obj.verbose_name.capitalize()
                         except:
                             nome_campo = field_name.capitalize()
                             field_obj = None
 
-                        v_antigo = change.old
-                        v_novo = change.new
+                        v_antigo, v_novo = change.old, change.new
 
-                        # Lógica de tradução de IDs para Nomes
                         if field_obj and hasattr(field_obj, 'choices') and field_obj.choices:
                             choices_dict = dict(field_obj.choices)
                             v_antigo = choices_dict.get(v_antigo, v_antigo)
                             v_novo = choices_dict.get(v_novo, v_novo)
-                        
                         elif field_obj and field_obj.is_relation:
-                            modelo_relacionado = field_obj.related_model
+                            modelo_rel = field_obj.related_model
                             if v_antigo:
-                                obj_ant = modelo_relacionado.objects.filter(pk=v_antigo).first()
+                                obj_ant = modelo_rel.objects.filter(pk=v_antigo).first()
                                 v_antigo = str(obj_ant) if obj_ant else f"ID {v_antigo}"
                             if v_novo:
-                                obj_nov = modelo_relacionado.objects.filter(pk=v_novo).first()
+                                obj_nov = modelo_rel.objects.filter(pk=v_novo).first()
                                 v_novo = str(obj_nov) if obj_nov else f"ID {v_novo}"
 
-                        lista_final_mudancas.append({
-                            'campo': nome_campo,
-                            'antigo': v_antigo,
-                            'novo': v_novo
-                        })
-            except Exception:
-                pass
-        
+                        lista_final_mudancas.append({'campo': nome_campo, 'antigo': v_antigo, 'novo': v_novo})
+            except Exception: pass
         registro.mudancas_processadas = lista_final_mudancas
                 
     return render(request, 'auditoria/detalhe_historico.html', {
@@ -1251,60 +1260,72 @@ from django.apps import apps # Import necessário no topo do arquivo
 
 @user_passes_test(lambda u: u.is_superuser)
 def auditoria_geral(request):
-    historico = Ocorrencia.history.select_related('history_user').all()[:100]
-    
+    # 1. Coleta o histórico de todos os modelos que possuem auditoria
+    h_ocorr = Ocorrencia.history.select_related('history_user').all()
+    h_env = Envolvido.history.select_related('history_user').all()
+    h_apr = Apreensao.history.select_related('history_user').all()
+    h_instrumento = Instrumento.history.select_related('history_user').all()
+
+    # 2. Une as listas e ordena pela data da modificação (mais recente primeiro)
+    historico_list = sorted(
+        chain(h_ocorr, h_env, h_apr, h_instrumento),
+        key=lambda instance: instance.history_date,
+        reverse=True
+    )
+
+    # 3. Paginação (20 itens por página)
+    paginator = Paginator(historico_list, 20)
+    page = request.GET.get('page')
+    try:
+        historico = paginator.page(page)
+    except (PageNotAnInteger, EmptyPage):
+        historico = paginator.page(1)
+
+    # 4. Processamento de mudanças
     for registro in historico:
         lista_final_mudancas = []
-        
-        # Só processamos mudanças se for uma EDIÇÃO (~)
         if registro.history_type == '~': 
             try:
                 anterior = registro.prev_record
                 if anterior:
                     delta = registro.diff_against(anterior)
+                    # Pegamos o modelo original dinamicamente para acessar verbose_name e choices
+                    modelo_origem = registro.instance.__class__
+                    
                     for change in delta.changes:
-                        # Normaliza o nome do campo (remove _id se houver)
                         field_name = change.field
                         clean_field_name = field_name[:-3] if field_name.endswith('_id') else field_name
                         
                         try:
-                            field_obj = Ocorrencia._meta.get_field(clean_field_name)
+                            field_obj = modelo_origem._meta.get_field(clean_field_name)
                             nome_campo = field_obj.verbose_name.capitalize()
                         except:
                             nome_campo = field_name.replace('_', ' ').capitalize()
                             field_obj = None
 
-                        v_antigo = change.old
-                        v_novo = change.new
+                        v_antigo, v_novo = change.old, change.new
 
-                        # TRATA CHOICES (ex: Consumado/Tentado)
+                        # Trata Choices
                         if field_obj and hasattr(field_obj, 'choices') and field_obj.choices:
                             choices_dict = dict(field_obj.choices)
                             v_antigo = choices_dict.get(v_antigo, v_antigo)
                             v_novo = choices_dict.get(v_novo, v_novo)
                         
-                        # TRATA RELAÇÕES (Select2, ForeignKeys)
+                        # Trata Relações (FKs)
                         elif field_obj and field_obj.is_relation:
-                            modelo_relacionado = field_obj.related_model
+                            modelo_rel = field_obj.related_model
                             try:
                                 if v_antigo:
-                                    obj_ant = modelo_relacionado.objects.filter(pk=v_antigo).first()
-                                    v_antigo = str(obj_ant) if obj_ant else f"ID {v_antigo} (Removido)"
+                                    obj_ant = modelo_rel.objects.filter(pk=v_antigo).first()
+                                    v_antigo = str(obj_ant) if obj_ant else f"ID {v_antigo}"
                                 if v_novo:
-                                    obj_nov = modelo_relacionado.objects.filter(pk=v_novo).first()
-                                    v_novo = str(obj_nov) if obj_nov else f"ID {v_novo} (Removido)"
-                            except:
-                                pass
+                                    obj_nov = modelo_rel.objects.filter(pk=v_novo).first()
+                                    v_novo = str(obj_nov) if obj_nov else f"ID {v_novo}"
+                            except: pass
 
-                        lista_final_mudancas.append({
-                            'campo': nome_campo,
-                            'antigo': v_antigo,
-                            'novo': v_novo
-                        })
-            except Exception:
-                pass
+                        lista_final_mudancas.append({'campo': nome_campo, 'antigo': v_antigo, 'novo': v_novo})
+            except Exception: pass
         
         registro.mudancas_processadas = lista_final_mudancas
-
+    
     return render(request, 'auditoria/lista_geral.html', {'historico': historico})
-

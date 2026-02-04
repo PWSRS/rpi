@@ -99,4 +99,46 @@
         box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
     }
 </style>
+<!-- PAGINAÇÃO -->
+ {% if historico.paginator.num_pages > 1 %}
+<nav aria-label="Paginação de auditoria">
+    <ul class="pagination justify-content-center">
+
+        {% if historico.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1" title="Primeira Página">&laquo;&laquo;</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ historico.previous_page_number }}">Anterior</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo;&laquo;</span></li>
+            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+        {% endif %}
+
+        {% for num in historico.paginator.page_range %}
+            {% if historico.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > historico.number|add:'-3' and num < historico.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if historico.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ historico.next_page_number }}">Próxima</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ historico.paginator.num_pages }}" title="Última Página">&raquo;&raquo;</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Próxima</span></li>
+            <li class="page-item disabled"><span class="page-link">&raquo;&raquo;</span></li>
+        {% endif %}
+
+    </ul>
+</nav>
+{% endif %}
 {% endblock %}
