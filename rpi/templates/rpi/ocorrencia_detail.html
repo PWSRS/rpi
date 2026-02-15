@@ -1,5 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Detalhes da Ocorrência #{{ ocorrencia.pk }}{% endblock %}
+
+{% block extra_head_css %}
+   <link rel="stylesheet" href="{% static 'rpi/css/ocorrencia_detail.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -39,7 +44,7 @@
             <div class="card mb-4 shadow-sm">
                 <div class="card-header bg-dark text-white font-weight-bold text-uppercase">Localização</div>
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><strong>Endereço:</strong> {{ ocorrencia.rua|default:"N/A" }}, {{ ocorrencia.numero|default:"S/N" }}</li>
+                    <li class="list-group-item"><strong>Endereço:</strong> {{ ocorrencia.rua|default:"N/A" }}, nº {{ ocorrencia.numero|default:"S/N" }}</li>
                     <li class="list-group-item"><strong>Bairro:</strong> {{ ocorrencia.bairro|default:"N/A" }}</li>
                     <li class="list-group-item"><strong>Cidade:</strong> {{ ocorrencia.municipio|default:"N/A" }}</li>
                 </ul>
@@ -47,9 +52,9 @@
         </div>
         
         <div class="col-md-7">
-            <div class="card mb-4 shadow-sm border-info">
+            <div class="card mb-4 shadow-sm border-info" >
                 <div class="card-header bg-info text-white font-weight-bold text-uppercase">Histórico</div>
-                <div class="card-body">
+                <div class="card-body" id="historico">
                     <p class="text-justify" style="white-space: pre-wrap;">{{ ocorrencia.relato_historico }}</p>
                 </div>
             </div>

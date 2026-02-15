@@ -1,16 +1,54 @@
-    /* Estilo específico para a tela de login */
-    .card-login {
-        border-top: 5px solid #002d5b; /* Azul Marinho Institucional */
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
-    .btn-pm {
-        background-color: #002d5b;
-        color: white;
-        border: none;
-    }
-    .btn-pm:hover {
-        background-color: #001f3f;
-        color: white;
-    }
-    /* Ocultar a navbar apenas na tela de login se necessário */
-    nav, .navbar { display: none !important; }
+/* Ocultar a navbar apenas na tela de login se necessário */
+nav,
+.navbar {
+    display: none !important;
+}
+
+/* Oculta a navbar na tela de login para foco total no acesso */
+nav,
+.navbar {
+    display: none !important;
+}
+
+body {
+    background-color: #001a35;
+}
+
+/* Estilo específico para a tela de login */
+.card-login {
+    border-top: 5px solid #002d5b; /* Azul Marinho Institucional */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+.btn-pm {
+    background-color: #002d5b;
+    color: white;
+    border: none;
+}
+.btn-pm:hover {
+    background-color: #001f3f;
+    color: white;
+}
+
+.card-login {
+    border-top: 5px solid #002d5b;
+    border-radius: 8px;
+}
+.btn-pm {
+    background-color: #002d5b;
+    color: white;
+    border: none;
+    transition: 0.3s;
+}
+.btn-pm:hover {
+    background-color: #001a35;
+    color: white;
+    transform: translateY(-1px);
+}
+.auth-links a {
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: 0.2s;
+}
+.auth-links a:hover {
+    text-decoration: underline;
+}

@@ -1,5 +1,11 @@
 .botoes-container {
     display: flex;
     white-space: nowrap; /* Impede quebras de linha */
-    flex-shrink: 0;      /* Impede que o botão seja espremido pelo título */
+    flex-shrink: 0; /* Impede que o botão seja espremido pelo título */
 }
+
+#historico p::first-letter {
+    text-transform: uppercase;
+}
+
+

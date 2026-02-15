@@ -4,15 +4,7 @@
 {% block title %}RPI - Login{% endblock %}
 
 {% block extra_head_css %}
-<style>
-    /* Oculta a navbar na tela de login para foco total no acesso */
-    nav, .navbar { display: none !important; }
-    .card-login { border-top: 5px solid #002d5b; border-radius: 8px; }
-    .btn-pm { background-color: #002d5b; color: white; border: none; transition: 0.3s; }
-    .btn-pm:hover { background-color: #001a35; color: white; transform: translateY(-1px); }
-    .auth-links a { font-size: 0.85rem; text-decoration: none; transition: 0.2s; }
-    .auth-links a:hover { text-decoration: underline; }
-</style>
+   <link rel="stylesheet" href="{% static 'rpi/css/login.css' %}">
 {% endblock %}
 
 {% block content %}
