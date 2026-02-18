@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from rpi.forms import EmailLoginForm
+from django.conf import settings  # <--- ADICIONE ESTA LINHA
+from django.conf.urls.static import static
 
 urlpatterns = [
     # =======================================================
@@ -9,11 +11,13 @@ urlpatterns = [
     # Garante que as rotas customizadas usem seus templates (registration/*.html)
     # =======================================================
     # 1. LOGIN
-    #path('auth/', include('django.contrib.auth.urls')),
+    # path('auth/', include('django.contrib.auth.urls')),
     path(
         "contas/login/",
-        auth_views.LoginView.as_view(template_name="rpi/registration/login.html",
-        authentication_form=EmailLoginForm),
+        auth_views.LoginView.as_view(
+            template_name="rpi/registration/login.html",
+            authentication_form=EmailLoginForm,
+        ),
         name="login",
     ),
     # 2. LOGOUT
@@ -73,5 +77,4 @@ urlpatterns = [
     ),
     path("admin/", admin.site.urls),
     path("", include("rpi.urls")),
-    
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

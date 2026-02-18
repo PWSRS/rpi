@@ -19,39 +19,34 @@
     <hr>
 
     <form method="post" class="needs-validation" novalidate id="ocorrencia-form" enctype="multipart/form-data">
-        {% csrf_token %}
-        {# Lista detalhada de erros - Só aparece se houver erros #}
-        {% if form.errors or envolvido_formset.errors or apreensao_formset.errors %}
-            <div class="alert alert-warning shadow-sm border-warning">
-                <h6 class="fw-bold"><i class="fas fa-exclamation-circle"></i> Atenção: Corrija os itens abaixo:</h6>
-                <ul class="mb-0">
-                    {# Erros do Formulário Principal #}
-                    {% for field in form %}
-                        {% if field.errors %}
-                            <li><strong>{{ field.label }}:</strong> {{ field.errors|striptags }}</li>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {# Erros globais dos Formsets (ex: validações personalizadas) #}
-                    {% for error in envolvido_formset.non_form_errors %}<li>{{ error }}</li>{% endfor %}
-                    {% for error in apreensao_formset.non_form_errors %}<li>{{ error }}</li>{% endfor %}
+        {% csrf_token %} {# Lista detalhada de erros - Só aparece se houver erros #} {% if form.errors or envolvido_formset.errors or apreensao_formset.errors %}
+        <div class="alert alert-warning shadow-sm border-warning">
+            <h6 class="fw-bold"><i class="fas fa-exclamation-circle"></i> Atenção: Corrija os itens abaixo:</h6>
+            <ul class="mb-0">
+                {# Erros do Formulário Principal #} {% for field in form %} {% if field.errors %}
+                <li><strong>{{ field.label }}:</strong> {{ field.errors|striptags }}</li>
+                {% endif %} {% endfor %} {# Erros globais dos Formsets (ex: validações personalizadas) #} {% for error in envolvido_formset.non_form_errors %}
+                <li>{{ error }}</li>{% endfor %} {% for error in apreensao_formset.non_form_errors %}
+                <li>{{ error }}</li>{% endfor %} {# Erros específicos dentro das linhas dos Formsets #} {# Substitua a parte do envolvido_formset.errors por isso: #} {% if envolvido_formset.errors %}
+                <li class="text-danger"><strong>Erro detalhado em Participantes:</strong>
+                    <ul>
+                        {% for error_dict in envolvido_formset.errors %} {% for field, message in error_dict.items %}
+                        <li>Linha {{ forloop.parentloop.counter }}: Campo <strong>{{ field }}</strong> -> {{ message|striptags }}</li>
+                        {% endfor %} {% endfor %}
+                    </ul>
+                </li>
+                {% endif %} {% if apreensao_formset.errors %}
+                <li>Verifique os dados na aba <strong>3. Materiais</strong></li>
+                {% endif %}
+            </ul>
+        </div>
 
-                    {# Erros específicos dentro das linhas dos Formsets #}
-                    {% if envolvido_formset.errors %}
-                        <li>Verifique os dados na aba <strong>2. Participantes</strong></li>
-                    {% endif %}
-                    {% if apreensao_formset.errors %}
-                        <li>Verifique os dados na aba <strong>3. Materiais</strong></li>
-                    {% endif %}
-                </ul>
-            </div>
-
-            {# Alerta Geral de Erro (Vermelho) #}
-            <div class="alert alert-danger shadow-sm mt-2">
-                <h6 class="alert-heading mb-0">
+        {# Alerta Geral de Erro (Vermelho) #}
+        <div class="alert alert-danger shadow-sm mt-2">
+            <h6 class="alert-heading mb-0">
                     <i class="fas fa-exclamation-triangle"></i> Erro no preenchimento. Verifique as abas marcadas em vermelho.
                 </h6>
-            </div>
+        </div>
         {% endif %}
 
         <ul class="nav nav-pills nav-justified mb-4 shadow-sm bg-white p-2 rounded border" id="ocorrenciaTabs" role="tablist">
@@ -78,7 +73,7 @@
         </ul>
 
         <div class="tab-content" id="ocorrenciaTabsContent">
-            
+
             {# --- ABA 1: DADOS DO FATO --- #}
             <div class="tab-pane fade show active" id="fato" role="tabpanel">
                 <div class="card shadow-sm mb-4">
@@ -89,17 +84,17 @@
                         <div class="row">
                             <div class="col-md-6 col-lg-4 mb-3">
                                 <label for="{{ form.natureza.id_for_label }}" class="form-label required">Fato</label>
-                                
+
                                 <div class="input-group flex-nowrap">
                                     {{ form.natureza }}
-                                    
+
                                     <button class="btn btn-outline-secondary" type="button" id="btn-add-natureza" title="Cadastrar nova natureza de crime">
                                         <i class="fas fa-plus"></i> </button>
                                 </div>
                                 {% if form.natureza.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.natureza.errors }}</div>
+                                <div class="invalid-feedback d-block">{{ form.natureza.errors }}</div>
                                 {% endif %}
-                                
+
                             </div>
                             <div class="col-md-6 col-lg-2 mb-3">
                                 <label for="{{ form.opm.id_for_label }}" class="form-label required">OPM</label>
@@ -129,13 +124,13 @@
                                 {{ form.bairro }}
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 col-lg-2 mb-3">
                                 <label for="{{ form.tipo_acao.id_for_label }}" class="form-label">Tipo do Fato</label>
                                 {{ form.tipo_acao }}
                             </div>
-                        
+
                             <div class="col-md-6 col-lg-7 mb-3" id="div_titulo_sumario">
                                 <label for="{{ form.resumo_cabecalho.id_for_label }}" class="form-label required">Título da Ocorrência</label>
                                 {{ form.resumo_cabecalho }}
@@ -145,10 +140,10 @@
                                 <label class="form-label fw-bold text-danger">
                                     <i class="bi bi-shield-fill-exclamation"></i> Instrumento Usado (CVLI)
                                 </label>
-                                
+
                                 <div class="input-group">
                                     {{ form.instrumento }}
-                                    
+
                                     <button class="btn btn-outline-secondary" type="button" onclick="abrirModalInstrumento()" title="Cadastrar novo instrumento">
                                         <i class="fas fa-plus"></i>
                                     </button>
@@ -165,7 +160,7 @@
                             </div>
                         </div>
                         <div id="overlayInst" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1999;"></div>
-                                            
+
                         <div class="row">
                             <div class="col-12 mb-3">
                                 <label for="{{ form.relato_historico.id_for_label }}" class="form-label required">Histórico da Ocorrência</label>
@@ -186,12 +181,12 @@
                             <h5 class="modal-title" id="modalNaturezaLabel">Novo Tipo Criminal</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        
+
                         <form id="form-add-natureza" action="{% url 'cadastrar_natureza_rapida' %}" method="post">
                             {% csrf_token %}
                             <div class="modal-body">
                                 <p class="text-muted small">Preencha apenas a tipo criminal e o aspecto para o cadastro rápido.</p>
-                                
+
                                 <div class="mb-3">
                                     <label for="id_natureza_nome_modal" class="form-label required">Tipo Criminal</label>
                                     <input type="text" class="form-control" id="id_natureza_nome_modal" name="nome" required>
@@ -199,9 +194,9 @@
                                 <div class="mb-3">
                                     <label for="id_natureza_aspecto_modal" class="form-label required">Aspecto/Impacto</label>
                                     <select class="form-select" id="id_natureza_aspecto_modal" name="tipo_impacto" required>
-                                        
-                                        <option value="" disabled selected>Selecione o Aspecto...</option> 
-                                        
+
+                                        <option value="" disabled selected>Selecione o Aspecto...</option>
+
                                         <option value="N">Negativo</option>
                                         <option value="P">Positivo</option>
                                     </select>
@@ -210,11 +205,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="button" 
-                                        class="btn btn-primary btn-sm"
-                                        id="btn-salvar-natureza"
-                                        data-url="{% url 'cadastrar_natureza_rapida' %}"
-                                        onclick="salvarNaturezaRapida()">Salvar
+                                <button type="button" class="btn btn-primary btn-sm" id="btn-salvar-natureza" data-url="{% url 'cadastrar_natureza_rapida' %}" onclick="salvarNaturezaRapida()">Salvar
                                 </button>
                             </div>
                         </form>
@@ -232,33 +223,70 @@
                         {{ envolvido_formset.management_form }}
                         <div id="envolvidos-container">
                             {% for form_envolvido in envolvido_formset %}
-                                <div class="envolvido-form border rounded p-3 mb-3 bg-light">
-                                    {% for hidden in form_envolvido.hidden_fields %} {{ hidden }} {% endfor %}
-                                    <div class="row">
-                                        <div class="col-md-2">{{ form_envolvido.tipo_participante.label_tag }} {{ form_envolvido.tipo_participante }}</div>
-                                        <div class="col-md-4">{{ form_envolvido.nome.label_tag }} {{ form_envolvido.nome }}</div>
-                                        <div class="col-md-1">{{ form_envolvido.idade.label_tag }} {{ form_envolvido.idade }}</div>
-                                        <div class="col-md-1">{{ form_envolvido.tipo_documento.label_tag }} {{ form_envolvido.tipo_documento }}</div>
-                                        <div class="col-md-2">{{ form_envolvido.nr_documento.label_tag }} {{ form_envolvido.nr_documento }}</div>
-                                        <div class="col-md-1">{{ form_envolvido.antecedentes.label_tag }} {{ form_envolvido.antecedentes }}</div>
-                                        <div class="col-md-1 d-flex align-items-end">
-                                            <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos"><i class="fas fa-trash"></i></button>
+                            <div class="envolvido-form border rounded p-3 mb-3 bg-light">
+                                {% for hidden in form_envolvido.hidden_fields %} {{ hidden }} {% endfor %} {# Linha 1: Dados do Participante #}
+                                <div class="row">
+                                    <div class="col-md-2">{{ form_envolvido.tipo_participante.label_tag }} {{ form_envolvido.tipo_participante }}</div>
+                                    <div class="col-md-4">{{ form_envolvido.nome.label_tag }} {{ form_envolvido.nome }}</div>
+                                    <div class="col-md-1">{{ form_envolvido.idade.label_tag }} {{ form_envolvido.idade }}</div>
+                                    <div class="col-md-1">{{ form_envolvido.tipo_documento.label_tag }} {{ form_envolvido.tipo_documento }}</div>
+                                    <div class="col-md-2">{{ form_envolvido.nr_documento.label_tag }} {{ form_envolvido.nr_documento }}</div>
+                                    <div class="col-md-1">{{ form_envolvido.antecedentes.label_tag }} {{ form_envolvido.antecedentes }}</div>
+
+                                    <div class="col-md-1 d-flex align-items-end justify-content-center">
+                                        <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    <div class="d-none">{{ form_envolvido.DELETE }}</div>
+                                </div>
+
+                                {# Linha 2: Foto (Refatorada) #}
+                                <div class="row align-items-center mt-3 border-top pt-2">
+                                    <div class="col-auto">
+                                        <div class="foto-preview-container" style="width: 65px; height: 80px; border: 1px solid #ddd; background: #e9ecef; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;">
+                                            {% if form_envolvido.instance.foto %}
+                                            <img src="{{ form_envolvido.instance.foto.url }}" class="img-envolvido-preview" style="width: 100%; height: 100%; object-fit: cover;"> {% else %}
+                                            <i class="fas fa-user text-muted" style="font-size: 1.5rem;"></i> {% endif %}
                                         </div>
-                                        <div class="d-none">{{ form_envolvido.DELETE }}</div>
+                                    </div>
+
+                                    <div class="col">
+                                        <div class="custom-file-upload">
+                                            <div class="input-foto-oculto" style="display: none;">
+                                                {{ form_envolvido.foto }}
+                                            </div>
+
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="$(this).siblings('.input-foto-oculto').find('input').click();">
+                                                <i class="fas fa-camera"></i> {% if form_envolvido.instance.foto %}Alterar Foto{% else %}Selecionar Foto{% endif %}
+                                            </button>
+
+                                            <small class="text-muted d-block mt-1 filename-display">
+                                                    {% if form_envolvido.instance.foto %}
+                                                        <i class="fas fa-check-circle text-success"></i> Foto salva
+                                                    {% else %}
+                                                        <i class="fas fa-info-circle"></i> Nenhuma foto selecionada
+                                                    {% endif %}
+                                                </small>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
                             {% endfor %}
                         </div>
+
                         <button type="button" id="add-envolvido-btn" class="btn btn-outline-primary mt-2">
                             <i class="fas fa-user-plus"></i> Adicionar Participante
                         </button>
                     </div>
                 </div>
+
+                {# Botões de Navegação (Agora dentro da tab-pane correta) #}
                 <div class="d-flex justify-content-between mb-4">
                     <button type="button" class="btn btn-secondary prev-tab"><i class="fas fa-arrow-left"></i> Anterior</button>
                     <button type="button" class="btn btn-primary next-tab">Próximo: Materiais <i class="fas fa-arrow-right"></i></button>
                 </div>
-            </div>
+            </div> {# FIM DA TAB-PANE #}
 
             <!-- ================= ABA 3 ================= -->
             <div class="tab-pane fade" id="materiais" role="tabpanel">
@@ -270,7 +298,7 @@
                         {{ apreensao_formset.management_form }}
 
                         <div id="apreensoes-formset-container">
-                        {% for form_apreensao in apreensao_formset %}
+                            {% for form_apreensao in apreensao_formset %}
                             <div class="form-apreensao-item mb-3 p-3 border rounded bg-light">
                                 {% for hidden in form_apreensao.hidden_fields %}{{ hidden }}{% endfor %}
                                 <div class="row">
@@ -278,8 +306,7 @@
                                         <label class="form-label">Material</label>
                                         <div class="input-group">
                                             {{ form_apreensao.material_tipo }}
-                                            <button type="button" class="btn btn-outline-secondary"
-                                                    onclick="abrirModalMaterial(this)">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="abrirModalMaterial(this)">
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
@@ -301,9 +328,7 @@
                                     </div>
 
                                     <div class="col-md-1 d-flex align-items-end">
-                                        <button type="button"
-                                                class="btn btn-outline-danger remove-formset-row"
-                                                data-prefix="apreensoes">
+                                        <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="apreensoes">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -311,11 +336,10 @@
                                     <div class="d-none">{{ form_apreensao.DELETE }}</div>
                                 </div>
                             </div>
-                        {% endfor %}
+                            {% endfor %}
                         </div>
 
-                        <button type="button" id="add-apreensao-btn"
-                                class="btn btn-outline-info mt-2">
+                        <button type="button" id="add-apreensao-btn" class="btn btn-outline-info mt-2">
                             <i class="fas fa-plus"></i> Adicionar Material
                         </button>
                     </div>
@@ -330,23 +354,19 @@
             <div id="modalMaterial" style="display:none; position:fixed; top:30%; left:35%; background:white;
             border:1px solid #ccc; padding:20px; z-index:2000; border-radius:8px; min-width:300px;">
                 <h5 class="mb-3">Novo Material</h5>
-                <input type="text" id="novo_nome_material"
-                    class="form-control mb-3"
-                    placeholder="Ex: Pistola, Celular, Documento">
+                <input type="text" id="novo_nome_material" class="form-control mb-3" placeholder="Ex: Pistola, Celular, Documento">
 
                 <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-secondary btn-sm"
-                            onclick="fecharModalMaterial()">Cancelar</button>
-                    <button type="button" class="btn btn-primary btn-sm" data-url="{% url 'adicionar_material_apreendido_ajax' %}"
-                            onclick="salvarMaterialRapido(this)">
-                            Salvar
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="fecharModalMaterial()">Cancelar</button>
+                    <button type="button" class="btn btn-primary btn-sm" data-url="{% url 'adicionar_material_apreendido_ajax' %}" onclick="salvarMaterialRapido(this)">
+                        Salvar
                     </button>
                 </div>
             </div>
 
-            <div id="overlayMaterial"
-                style="display:none; position:fixed; top:0; left:0; width:100%;
-                height:100%; background:rgba(0,0,0,.5); z-index:1999;"></div>
+            <div id="overlayMaterial" style="display:none; position:fixed; top:0; left:0; width:100%;
+                height:100%; background:rgba(0,0,0,.5); z-index:1999;">
+            </div>
 
 
             {# --- ABA 4: MÍDIA E SALVAR --- #}
@@ -364,46 +384,68 @@
                                 {{ form.id }}
                                 <div class="row align-items-center">
                                     <div class="col-md-2 text-center">
-                                        <div class="preview-container border rounded bg-white d-flex align-items-center justify-content-center" style="height: 80px; width: 100%; overflow: hidden;">
+                                        <div class="preview-container border rounded bg-white d-flex align-items-center justify-content-center" style="height: 100px; width: 100%; overflow: hidden; position: relative;">
+                                            {% if form.instance.imagem %}
+                                            <img src="{{ form.instance.imagem.url }}" class="img-fluid img-preview" style="height: 100%; width: 100%; object-fit: cover;"> {% else %}
                                             <i class="fas fa-image text-muted fa-2x preview-icon"></i>
-                                            <img src="" class="img-fluid d-none img-preview" style="max-height: 80px;">
+                                            <img src="" class="img-fluid d-none img-preview" style="height: 100%; width: 100%; object-fit: cover;"> {% endif %}
                                         </div>
                                     </div>
+
                                     <div class="col-md-4">
-                                        <label for="formFile" class="form-label fw-bold small">Arquivo</label>
-                                        {{ form.imagem }}
+                                        <label class="form-label fw-bold small d-block">Arquivo da Foto</label>
+
+                                        <div class="input-imagem-oculta" style="display: none;">
+                                            {{ form.imagem }}
+                                        </div>
+
+                                        <button type="button" class="btn btn-sm btn-outline-dark w-100" onclick="$(this).siblings('.input-imagem-oculta').find('input').click();">
+                                            <i class="fas fa-upload me-1"></i> {% if form.instance.imagem %}Trocar Imagem{% else %}Selecionar Imagem{% endif %}
+                                        </button>
+
+                                        <small class="text-muted d-block mt-1 filename-display" style="font-size: 0.7rem;">
+                                            {% if form.instance.imagem %}
+                                                <i class="fas fa-check text-success"></i> {{ form.instance.imagem.name|truncatechars:30 }}
+                                            {% else %}
+                                                Nenhum arquivo selecionado
+                                            {% endif %}
+                                        </small>
                                     </div>
+
                                     <div class="col-md-5">
-                                        <label class="form-label fw-bold small">Legenda</label>
+                                        <label class="form-label fw-bold small">Legenda da Foto</label>
                                         {{ form.legenda }}
                                     </div>
+
                                     <div class="col-md-1 d-flex align-items-end justify-content-center">
                                         <button type="button" class="btn btn-outline-danger remove-formset-row">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                        <div class="d-none">{{ form.DELETE }}</div>
                                     </div>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
+
                         <button type="button" class="btn btn-outline-primary mt-2" id="add-imagem-btn">
                             <i class="fas fa-plus-circle me-1"></i> Adicionar Outra Foto
                         </button>
+
                         <hr class="my-4">
                         <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center" role="alert">
                             <i class="fas fa-exclamation-triangle me-3 fa-2x"></i>
                             <div>
-                                <strong>Atenção:</strong> Revise cuidadosamente todas as abas (Fato, Participantes, Materiais e Mídia) antes de salvar. Uma vez salva, a ocorrência será registrada no sistema.
+                                <strong>Atenção:</strong> Revise cuidadosamente todas as abas antes de salvar.
                             </div>
                         </div>
+
                         <div class="d-flex justify-content-between align-items-center mt-4">
                             <button type="button" class="btn btn-secondary prev-tab">
                                 <i class="fas fa-arrow-left me-2"></i> Voltar: Materiais
                             </button>
                             <div class="d-flex gap-2">
-                                <a href="{% url 'ocorrencia_list' %}" class="btn btn-outline-secondary">Cancelar
-                                    <i class="fas fa-times me-2"></i>
-                                </a>
+                                <a href="{% url 'ocorrencia_list' %}" class="btn btn-outline-secondary">Cancelar</a>
                                 <button type="submit" class="btn btn-success px-5 shadow">
                                     <i class="fas fa-save me-2"></i> SALVAR OCORRÊNCIA
                                 </button>
@@ -412,6 +454,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </form>
 </div>
@@ -444,10 +487,38 @@
                 <label class="form-label">Antec.</label>
                 {{ envolvido_formset.empty_form.antecedentes }}
             </div>
-            <div class="col-md-1 d-flex align-items-end">
+
+            <div class="col-md-1 d-flex align-items-end justify-content-center">
                 <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos">
                     <i class="fas fa-trash"></i>
                 </button>
+            </div>
+            <div class="d-none">{{ envolvido_formset.empty_form.DELETE }}</div>
+        </div>
+
+        {# SEÇÃO DE FOTO PARA O NOVO PARTICIPANTE #}
+        <div class="row align-items-center mt-3 border-top pt-2">
+            <div class="col-auto">
+                <div class="foto-preview-container" style="width: 65px; height: 80px; border: 1px solid #ddd; background: #e9ecef; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;">
+                    {# Como é um formulário novo, sempre começa com o ícone de usuário #}
+                    <i class="fas fa-user text-muted" style="font-size: 1.5rem;"></i>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="custom-file-upload">
+                    <div class="input-foto-oculto" style="display: none;">
+                        {{ envolvido_formset.empty_form.foto }}
+                    </div>
+
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="$(this).siblings('.input-foto-oculto').find('input').click();">
+                        <i class="fas fa-camera"></i> Selecionar Foto
+                    </button>
+
+                    <small class="text-muted d-block mt-1 filename-display">
+                        <i class="fas fa-info-circle"></i> Nenhuma foto selecionada
+                    </small>
+                </div>
             </div>
         </div>
     </div>
@@ -511,7 +582,6 @@
         </div>
     </div>
 </template>
-
 {% endblock content %}
 
 {% block extra_js %}
@@ -520,422 +590,274 @@
 <script>
 $(document).ready(function () {
 
-   /* ---------- 1. SELECT2 ---------- */
-   function inicializarSelects() {
+    /* ---------- 1. INICIALIZAÇÃO SELECT2 ---------- */
+    function inicializarSelects(container = document) {
+        if (!$.fn.select2) return;
 
-      if (!$.fn.select2) return;
-
-      $('#id_natureza').select2({
-         theme: 'bootstrap-5',
-         placeholder: '🔍 Digite o nome (ou alias) do crime...',
-         allowClear: true,
-         width: '100%',
-         dropdownParent: $('#fato'),
-         language: {
-            noResults: () => 'Nenhuma natureza encontrada',
-            searching: () => 'Buscando...',
-         }, // ---- CÓDIGO AJAX (Mantido) ----
-         minimumInputLength: 3, // Começa a buscar após 3 caracteres
-         ajax: {
-            // Use o nome da rota URL do Django. Crie essa rota em urls.py!
-            url: "{% url 'buscar_naturezas_ajax' %}",
-            dataType: 'json',
-            delay: 250, // Espera 250ms após a digitação
-            data: function (params) {
-               return {
-                  q: params.term, // 'q' é o termo enviado para a view Python
-               };
+        // Natureza com busca AJAX
+        $('#id_natureza').select2({
+            theme: 'bootstrap-5',
+            placeholder: '🔍 Digite o nome do crime...',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#fato'),
+            language: {
+                noResults: () => 'Nenhuma natureza encontrada',
+                searching: () => 'Buscando...',
             },
-            processResults: function (data) {
-               // A View Python já formatou como Select2 espera, então só retornamos
-               return {
-                  results: data.results,
-               };
+            minimumInputLength: 3,
+            ajax: {
+                url: "{% url 'buscar_naturezas_ajax' %}",
+                dataType: 'json',
+                delay: 250,
+                data: params => ({ q: params.term }),
+                processResults: data => ({ results: data.results }),
+                cache: true,
             },
-            cache: true,
-         }, // -------------------------
-      });
-      /* ---------- 4. FORMSETS (PREVIEW DE IMAGENS) ---------- */
+        });
 
-      // Unificado: Delegar evento para campos de arquivo dentro do bloco de imagem
-      $(document).on('change', '.imagem-form-bloco input[type="file"]', function () {
-         const input = this;
-         const container = $(input).closest('.imagem-form-bloco');
-         const previewImg = container.find('.img-preview');
-         const previewIcon = container.find('.preview-icon');
-         const previewBox = container.find('.preview-container');
+        // Inicializa outros selects (OPM, Município, Participantes, Materiais)
+        $(container).find('select:not(#id_natureza)').each(function() {
+            $(this).select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: $(this).attr('placeholder') || 'Selecione uma opção'
+            });
+        });
+    }
 
-         if (input.files && input.files[0]) {
-            const reader = new FileReader();
+    inicializarSelects();
 
-            reader.onload = function (e) {
-               // Atualiza a imagem e troca visibilidade
-               previewImg.attr('src', e.target.result).removeClass('d-none');
-               previewIcon.addClass('d-none');
+    /* ---------- 2. NAVEGAÇÃO ENTRE ABAS ---------- */
+    $('.next-tab').on('click', function () {
+        const next = $('.nav-pills .active').parent().next().find('button');
+        if (next.length) new bootstrap.Tab(next[0]).show();
+        window.scrollTo(0, 0);
+    });
 
-               // Feedback visual de sucesso: borda azul (Bootstrap primary)
-               previewBox.addClass('border-primary shadow-sm').removeClass('bg-white');
-            }
+    $('.prev-tab').on('click', function () {
+        const prev = $('.nav-pills .active').parent().prev().find('button');
+        if (prev.length) new bootstrap.Tab(prev[0]).show();
+        window.scrollTo(0, 0);
+    });
 
-            reader.readAsDataURL(input.files[0]);
-         } else {
-            // Caso o usuário limpe o campo ou cancele a seleção
-            previewImg.attr('src', '').addClass('d-none');
-            previewIcon.removeClass('d-none');
-            previewBox.removeClass('border-primary shadow-sm').addClass('bg-white');
-         }
-      });
+    /* ---------- 3. FILTROS DINÂMICOS (OPM -> MUNICÍPIO) ---------- */
+    $(document).on('change', '#id_opm', function () {
+        const opmId = $(this).val();
+        const $municipioSelect = $('#id_municipio');
+        $municipioSelect.html('<option value="">Carregando...</option>').prop('disabled', true).trigger('change');
 
-
-      /* ---------- INICIALIZAÇÃO DOS SELECTS ---------- */
-      $('#id_opm').select2({
-         theme: 'bootstrap-5',
-         width: '100%',
-         placeholder: 'Selecione a OPM'
-      });
-
-      $('#id_municipio').select2({
-         theme: 'bootstrap-5',
-         width: '100%',
-         placeholder: 'Selecione a OPM primeiro'
-      });
-
-      /* ---------- FILTRO DINÂMICO OPM -> MUNICÍPIO ---------- */
-      $(document).on('change', '#id_opm', function () {
-         const opmId = $(this).val();
-         const $municipioSelect = $('#id_municipio');
-
-         // 1. Limpa o select e desabilita temporariamente para dar feedback visual
-         $municipioSelect.html('<option value="">Carregando...</option>').prop('disabled', true).trigger('change');
-
-         if (!opmId) {
+        if (!opmId) {
             $municipioSelect.html('<option value="">---------</option>').prop('disabled', false).trigger('change');
             return;
-         }
+        }
 
-         // 2. Chamada AJAX
-         $.ajax({
+        $.ajax({
             url: "{% url 'ajax_carregar_municipios' %}",
             type: 'GET',
-            data: {
-               'opm_id': opmId
-            },
-            dataType: 'json',
+            data: { 'opm_id': opmId },
             success: function (data) {
-               let options = '<option value="">---------</option>';
-
-               // 3. Itera sobre os dados (Lembre-se: sua View deve retornar [{'id':..., 'nome':...}])
-               $.each(data, function (index, item) {
-                  options += `<option value="${item.id}">${item.nome}</option>`;
-               });
-
-               // 4. Atualiza o HTML, reabilita o campo e limpa o valor selecionado
-               $municipioSelect.html(options).prop('disabled', false).val('').trigger('change');
-            },
-            error: function (xhr, status, error) {
-               console.error("Erro no AJAX:", error);
-               $municipioSelect.html('<option value="">Erro ao carregar</option>').prop('disabled', false).trigger('change');
+                let options = '<option value="">---------</option>';
+                $.each(data, (i, item) => options += `<option value="${item.id}">${item.nome}</option>`);
+                $municipioSelect.html(options).prop('disabled', false).trigger('change');
             }
-         });
-      });
-   }
-   inicializarSelects();
+        });
+    });
 
-   /* ------------------------------------------------------------------
-    * HANDLER PARA CADASTRO RÁPIDO DE NATUREZA (Chamada de Modal)
-    * Deve ser colocado aqui para que o botão seja funcional
-    * ------------------------------------------------------------------
-    */
-   $('#btn-add-natureza').on('click', function (e) {
-      e.preventDefault();
-      abrirModalNatureza();
-   });
+    /* ---------- 4. LÓGICA CVLI ---------- */
+    function verificarCVLI() {
+        const crimes = ['HOMICÍDIO DOLOSO', 'FEMINICÍDIO', 'ABORTO', 'LESÃO CORPORAL SEGUIDA DE MORTE', 'ROUBO COM MORTE', 'LATROCÍNIO'];
+        const texto = $('#id_natureza option:selected').text().toUpperCase();
+        $('#div_instrumento').toggle(crimes.some(c => texto.includes(c)));
+    }
+    $('#id_natureza').on('change', verificarCVLI);
+    verificarCVLI();
 
-   // Handler para submissão do formulário dentro do modal
-   // Exemplo de código jQuery para submeter o modal
-   $('#form-add-natureza').on('submit', function (e) {
-      e.preventDefault(); // CRÍTICO: Previne a submissão padrão para /nova/
+    /* ---------- 5. FORMSETS (ADICIONAR / REMOVER) ---------- */
+    function addRow(prefix) {
+        const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
+        const index = parseInt(totalForms.val());
+        
+        const templateId = { 
+            envolvidos: 'envolvido-template', 
+            apreensoes: 'apreensao-template', 
+            imagens: 'imagem-template' 
+        }[prefix];
 
-      // Certifique-se de que a URL de destino está correta no AJAX
-      let url_destino = $(this).attr('action'); // Pega a URL definida no 'action' do form (correto)
+        const containerId = { 
+            envolvidos: '#envolvidos-container', 
+            apreensoes: '#apreensoes-formset-container', 
+            imagens: '#imagens-container' 
+        }[prefix];
 
-      // OU, se você definiu a URL diretamente no JS, certifique-se que é:
-      // let url_destino = "/naturezas/novo/";
+        let rawHtml = $(`#${templateId}`).html().replace(/__prefix__/g, index);
+        let $newRow = $(rawHtml);
 
-      $.ajax({
-         type: 'POST',
-         url: url_destino, // Usa a URL correta
-         data: $(this).serialize(),
-         // ... (código de sucesso/erro) ...
-      });
-   }); /* ---------- 2. NAVEGAÇÃO ENTRE ABAS ---------- */
-   /* ------------------------------------------------------------------ */
+        $(containerId).append($newRow);
+        totalForms.val(index + 1);
 
-   // ... (Mantido)
-   $('.next-tab').on('click', function () {
-      const next = $('.nav-pills .active').parent().next().find('button');
-      if (next.length) new bootstrap.Tab(next[0]).show();
-      window.scrollTo(0, 0);
-   });
+        inicializarSelects($newRow);
+    }
 
-   $('.prev-tab').on('click', function () {
-      const prev = $('.nav-pills .active').parent().prev().find('button');
-      if (prev.length) new bootstrap.Tab(prev[0]).show();
-      window.scrollTo(0, 0);
-   }); /* ---------- 3. LÓGICA CVLI ---------- */
+    $('#add-envolvido-btn').click(() => addRow('envolvidos'));
+    $('#add-apreensao-btn').click(() => addRow('apreensoes'));
+    $('#add-imagem-btn').click(() => addRow('imagens'));
 
-   // ... (Mantido)
-   function verificarCVLI() {
-      const crimes = [
-         'HOMICÍDIO DOLOSO',
-         'FEMINICÍDIO',
-         'ABORTO',
-         'LESÃO CORPORAL SEGUIDA DE MORTE',
-         'ROUBO COM MORTE',
-         'LATROCÍNIO',
-         'ROUBO A PEDESTRE COM MORTE',
-         'ROUBO A RESIDÊNCIA COM MORTE',
-         'ROUBO A ESTABELECIMENTO COM MORTE',
-         'ROUBO A ESTABELECIMENTO BANCÁRIO COM MORTE',
-         'INSTIGAÇÃO AO SUICÍDIO',
-      ];
+    $(document).on('click', '.remove-formset-row', function () {
+    const row = $(this).closest('.envolvido-form');
+    const idField = row.find('input[name$="-id"]');
+    const deleteCheckbox = row.find('input[name$="-DELETE"]');
+    const totalForms = $('#id_envolvidos-TOTAL_FORMS');
 
-      const texto = $('#id_natureza option:selected').text().toUpperCase();
-      const div = $('#div_instrumento');
+    if (idField.val()) {
+        // CASO 1: O participante já existe no banco de dados
+        // Não removemos a linha, apenas marcamos para o Django deletar no servidor
+        deleteCheckbox.prop('checked', true).val('on');
+        row.hide(); // Esconde para o usuário não ver mais
+    } else {
+        // CASO 2: É a linha vazia (extra) ou uma linha nova que você criou agora
+        // Podemos remover totalmente do HTML
+        row.remove();
+        
+        // CRÍTICO: Precisamos diminuir o contador, senão o Django espera os dados dessa linha!
+        const novoTotal = parseInt(totalForms.val()) - 1;
+        totalForms.val(novoTotal);
+    }
+    });
 
-      crimes.some((c) => texto.includes(c)) ? div.show() : div.hide();
-   }
+    /* ---------- 6. PREVIEWS DE IMAGENS E FOTOS ---------- */
+    
+    // Foto de Envolvidos (Aba 2)
+    $(document).on('change', 'input[type="file"][name*="envolvidos-"]', function() {
+        const input = this;
+        const row = $(input).closest('.envolvido-form');
+        const previewContainer = row.find('.foto-preview-container');
+        const textDisplay = row.find('.filename-display');
 
-   $('#id_natureza').on('change', verificarCVLI);
-   verificarCVLI(); /* ---------- 4. FORMSETS ---------- */
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                previewContainer.html(`<img src="${e.target.result}" class="img-envolvido-preview" style="width:100%; height:100%; object-fit:cover;">`);
+                textDisplay.html(`<i class="fas fa-check text-success"></i> ${input.files[0].name}`);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    });
 
-   function addRow(prefix) {
-      const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
-      const index = parseInt(totalForms.val());
+    // Imagens da Ocorrência (Aba 4)
+    $(document).on('change', 'input[type="file"][name*="imagens-"]', function() {
+        const input = this;
+        const bloco = $(input).closest('.imagem-form-bloco');
+        const previewImg = bloco.find('.img-preview');
+        const previewIcon = bloco.find('.preview-icon');
+        const textDisplay = bloco.find('.filename-display');
 
-      const templateId = {
-         envolvidos: 'envolvido-template',
-         apreensoes: 'apreensao-template',
-         imagens: 'imagem-template',
-      } [prefix];
-
-      // 1. Pega o HTML e substitui o prefixo
-      let rawHtml = $(`#${templateId}`).html().replace(/__prefix__/g, index);
-      let $newRow = $(rawHtml);
-
-      const containerId = {
-         envolvidos: '#envolvidos-container',
-         apreensoes: '#apreensoes-formset-container',
-         imagens: '#imagens-container',
-      } [prefix];
-
-      // 2. Insere no DOM
-      $(containerId).append($newRow);
-      totalForms.val(index + 1);
-
-      // 3. Inicializa plugins na nova linha
-      if (prefix !== 'imagens' && $.fn.select2) {
-         $newRow.find('select').select2({
-            theme: 'bootstrap-5',
-            width: '100%'
-         });
-      }
-   }
-
-   $('#add-envolvido-btn').click(() => addRow('envolvidos'));
-   $('#add-apreensao-btn').click(() => addRow('apreensoes'));
-   $('#add-imagem-btn').click(() => addRow('imagens'));
-
-   $(document).on('click', '.remove-formset-row', function () {
-      const row = $(this).closest('.envolvido-form, .form-apreensao-item, .imagem-form-bloco');
-      const idField = row.find('input[name$="-id"]');
-
-      if (idField.val()) {
-         row.find('input[name$="-DELETE"]').val('on');
-         row.hide();
-      } else {
-         row.remove();
-      }
-   });
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                previewImg.attr('src', e.target.result).removeClass('d-none');
+                previewIcon.addClass('d-none');
+                textDisplay.html(`<i class="fas fa-check text-primary"></i> ${input.files[0].name}`);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    });
 });
 
-/* ==========================================================
-   NATUREZA (AJAX) ⭐️ NOVO BLOCO ⭐️
-========================================================== */
-function abrirModalNatureza() {
-   // Inicializa e mostra o modal do Bootstrap
-   const modalNatureza = new bootstrap.Modal(document.getElementById('modalNatureza'));
-   modalNatureza.show();
-   $('#id_natureza_nome_modal').focus();
-}
+/* ---------- 7. FUNÇÕES DOS MODAIS AJAX (ESCOPO GLOBAL) ---------- */
 
-function fecharModalNatureza() {
-   // Fecha e limpa o modal
-   const modalInstance = bootstrap.Modal.getInstance(document.getElementById('modalNatureza'));
-   if (modalInstance) modalInstance.hide();
-   $('#form-add-natureza')[0].reset();
-   $('#natureza-modal-errors').html('');
+// NATUREZA
+function abrirModalNatureza() {
+    new bootstrap.Modal(document.getElementById('modalNatureza')).show();
 }
 
 function salvarNaturezaRapida() {
-   var $form = $('#form-add-natureza');
-
-   // Pega a URL: prioriza o 'action' do form, senão usa o data-url do botão.
-   var url = $form.attr('action') || $('#btn-salvar-natureza').data('url');
-
-   // Token CSRF é coletado
-   var csrfToken = $('[name="csrfmiddlewaretoken"]').val();
-
-   // Cria o objeto de dados a ser enviado (garantindo os campos obrigatórios)
-   var dados_para_enviar = {
-      csrfmiddlewaretoken: csrfToken,
-      nome: $('#id_natureza_nome_modal').val(),
-      tipo_impacto: $('#id_natureza_aspecto_modal').val(),
-   };
-
-   // **DEBUG:** Mostra o que será enviado.
-   console.log('Dados a serem enviados:', dados_para_enviar);
-
-   // --- Requisição AJAX ---
-   $.ajax({
-      type: 'POST',
-      url: url,
-      data: dados_para_enviar, // <-- VÍRGULA CORRIGIDA AQUI!
-      headers: {
-         'X-CSRFToken': csrfToken,
-      },
-      success: function (response) {
-         if (response.success) {
-            // Sucesso: Adiciona a nova Natureza ao Select2
-            var newOption = new Option(response.text, response.id, true, true);
-            $('#id_natureza').append(newOption).trigger('change');
-
-            // Fecha o modal e limpa o formulário
-            $('#modalNatureza').modal('hide'); // Use o ID correto do modal: #modalNatureza
-            $form[0].reset();
-
-            alert('Natureza cadastrada com sucesso!');
-         } else {
-            // Falha de validação (retorno 400 OK na resposta success)
-            alert('Erro de validação: ' + JSON.stringify(response.errors));
-            // Opcional: Exibir erros no div #natureza-modal-errors
-         }
-      },
-      error: function (xhr) {
-         // Falha de Servidor (400 ou 500)
-         var errors = JSON.parse(xhr.responseText).errors;
-
-         // Exibir erro no modal e no console
-         $('#natureza-modal-errors').html('Falha: ' + JSON.stringify(errors));
-         alert(
-            'Erro ao salvar Natureza. Verifique o console. Detalhes: ' + JSON.stringify(errors)
-         );
-         console.error('AJAX Error:', errors);
-      },
-   });
+    const $form = $('#form-add-natureza');
+    const url = $form.attr('action') || $('#btn-salvar-natureza').data('url');
+    
+    $.ajax({
+        type: 'POST',
+        url: url,
+        data: $form.serialize(),
+        success: function (response) {
+            if (response.success) {
+                const newOption = new Option(response.text, response.id, true, true);
+                $('#id_natureza').append(newOption).trigger('change');
+                $('#modalNatureza').modal('hide');
+                $form[0].reset();
+                alert('Natureza cadastrada!');
+            } else {
+                alert('Erro: ' + JSON.stringify(response.errors));
+            }
+        }
+    });
 }
 
-/* ==========================================================
-   INSTRUMENTO (AJAX)
-========================================================== */
-// ... (Mantido)
+// INSTRUMENTO
 function abrirModalInstrumento() {
-   $('#modalInstrumento, #overlayInst').show();
+    $('#modalInstrumento, #overlayInst').show();
 }
 
 function fecharModalInstrumento() {
-   $('#modalInstrumento, #overlayInst').hide();
-   $('#novo_nome_instrumento').val('');
+    $('#modalInstrumento, #overlayInst').hide();
+    $('#novo_nome_instrumento').val('');
 }
 
 function salvarInstrumentoRapido() {
-   const nome = $('#novo_nome_instrumento').val().trim();
-   if (!nome) return alert('Digite o nome do instrumento.');
+    const nome = $('#novo_nome_instrumento').val().trim();
+    if (!nome) return alert('Digite o nome.');
 
-   fetch("{% url 'adicionar_instrumento_ajax' %}", {
-         method: 'POST',
-         headers: {
+    fetch("{% url 'adicionar_instrumento_ajax' %}", {
+        method: 'POST',
+        headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
-         },
-         body: 'nome=' + encodeURIComponent(nome),
-      })
-      .then((r) => r.json())
-      .then((data) => {
-         const select = $('#id_instrumento');
-         select.append(new Option(data.nome, data.id, true, true)).trigger('change');
-         fecharModalInstrumento();
-      });
+        },
+        body: 'nome=' + encodeURIComponent(nome),
+    })
+    .then(r => r.json())
+    .then(data => {
+        $('#id_instrumento').append(new Option(data.nome, data.id, true, true)).trigger('change');
+        fecharModalInstrumento();
+    });
 }
 
-/* ==========================================================
-   MATERIAL APREENDIDO (AJAX)
-========================================================== */
-// ... (Mantido)
+// MATERIAL APREENDIDO
 let selectMaterialAtual = null;
 
 function abrirModalMaterial(botao) {
-   selectMaterialAtual = botao.closest('.input-group').querySelector('select');
-   $('#modalMaterial, #overlayMaterial').show();
-   $('#novo_nome_material').focus();
+    selectMaterialAtual = $(botao).closest('.input-group').find('select')[0];
+    $('#modalMaterial, #overlayMaterial').show();
+    $('#novo_nome_material').focus();
 }
 
 function fecharModalMaterial() {
-   $('#modalMaterial, #overlayMaterial').hide();
-   $('#novo_nome_material').val('');
-   selectMaterialAtual = null;
+    $('#modalMaterial, #overlayMaterial').hide();
+    $('#novo_nome_material').val('');
 }
 
 function salvarMaterialRapido() {
-   const nome = $('#novo_nome_material').val().trim();
-   if (!nome) {
-      alert('Informe o nome do material.');
-      return;
-   }
+    const nome = $('#novo_nome_material').val().trim();
+    if (!nome) return alert('Informe o nome.');
 
-   // EM VEZ DE procurar na página, use a URL correta diretamente
-   // Verifique no seu urls.py se o nome da rota é este mesmo:
-   const url = "{% url 'adicionar_material_apreendido_ajax' %}";
-
-   fetch(url, {
-         method: 'POST',
-         headers: {
+    fetch("{% url 'adicionar_material_apreendido_ajax' %}", {
+        method: 'POST',
+        headers: {
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
-         },
-         body: 'nome=' + encodeURIComponent(nome),
-      })
-      .then((response) => {
-         if (!response.ok) {
-            return response.json().then((data) => {
-               // Se o erro de tipo_impacto aparecer aqui agora, 
-               // saberemos que a View no Python está errada.
-               console.error('Erro retornado pelo servidor:', data);
-               throw new Error('HTTP ' + response.status);
-            });
-         }
-         return response.json();
-      })
-      .then((data) => {
-         if (!data.id) {
-            alert(data.error || 'Erro ao salvar material');
-            return;
-         }
-
-         const option = new Option(data.nome, data.id, true, true);
-         selectMaterialAtual.append(option);
-         $(selectMaterialAtual).trigger('change');
-
-         if (!data.created) {
-            alert('Material já existia e foi selecionado.');
-         }
-
-         fecharModalMaterial();
-      })
-      .catch((err) => {
-         console.error('Falha AJAX Material:', err);
-         alert('Erro ao salvar material. Verifique o console.');
-      });
+        },
+        body: 'nome=' + encodeURIComponent(nome),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.id) {
+            $(selectMaterialAtual).append(new Option(data.nome, data.id, true, true)).trigger('change');
+            fecharModalMaterial();
+        } else {
+            alert(data.error || 'Erro ao salvar');
+        }
+    })
+    .catch(err => alert('Erro no servidor. Verifique o console.'));
 }
 </script>
 

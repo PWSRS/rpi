@@ -60,9 +60,7 @@ class NaturezaOcorrencia(models.Model):
         ("N", "Negativo"),
         ("P", "Positivo"),
     ]
-    nome = models.CharField(
-        max_length=255, unique=True, verbose_name="Fato"
-    )
+    nome = models.CharField(max_length=255, unique=True, verbose_name="Fato")
     tipo_impacto = models.CharField(
         max_length=1, choices=IMPACTO_CHOICES, verbose_name="Aspecto"
     )
@@ -71,9 +69,10 @@ class NaturezaOcorrencia(models.Model):
         max_length=500,
         blank=True,
         verbose_name="Tags de Busca (Opcional)",
-        help_text="Termos alternativos para pesquisa, separados por vírgula."
+        help_text="Termos alternativos para pesquisa, separados por vírgula.",
     )
     history = HistoricalRecords()
+
     def __str__(self):
         return self.nome
 
@@ -87,6 +86,7 @@ class Municipio(models.Model):
         max_length=100, unique=True, verbose_name="Nome do Município"
     )
     history = HistoricalRecords()
+
     def __str__(self):
         return self.nome
 
@@ -98,14 +98,12 @@ class Municipio(models.Model):
 class OPM(models.Model):
     nome = models.CharField(max_length=100, verbose_name="Nome da OPM")
     sigla = models.CharField(max_length=20, verbose_name="Sigla da OPM", unique=True)
-    
+
     # ALTERAÇÃO AQUI: De ForeignKey para ManyToManyField
     municipios = models.ManyToManyField(
-        Municipio, 
-        related_name="opms",
-        verbose_name="Municípios Atendidos"
+        Municipio, related_name="opms", verbose_name="Municípios Atendidos"
     )
-    
+
     history = HistoricalRecords()
 
     def __str__(self):
@@ -251,7 +249,7 @@ class Ocorrencia(models.Model):
     bairro = models.CharField(
         max_length=100, verbose_name="Bairro", blank=True, null=True
     )
-    
+
     history = HistoricalRecords()
 
     def __str__(self):
@@ -294,20 +292,25 @@ class Envolvido(models.Model):
         ("N", "Não"),
         ("I", "N/D"),  # Opção para casos em que o status é desconhecido
     ]
-    
+
     TIPO_DOCUMENTO = [
         ("1", "RG"),
         ("2", "CPF"),
     ]
-    
+
     tipo_documento = models.CharField(
         max_length=1,
         choices=TIPO_DOCUMENTO,
         verbose_name="Documento",
     )
-    
-    nr_documento = models.CharField(max_length=14, blank=True, null=True, verbose_name="Nr",)
-    
+
+    nr_documento = models.CharField(
+        max_length=14,
+        blank=True,
+        null=True,
+        verbose_name="Nr",
+    )
+
     antecedentes = models.CharField(
         max_length=1,
         choices=ANTECEDENTES_CHOICES,
@@ -316,12 +319,20 @@ class Envolvido(models.Model):
     )
     nome = models.CharField(max_length=255)
     tipo_participante = models.CharField(
-        max_length=1, choices=TIPO_PARTICIPANTE_CHOICES, verbose_name="Tipo",
+        max_length=1,
+        choices=TIPO_PARTICIPANTE_CHOICES,
+        verbose_name="Tipo",
     )
     ocorrencia = models.ForeignKey(
         Ocorrencia, on_delete=models.CASCADE, related_name="envolvidos"
     )
     idade = models.PositiveIntegerField(null=True, blank=True)
+    foto = models.ImageField(
+        upload_to="envolvidos/fotos/",
+        null=True,
+        blank=True,
+        verbose_name="Foto do Envolvido",
+    )
     history = HistoricalRecords()
 
     def __str__(self):
@@ -336,6 +347,7 @@ class Envolvido(models.Model):
     class Meta:
         verbose_name = "Envolvido"
         verbose_name_plural = "Envolvidos"
+
 
 # --- TABELA AUXILIAR PARA TIPOS DE MATERIAIS ---
 class MaterialApreendidoTipo(models.Model):
@@ -384,7 +396,7 @@ class Apreensao(models.Model):
     unidade_medida = models.CharField(
         max_length=3, blank=True, choices=TIPO_MEDIDA, verbose_name="Unidade de Medida"
     )
-    
+
     descricao_adicional = models.CharField(
         max_length=255, blank=True, null=True, verbose_name="Descrição Adicional"
     )
@@ -397,15 +409,16 @@ class Apreensao(models.Model):
         verbose_name = "Apreensão"
         verbose_name_plural = "Apreensões"
 
+
 class AuditCleanupLog(models.Model):
     executed_at = models.DateTimeField(auto_now_add=True)
     records_deleted = models.PositiveIntegerField()
-    status = models.CharField(max_length=20, default='Sucesso')
+    status = models.CharField(max_length=20, default="Sucesso")
     message = models.TextField(blank=True)
 
     class Meta:
         verbose_name = "Log de Limpeza de Auditoria"
-        ordering = ['-executed_at']
+        ordering = ["-executed_at"]
 
     def __str__(self):
         return f"Limpeza em {self.executed_at} - {self.records_deleted} removidos"

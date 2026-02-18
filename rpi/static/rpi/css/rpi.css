@@ -1,4 +1,7 @@
-/* Estilos gerais */
+/* ==========================================================================
+   1. ESTILOS GERAIS
+   ========================================================================== */
+
 body {
     font-family: Arial, sans-serif;
     font-size: 10pt;
@@ -21,11 +24,29 @@ header img {
     max-width: 150px;
     height: auto;
 }
+
 /* Estilos para título geral do RPI no cabeçalho */
 header h1 {
     font-size: 13pt;
     font-weight: bold;
 }
+
+/* Estilos para a logo do RPI */
+.logo {
+    /* Mantenha o tamanho que você definiu para corrigir o problema de ser gigante */
+    width: 100px;
+    height: auto;
+
+    /* 🚨 CÓDIGO CRÍTICO PARA CENTRALIZAÇÃO 🚨 */
+    display: block; /* Essencial: Trata o elemento como um bloco para que as margens funcionem */
+    margin-left: auto; /* Centraliza horizontalmente à esquerda */
+    margin-right: auto; /* Centraliza horizontalmente à direita */
+}
+
+/* ==========================================================================
+   2. SUMÁRIO E LINKS
+   ========================================================================== */
+
 /* Estilos para o sumário */
 h2 {
     font-size: 12pt;
@@ -55,6 +76,7 @@ table tr {
 .sumario-link span {
     color: inherit;
 }
+
 /* Estilos para links de voltar */
 .voltar-link {
     font-size: 10pt;
@@ -63,41 +85,13 @@ table tr {
     font-style: italic;
     margin-left: 2px;
 }
+
 /* Efeito ao passar o mouse */
 .voltar-link:hover {
     text-decoration: underline;
     color: #0056b3;
 }
 
-/* Estilos para o margem e posicionamento das ocorrências */
-.ocorrencia {
-    margin-bottom: 20px;
-    page-break-inside: avoid; /* Evita quebras de página dentro da ocorrência */
-}
-/* Estilos para títulos das ocorrências*/
-.titulo {
-    font-weight: bold;
-    font-size: 11pt;
-    margin-bottom: 5px;
-}
-/* Estilos para o texto do histórico */
-.historico {
-    text-align: justify; /* Alinhamento justificado */
-    line-height: 1.5;
-    text-indent: 1.5em; /* Recuo na primeira linha (opcional) */
-}
-/* Estilos para a logo do RPI*/
-.logo {
-    /* Mantenha o tamanho que você definiu para corrigir o problema de ser gigante */
-    width: 100px;
-    height: auto;
-
-    /* 🚨 CÓDIGO CRÍTICO PARA CENTRALIZAÇÃO 🚨 */
-    display: block; /* Essencial: Trata o elemento como um bloco para que as margens funcionem */
-    margin-left: auto; /* Centraliza horizontalmente à esquerda */
-    margin-right: auto; /* Centraliza horizontalmente à direita */
-    /* Você pode adicionar um espaçamento abaixo se precisar, ex: margin-bottom: 20px; */
-}
 /* Estilos para o período do relatório */
 .periodo {
     font-size: 12pt;
@@ -106,6 +100,218 @@ table tr {
     text-align: center;
     color: red;
 }
+
+/* ==========================================================================
+   3. OCORRÊNCIAS E HISTÓRICO
+   ========================================================================== */
+
+/* Estilos para o margem e posicionamento das ocorrências */
+.ocorrencia {
+    margin-bottom: 20px;
+    page-break-inside: avoid; /* Evita quebras de página dentro da ocorrência */
+}
+
+/* Estilos para títulos das ocorrências*/
+.titulo {
+    font-weight: bold;
+    font-size: 11pt;
+    margin-bottom: 5px;
+}
+
+/* Estilos para o texto do histórico */
+.historico {
+    text-align: justify; /* Alinhamento justificado */
+    line-height: 1.5;
+    text-indent: 1.5em; /* Recuo na primeira linha (opcional) */
+}
+
+/* ==========================================================================
+   4. GALERIA DE IMAGENS DO RELATÓRIO
+   ========================================================================== */
+
+.galeria-imagens {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* centraliza no meio da página */
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 6px;
+    page-break-inside: avoid;
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.bloco-imagem {
+    text-align: center;
+    page-break-inside: avoid;
+    display: inline-block;
+    width: 45%; /* Duas imagens por linha no relatório */
+    margin: 1%;
+    vertical-align: top;
+}
+
+.imagem-relatorio {
+    max-width: 7cm;
+    max-height: 5cm;
+    width: 100%;
+    height: auto;
+    border: 0.9pt solid #000;
+    padding: 1px;
+    margin: 0 auto; /* centraliza a imagem */
+    display: block;
+}
+
+.legenda-imagem {
+    font-size: 9pt;
+    margin-top: 2px;
+    color: #000;
+}
+
+/* Estilo para Grade de Participantes (2 por linha) */
+.grade-participantes {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.item-participante-grade {
+    display: inline-block;
+    width: 45%; /* Quase metade da página */
+    vertical-align: top;
+    margin-bottom: 15px;
+    margin-right: 1%;
+    page-break-inside: avoid;
+}
+
+.foto-participante-grade {
+    width: 70px;
+    height: 85px;
+    object-fit: cover;
+    border: 1px solid #000;
+    float: left; /* Mantém a foto à esquerda do texto do indivíduo */
+    margin-right: 8px;
+}
+
+.texto-participante-grade {
+    font-size: 8.5pt; /* Levemente menor para caber na grade */
+    text-align: justify;
+    line-height: 1.2;
+}
+
+/* Container para as fotos dos envolvidos */
+.galeria-participantes {
+    display: flex;       /* Ativa o modo flexível */
+    flex-wrap: wrap;    /* Permite pular linha se houver mais de 3 */
+    justify-content: center; /* CENTRALIZA se houver apenas uma (ou se sobrarem itens) */
+    align-items: flex-start;
+    gap: 15px;          /* Espaçamento uniforme entre as fotos */
+    width: 100%;
+    margin-top: 12px;
+}
+
+/* Bloco individual de cada foto (3 por linha) */
+/* O bloco individual não precisa mais de margin-right fixa */
+.bloco-foto-participante, .bloco-evidencia {
+    display: block;
+    width: 30%;         /* Mantém a regra de 3 por linha */
+    text-align: center;
+    page-break-inside: avoid;
+}
+
+/* Estilo da foto de perfil */
+.foto-perfil {
+    width: 65px;
+    height: 80px;
+    object-fit: cover;
+    border: 1px solid #000;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Legenda com apenas o primeiro nome */
+.legenda-nome {
+    font-size: 8pt;
+    font-weight: bold;
+    margin-top: 3px;
+    text-transform: uppercase;
+    color: #000;
+}
+
+/* Container uniforme para qualquer imagem de evidência */
+.bloco-evidencia {
+    display: inline-block;
+    width: 30%; /* Garante 3 por linha */
+    margin: 1%;
+    text-align: center;
+    vertical-align: top;
+}
+
+/* Força todas as imagens a terem a mesma moldura visual */
+.img-padronizada {
+    width: 100%;
+    height: 180px;      /* Altura que definimos para padronizar */
+    object-fit: cover;
+    border: 1px solid #000;
+}
+
+/* ==========================================================================
+   5. SEÇÃO CVLI
+   ========================================================================== */
+
+.titulo-secao-cvli {
+    text-align: left;
+    font-size: 12pt;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* NOVO: Classe para o título do CVLI para garantir que ele não fique 'órfão' */
+.titulo-secao-cvli {
+    text-align: left;
+    font-size: 12pt;
+    font-weight: bold;
+    margin-top: 20px; /* Dá um espaçamento da última ocorrência comum */
+    margin-bottom: 10px;
+    page-break-after: avoid; /* Tenta não deixar o título sozinho no fim de uma página */
+}
+
+/* Garante que o bloco de CVLI não force quebra a menos que não caiba */
+.bloco-cvli {
+    page-break-inside: auto;
+    page-break-before: auto !important;
+    display: block;
+    clear: both; /* Garante que não haja elementos flutuando que empurrem o bloco */
+    position: relative;
+}
+
+/* ==========================================================================
+   6. CONTROLE DE QUEBRAS E TABELAS
+   ========================================================================== */
+
+/* Evita quebras de página dentro de tabelas ou blocos de ocorrência */
+.tabela-sumario,
+.bloco-ocorrencia {
+    page-break-inside: avoid;
+}
+
+/* Garante que a quebra manual não gere duplicidade */
+.page-break {
+    display: block;
+    page-break-before: always;
+    clear: both;
+}
+
+.tabela-sumario {
+    width: 100%;
+    margin-bottom: 0 !important; /* Remove margem que pode empurrar a quebra */
+}
+
+/* ==========================================================================
+   7. FORMULÁRIO DE EDIÇÃO (INTERFACE)
+   ========================================================================== */
+
 /* Estilos para detalhes técnicos */
 .imagem-form-bloco input[type='file'] {
     display: block;
@@ -130,87 +336,9 @@ table tr {
     /* Permite que o texto e a checkbox fiquem em colunas implícitas */
     flex-grow: 1;
 }
+
 .imagem-form-bloco .form-check {
     /* Garante que o checkbox não quebre linha de forma estranha */
     padding-left: 1.5em;
     display: block;
-}
-/* ===== GALERIA DE IMAGENS ===== */
-
-.galeria-imagens {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center; /* centraliza no meio da página */
-    align-items: flex-start;
-    gap: 6px;
-    margin-top: 6px;
-    page-break-inside: avoid;
-    /*page-break-inside: auto; /* Permite que a galeria quebre se necessário */
-}
-
-.bloco-imagem {
-    width: 48%; /* máximo 2 por linha */
-    text-align: center;
-    page-break-inside: avoid;
-}
-
-.imagem-relatorio {
-    max-width: 7cm;
-    max-height: 5cm;
-    width: 100%;
-    height: auto;
-    border: 0.9pt solid #000;
-    padding: 1px;
-    margin: 0 auto; /* centraliza a imagem */
-    display: block;
-}
-
-.legenda-imagem {
-    font-size: 9pt;
-    margin-top: 2px;
-    color: #000;
-}
-
-.titulo-secao-cvli {
-    text-align: left;
-    font-size: 12pt;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-/* Evita quebras de página dentro de tabelas ou blocos de ocorrência */
-.tabela-sumario,
-.bloco-ocorrencia {
-    page-break-inside: avoid;
-}
-
-/* Garante que a quebra manual não gere duplicidade */
-.page-break {
-    display: block;
-    page-break-before: always;
-    clear: both;
-}
-
-/* NOVO: Classe para o título do CVLI para garantir que ele não fique 'órfão' */
-.titulo-secao-cvli {
-    text-align: left;
-    font-size: 12pt;
-    font-weight: bold;
-    margin-top: 20px; /* Dá um espaçamento da última ocorrência comum */
-    margin-bottom: 10px;
-    page-break-after: avoid; /* Tenta não deixar o título sozinho no fim de uma página */
-}
-
-/* Garante que o bloco de CVLI não force quebra a menos que não caiba */
-.bloco-cvli {
-    page-break-inside: auto;
-    page-break-before: auto !important;
-    display: block;
-    clear: both; /* Garante que não haja elementos flutuando que empurrem o bloco */
-    position: relative;
-}
-
-.tabela-sumario {
-    width: 100%;
-    margin-bottom: 0 !important; /* Remove margem que pode empurrar a quebra */
 }

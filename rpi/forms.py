@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import inlineformset_factory
+from django.forms import FileInput, inlineformset_factory
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -41,9 +41,11 @@ class CadastroUsuarioForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         # 1. Configurações de auxílio e Placeholders
-        self.fields['email'].help_text = "Obrigatório: utilize seu e-mail institucional @bm.rs.gov.br"
+        self.fields["email"].help_text = (
+            "Obrigatório: utilize seu e-mail institucional @bm.rs.gov.br"
+        )
         self.fields["first_name"].widget.attrs["placeholder"] = "Seu primeiro nome"
         self.fields["last_name"].widget.attrs["placeholder"] = "Seu último nome"
         self.fields["email"].widget.attrs["placeholder"] = "usuario@bm.rs.gov.br"
@@ -55,9 +57,9 @@ class CadastroUsuarioForm(UserCreationForm):
     # --- VALIDAÇÕES (CLEAN METHODS) ---
 
     def clean_email(self):
-        email = self.cleaned_data.get('email').lower()
+        email = self.cleaned_data.get("email").lower()
         dominio_oficial = "@bm.rs.gov.br"
-        
+
         if not email.endswith(dominio_oficial):
             raise forms.ValidationError(
                 f"Acesso negado. O e-mail deve pertencer ao domínio {dominio_oficial}."
@@ -65,21 +67,27 @@ class CadastroUsuarioForm(UserCreationForm):
         return email
 
     def clean_first_name(self):
-        nome = self.cleaned_data.get('first_name')
+        nome = self.cleaned_data.get("first_name")
         return nome.upper() if nome else nome
 
     def clean_last_name(self):
-        sobrenome = self.cleaned_data.get('last_name')
+        sobrenome = self.cleaned_data.get("last_name")
         return sobrenome.upper() if sobrenome else sobrenome
 
+
 class EmailLoginForm(AuthenticationForm):
-    username = forms.EmailField(widget=forms.EmailInput(attrs={
-        'class': 'form-control',
-        'placeholder': 'usuario@bm.rs.gov.br'
-    }))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'form-control',
-    }))
+    username = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={"class": "form-control", "placeholder": "usuario@bm.rs.gov.br"}
+        )
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-control",
+            }
+        )
+    )
 
 
 # --- 1. CLASSES DE FORMULÁRIOS ---
@@ -88,13 +96,20 @@ class EmailLoginForm(AuthenticationForm):
 class ApreensaoForm(forms.ModelForm):
     class Meta:
         model = Apreensao
-        fields = ["material_tipo", "descricao_adicional", "quantidade", "unidade_medida"]
+        fields = [
+            "material_tipo",
+            "descricao_adicional",
+            "quantidade",
+            "unidade_medida",
+        ]
         widgets = {
             "quantidade": forms.TextInput(
                 attrs={"placeholder": "1.00 ou 100", "class": "form-control"}
             ),
             "unidade_medida": forms.Select(
-                attrs={"class": "form-control"} # Removi o placeholder (não funciona aqui)
+                attrs={
+                    "class": "form-control"
+                }  # Removi o placeholder (não funciona aqui)
             ),
             "descricao_adicional": forms.TextInput(
                 attrs={"placeholder": "Descrição adicional...", "class": "form-control"}
@@ -103,31 +118,41 @@ class ApreensaoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         # 1. ORDENANDO AS CHOICES:
         # Pega as choices atuais, remove a primeira (que costuma ser o "---------")
         # e ordena pelo rótulo (item [1] da tupla)
-        choices = list(self.fields['unidade_medida'].choices)
-        blank_choice = choices[0] if choices[0][0] == '' else ('', '---------')
-        
+        choices = list(self.fields["unidade_medida"].choices)
+        blank_choice = choices[0] if choices[0][0] == "" else ("", "---------")
+
         # Ordena o restante da lista alfabeticamente pelo nome (ex: g, kg, pé, un)
-        other_choices = sorted([c for c in choices if c[0] != ''], key=lambda x: x[1])
-        
+        other_choices = sorted([c for c in choices if c[0] != ""], key=lambda x: x[1])
+
         # Reidrata o campo com a nova ordem
-        self.fields['unidade_medida'].choices = [blank_choice] + other_choices
+        self.fields["unidade_medida"].choices = [blank_choice] + other_choices
 
         # 2. SEU CÓDIGO DE ESTILIZAÇÃO (AJUSTADO):
         for field_name, field in self.fields.items():
-            if field_name not in ["quantidade", "descricao_adicional", "unidade_medida"]:
-                field.widget.attrs["class"] = "form-control"  
-
-
+            if field_name not in [
+                "quantidade",
+                "descricao_adicional",
+                "unidade_medida",
+            ]:
+                field.widget.attrs["class"] = "form-control"
 
 
 class EnvolvidoForm(forms.ModelForm):
     class Meta:
         model = Envolvido
-        fields = ("nome", "tipo_participante", "idade", "tipo_documento", "nr_documento", "antecedentes")
+        fields = (
+            "nome",
+            "tipo_participante",
+            "idade",
+            "tipo_documento",
+            "nr_documento",
+            "antecedentes",
+            "foto",
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -137,6 +162,14 @@ class EnvolvidoForm(forms.ModelForm):
         # 🚨 ESSENCIAL: Descomente estas linhas para não travar o salvamento
         if "antecedentes" in self.fields:
             self.fields["antecedentes"].required = False
+
+        if "foto" in self.fields:
+            #           2. TROCAMOS O WIDGET: Isso remove o checkbox "Limpar" que causa o erro
+            self.fields["foto"].widget = FileInput(
+                attrs={"class": "form-control form-control-sm", "accept": "image/*"}
+            )
+            # 3. Garantimos que não seja obrigatório
+            self.fields["foto"].required = False
 
 
 class OcorrenciaForm(forms.ModelForm):
@@ -157,7 +190,10 @@ class OcorrenciaForm(forms.ModelForm):
         ]
         widgets = {
             "relato_historico": forms.Textarea(
-                attrs={"rows": 5, "placeholder": "inicie o histórico da ocorrência com letra minúscula..."}
+                attrs={
+                    "rows": 5,
+                    "placeholder": "inicie o histórico da ocorrência com letra minúscula...",
+                }
             ),
             "resumo_cabecalho": forms.TextInput(),
             "data_hora_bruta": forms.TextInput(
@@ -170,12 +206,14 @@ class OcorrenciaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         # Transformar automaticamente o resumo do cabeçalho em maiúsculas
-        self.fields['resumo_cabecalho'].widget.attrs.update({
-            'style': 'text-transform: uppercase;',
-            'oninput': 'this.value = this.value.toUpperCase()'
-        })
+        self.fields["resumo_cabecalho"].widget.attrs.update(
+            {
+                "style": "text-transform: uppercase;",
+                "oninput": "this.value = this.value.toUpperCase()",
+            }
+        )
 
         # Otimização: Ordenar os instrumentos por nome no dropdown do formulário
         if "instrumento" in self.fields:
@@ -199,8 +237,19 @@ class OcorrenciaImagemForm(forms.ModelForm):
         fields = ("imagem", "legenda")
         widgets = {
             # ESSENCIAL: Garante que o input de arquivo tenha o estilo form-control
-            'imagem': forms.FileInput(attrs={'class': 'form-control form-control-sm', 'accept': 'image/*','onchange': 'previewImage(this)'}),
-            'legenda': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Digite a legenda...'}),
+            "imagem": forms.FileInput(
+                attrs={
+                    "class": "form-control form-control-sm",
+                    "accept": "image/*",
+                    "onchange": "previewImage(this)",
+                }
+            ),
+            "legenda": forms.TextInput(
+                attrs={
+                    "class": "form-control form-control-sm",
+                    "placeholder": "Digite a legenda...",
+                }
+            ),
         }
 
 
@@ -221,6 +270,8 @@ ImagemFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,
 )
+
+
 class InstrumentoForm(forms.ModelForm):
     class Meta:
         model = Instrumento
@@ -230,10 +281,8 @@ class InstrumentoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs["class"] = "form-control"
- 
-          
-            
-            
+
+
 class MaterialApreendidoTipoForm(forms.ModelForm):
     class Meta:
         model = MaterialApreendidoTipo
@@ -243,29 +292,32 @@ class MaterialApreendidoTipoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs["class"] = "form-control"
-            
+
+
 class NaturezaOcorrenciaForm(forms.ModelForm):
     class Meta:
         model = NaturezaOcorrencia
         # Incluir 'tags_busca' aqui está OK, se for necessário para a criação.
-        fields = ['nome', 'tipo_impacto', 'tags_busca']
-        
+        fields = ["nome", "tipo_impacto", "tags_busca"]
+
         widgets = {
             # ✅ Widgets definidos corretamente
-            'nome': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_natureza_nome_modal'}),
-            'tipo_impacto': forms.Select(attrs={'class': 'form-select', 'id': 'id_natureza_aspecto_modal'}),
+            "nome": forms.TextInput(
+                attrs={"class": "form-control", "id": "id_natureza_nome_modal"}
+            ),
+            "tipo_impacto": forms.Select(
+                attrs={"class": "form-select", "id": "id_natureza_aspecto_modal"}
+            ),
             # Se 'tags_busca' for Textarea, defina seu widget aqui
             # 'tags_busca': forms.Textarea(attrs={'class': 'form-control'}),
         }
-    
+
     # ✅ __init__ MOVIDO PARA FORA do Meta class
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         for field in self.fields.values():
-             if 'class' not in field.widget.attrs:
-                 field.widget.attrs['class'] = 'form-control'
-             elif 'form-select' not in field.widget.attrs['class']:
-                 field.widget.attrs['class'] += ' form-control'
-             
- 
+            if "class" not in field.widget.attrs:
+                field.widget.attrs["class"] = "form-control"
+            elif "form-select" not in field.widget.attrs["class"]:
+                field.widget.attrs["class"] += " form-control"

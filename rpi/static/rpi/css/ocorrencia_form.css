@@ -58,3 +58,9 @@
 .nav-link:not(.active) {
     color: #575049;
 }
+
+.img-envolvido-preview { transition: all 0.3s; }
+/* Se o checkbox de deletar for marcado, a foto fica cinza */
+input[name*="-DELETE"]:checked ~ .row .img-envolvido-preview {
+    filter: grayscale(1) opacity(0.3);
+}

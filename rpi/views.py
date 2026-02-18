@@ -73,6 +73,8 @@ from .models import (
     Municipio,
     OPM,
 )
+
+
 # O @user_passes_test verifica se o usuário é staff (admin)
 # Apenas usuários staff podem ativar o cadastro de novos usuários
 # lambda é uma função anônima que retorna True se o usuário for staff
@@ -81,82 +83,102 @@ from .models import (
 def ativar_policial(request, user_id):
     # Busca o usuário ou retorna 404 se não existir
     policial = get_object_or_404(User, id=user_id)
-    
+
     # Se não estiver ativo, ativa e salva
     if not policial.is_active:
         policial.is_active = True
         policial.save()
-        
+
         # Opcional: Avisar o policial por e-mail
         assunto = "Acesso Liberado - Sistema RPI"
         mensagem = f"Olá {policial.first_name},\n\nSua solicitação de acesso ao Sistema RPI da ARI Sul foi aprovada. Você já pode realizar o login com seu e-mail institucional e senha cadastrada."
-        
-        send_mail(assunto, mensagem, 'pablo.weber@hotmail.com', [policial.email], fail_silently=True)
-        
-        messages.success(request, f"O policial {policial.first_name} foi ativado com sucesso!")
+
+        send_mail(
+            assunto,
+            mensagem,
+            "pablo.weber@hotmail.com",
+            [policial.email],
+            fail_silently=True,
+        )
+
+        messages.success(
+            request, f"O policial {policial.first_name} foi ativado com sucesso!"
+        )
     else:
         messages.info(request, "Este policial já está ativo.")
-        
-    return redirect('painel_gestao')
+
+    return redirect("painel_gestao")
+
 
 @user_passes_test(lambda u: u.is_staff)
 def deletar_usuario(request, user_id):
     policial = get_object_or_404(User, id=user_id)
-    
+
     if request.method == "POST":
         policial_nome = policial.first_name  # Salva antes de deletar!
         policial.delete()
-        return JsonResponse({'success': True, 'message': f"O policial {policial_nome} foi deletado com sucesso!"})
-    
-    return JsonResponse({'success': False, 'error': 'Requisição inválida.'}, status=400)
+        return JsonResponse(
+            {
+                "success": True,
+                "message": f"O policial {policial_nome} foi deletado com sucesso!",
+            }
+        )
+
+    return JsonResponse({"success": False, "error": "Requisição inválida."}, status=400)
+
 
 @user_passes_test(lambda u: u.is_staff)
 def listar_usuarios(request):
-    usuarios = User.objects.filter(is_active=True).order_by('-date_joined')
-    return render(request, 'rpi/lista_usuarios.html', {'usuarios': usuarios})
+    usuarios = User.objects.filter(is_active=True).order_by("-date_joined")
+    return render(request, "rpi/lista_usuarios.html", {"usuarios": usuarios})
 
 
-#User = get_user_model() # Obtém o modelo de usuário customizado ou o padrão do Django
+# User = get_user_model() # Obtém o modelo de usuário customizado ou o padrão do Django
 User = get_user_model()
+
+
 @user_passes_test(lambda u: u.is_staff)
 def painel_gestao(request):
     # User.objects.filter(is_active=False).order_by('-date_joined') busca todos os usuários inativos (pendentes)
     # -date_joined é usado para ordenar do mais recente ao mais antigo
-    pendentes = User.objects.filter(is_active=False).order_by('-date_joined')
-    return render(request, 'rpi/dashboard_admin.html', {'pendentes': pendentes})
+    pendentes = User.objects.filter(is_active=False).order_by("-date_joined")
+    return render(request, "rpi/dashboard_admin.html", {"pendentes": pendentes})
+
 
 @login_required
 def dashboard_admin(request):
     # Se não for staff, redireciona para a lista de ocorrências
     if not request.user.is_staff:
-        return redirect('ocorrencia_list')
-    
+        return redirect("ocorrencia_list")
+
     # Busca apenas os policiais que se cadastraram mas ainda não foram aprovados
-    pendentes = User.objects.filter(is_active=False).order_by('-date_joined')
-    
-    return render(request, 'rpi/dashboard_admin.html', {'pendentes': pendentes})
+    pendentes = User.objects.filter(is_active=False).order_by("-date_joined")
+
+    return render(request, "rpi/dashboard_admin.html", {"pendentes": pendentes})
+
 
 def registro_usuario(request):
     if request.method == "POST":
         form = CadastroUsuarioForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False) # Não salva no banco ainda
-            
+            user = form.save(commit=False)  # Não salva no banco ainda
+
             # REGRA DE SEGURANÇA CRÍTICA:
-            user.is_active = False # O usuário nasce desativado
-            
+            user.is_active = False  # O usuário nasce desativado
+
             user.save()
 
             messages.warning(
                 request,
                 "Solicitação enviada! Sua conta está em análise pela administração. "
-                "Você receberá um aviso assim que seu acesso for liberado."
+                "Você receberá um aviso assim que seu acesso for liberado.",
             )
             return redirect("login")
     else:
         form = CadastroUsuarioForm()
 
     return render(request, "rpi/registro.html", {"form": form})
+
 
 class EmailBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
@@ -166,13 +188,15 @@ class EmailBackend(ModelBackend):
             user = UserModel.objects.get(email=username)
         except UserModel.DoesNotExist:
             return None
-        
+
         # Verifica a senha
         if user.check_password(password):
             return user
         return None
 
+
 # --- GERENCIAMENTO DO RELATÓRIO ---
+
 
 @login_required
 def finalizar_relatorio(request, pk):
@@ -197,6 +221,7 @@ def finalizar_relatorio(request, pk):
         return redirect("ocorrencia_list")
 
     return redirect("ocorrencia_list")
+
 
 @login_required
 def download_pdf_relatorio(request, pk):
@@ -232,6 +257,7 @@ def reabrir_relatorio(request, pk):
 
     return redirect("ocorrencia_list")
 
+
 # NOVO: Permite reexportar o PDF mesmo que o relatório esteja finalizado
 @login_required
 def reexportar_pdf(request, pk):
@@ -266,7 +292,7 @@ def iniciar_dia(request):
 
     if request.method == "POST" and not relatorio_aberto:
         agora = timezone.now()
-        
+
         # 1. FIXA O PERÍODO: 07:00 de hoje até 07:00 de amanhã
         inicio_plantao = timezone.make_aware(
             datetime.combine(agora.date(), time(7, 0, 0))
@@ -275,7 +301,7 @@ def iniciar_dia(request):
 
         # 2. LÓGICA DO DIA DO ANO (Ordinal)
         # tm_yday retorna 1 para 1º de Jan, 16 para 16 de Jan, etc.
-        
+
         # o número do relatório seja baseado no início do plantão(mesmo que aberto após a meia-noite)
         # o dia_do_ano = inicio_plantao.date().timetuple().tm_yday
         dia_do_ano = agora.date().timetuple().tm_yday
@@ -284,17 +310,19 @@ def iniciar_dia(request):
         # 3. VERIFICAÇÃO DE SEGURANÇA (Opcional)
         # Verifica se já existe um relatório com esse número para evitar duplicidade no mesmo dia
         existe_hoje = RelatorioDiario.objects.filter(
-            nr_relatorio=dia_do_ano, 
-            ano_criacao=ano_atual
+            nr_relatorio=dia_do_ano, ano_criacao=ano_atual
         ).exists()
 
         if existe_hoje:
-            messages.error(request, f"Já existe um relatório (Nº {dia_do_ano}) iniciado para a data de hoje.")
-            return redirect("alguma_view_de_lista") # Redirecione para onde preferir
+            messages.error(
+                request,
+                f"Já existe um relatório (Nº {dia_do_ano}) iniciado para a data de hoje.",
+            )
+            return redirect("alguma_view_de_lista")  # Redirecione para onde preferir
 
         # 4. CRIAÇÃO DO RELATÓRIO
         relatorio_aberto = RelatorioDiario.objects.create(
-            nr_relatorio=dia_do_ano, # Agora é o dia do ano, não mais incremento +1
+            nr_relatorio=dia_do_ano,  # Agora é o dia do ano, não mais incremento +1
             ano_criacao=ano_atual,
             data_inicio=inicio_plantao,
             data_fim=fim_plantao,
@@ -308,6 +336,7 @@ def iniciar_dia(request):
         return redirect("ocorrencia_create")
 
     return render(request, "rpi/iniciar_dia.html", {"relatorio": relatorio_aberto})
+
 
 # --- OCORRÊNCIAS ---
 
@@ -329,7 +358,9 @@ class OcorrenciaListView(LoginRequiredMixin, ListView):
         # você pode optar por mostrar as do ÚLTIMO finalizado para não ver a tela vazia,
         # OU retornar vazio para forçar o início de um novo dia.
         ultimo_finalizado = (
-            RelatorioDiario.objects.filter(finalizado=True).order_by("-data_inicio").first()
+            RelatorioDiario.objects.filter(finalizado=True)
+            .order_by("-data_inicio")
+            .first()
         )
 
         if ultimo_finalizado:
@@ -341,12 +372,8 @@ class OcorrenciaListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         # Busca o mesmo relatório para o template decidir se mostra os botões de Editar/Excluir
         relatorio = (
-            RelatorioDiario.objects.filter(
-               finalizado=False
-            ).last()
-            or RelatorioDiario.objects.filter(
-               finalizado=True
-            )
+            RelatorioDiario.objects.filter(finalizado=False).last()
+            or RelatorioDiario.objects.filter(finalizado=True)
             .order_by("-data_inicio")
             .first()
         )
@@ -362,11 +389,8 @@ class OcorrenciaCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("ocorrencia_list")
 
     def dispatch(self, request, *args, **kwargs):
-        # Usa o filtro de finalizado=False para ter certeza que o relatório permite novas inserções
-        self.relatorio_atual = RelatorioDiario.objects.filter(
-            finalizado=False
-        ).last()
-
+        """Verifica se há um relatório aberto antes de permitir a criação"""
+        self.relatorio_atual = RelatorioDiario.objects.filter(finalizado=False).last()
         if not self.relatorio_atual:
             messages.warning(
                 request, "Não há relatório aberto. Inicie um novo plantão."
@@ -378,23 +402,13 @@ class OcorrenciaCreateView(LoginRequiredMixin, CreateView):
         data = super().get_context_data(**kwargs)
         data["relatorio"] = self.relatorio_atual
 
-        # Definição das fábricas de Formset (Mantidas na View, conforme seu código)
+        # Fábricas de Formset
         EnvolvidoFormSet = inlineformset_factory(
-            self.model,
-            Envolvido,
-            form=EnvolvidoForm,
-            extra=1,
-            can_delete=True,  # Alterei extra=0 para 1 para facilitar
+            self.model, Envolvido, form=EnvolvidoForm, extra=1, can_delete=True
         )
         ApreensaoFormSet = inlineformset_factory(
-            self.model,
-            Apreensao,
-            form=ApreensaoForm,
-            extra=1,
-            can_delete=True,  # Alterei extra=0 para 1
+            self.model, Apreensao, form=ApreensaoForm, extra=1, can_delete=True
         )
-
-        # NOVO: Fábrica do Formset de Imagens (Definida na View, conforme seu código)
         OcorrenciaImagemFormSet = inlineformset_factory(
             self.model,
             OcorrenciaImagem,
@@ -404,104 +418,84 @@ class OcorrenciaCreateView(LoginRequiredMixin, CreateView):
         )
 
         if self.request.POST:
+            # CRÍTICO: Todos os formsets que possuem FileField devem receber self.request.FILES
             data["envolvido_formset"] = EnvolvidoFormSet(
-                self.request.POST, prefix="envolvidos"
+                self.request.POST, self.request.FILES, prefix="envolvidos"
             )
             data["apreensao_formset"] = ApreensaoFormSet(
                 self.request.POST, prefix="apreensoes"
             )
-            # CRÍTICO: Instancia o Formset de Imagens. Inclui request.FILES.
             data["imagem_formset"] = OcorrenciaImagemFormSet(
                 self.request.POST, self.request.FILES, prefix="imagens"
             )
         else:
-            # Em vez de criar um objeto fictício, passamos a instância como None (self.object é None)
-            data["envolvido_formset"] = EnvolvidoFormSet(
-                instance=self.object, prefix="envolvidos"
-            )
-            data["apreensao_formset"] = ApreensaoFormSet(
-                instance=self.object, prefix="apreensoes"
-            )
-            # NOVO: Instancia o Formset de Imagens
-            data["imagem_formset"] = OcorrenciaImagemFormSet(
-                instance=self.object, prefix="imagens"
-            )
+            data["envolvido_formset"] = EnvolvidoFormSet(prefix="envolvidos")
+            data["apreensao_formset"] = ApreensaoFormSet(prefix="apreensoes")
+            data["imagem_formset"] = OcorrenciaImagemFormSet(prefix="imagens")
+
         return data
 
     def form_valid(self, form):
         context = self.get_context_data()
         envolvido_formset = context["envolvido_formset"]
         apreensao_formset = context["apreensao_formset"]
-        imagem_formset = context["imagem_formset"]  # NOVO: Adiciona o formset de imagem
-
-        # Log de depuração (opcional, pode remover depois)
-        print(f"Envolvidos válidos: {envolvido_formset.is_valid()}")
-        print(f"Apreensões válidas: {apreensao_formset.is_valid()}")
-        print(f"Imagens válidas: {imagem_formset.is_valid()}")  # NOVO: Log
+        imagem_formset = context["imagem_formset"]
 
         if (
-            envolvido_formset.is_valid()
+            form.is_valid()
+            and envolvido_formset.is_valid()
             and apreensao_formset.is_valid()
-            and imagem_formset.is_valid()  # CRÍTICO: Validação do formset de imagem
+            and imagem_formset.is_valid()
         ):
+
             with transaction.atomic():
+                # 1. Salva a Ocorrência primeiro para gerar o ID
                 self.object = form.save(commit=False)
                 self.object.relatorio_diario = self.relatorio_atual
                 self.object.save()
 
+                # 2. Vincula a instância da Ocorrência aos formsets e salva
                 envolvido_formset.instance = self.object
                 envolvido_formset.save()
 
                 apreensao_formset.instance = self.object
                 apreensao_formset.save()
 
-                imagem_formset.instance = (
-                    self.object
-                )  # NOVO: Liga as imagens à ocorrência
-                imagem_formset.save()  # NOVO: Salva as imagens
+                imagem_formset.instance = self.object
+                imagem_formset.save()
 
-            messages.success(self.request, "Ocorrência salva com sucesso!")
+            messages.success(self.request, "Ocorrência salva com sucesso em Pelotas!")
             return redirect(self.get_success_url())
         else:
-            # Se cair aqui, o erro aparecerá no topo da página
             messages.error(
-                self.request,
-                "Erro na validação dos dados dos participantes, materiais ou imagens.",
+                self.request, "Erro na validação. Verifique os dados e as imagens."
             )
-            return self.render_to_response(
-                self.get_context_data(
-                    form=form,
-                    envolvido_formset=envolvido_formset,
-                    apreensao_formset=apreensao_formset,
-                    imagem_formset=imagem_formset,  # CRÍTICO: Passar o formset de imagem
-                )
-            )
-            
+            return self.render_to_response(self.get_context_data(form=form))
+
+
 def ajax_carregar_municipios(request):
-    opm_id = request.GET.get('opm_id')
-    
+    opm_id = request.GET.get("opm_id")
+
     if not opm_id:
         return JsonResponse([], safe=False)
 
     try:
         # 1. Buscamos a OPM específica
         opm = OPM.objects.get(id=opm_id)
-        
+
         # 2. Pegamos todos os municípios associados a essa OPM
         # Como é ManyToMany, usamos .all() no campo municipios
-        municipios = opm.municipios.all().order_by('nome')
-        
+        municipios = opm.municipios.all().order_by("nome")
+
         # 3. Formatamos para JSON
-        data = [
-            {'id': m.id, 'nome': m.nome} 
-            for m in municipios
-        ]
+        data = [{"id": m.id, "nome": m.nome} for m in municipios]
         return JsonResponse(data, safe=False)
-        
+
     except OPM.DoesNotExist:
-        return JsonResponse({'error': 'OPM não encontrada'}, status=404)
+        return JsonResponse({"error": "OPM não encontrada"}, status=404)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({"error": str(e)}, status=500)
+
 
 class OcorrenciaDetailView(LoginRequiredMixin, DetailView):
     model = Ocorrencia
@@ -536,19 +530,20 @@ class OcorrenciaUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy("ocorrencia_list")
 
     def dispatch(self, request, *args, **kwargs):
-        """ Impede a edição se o relatório estiver finalizado """
         obj = self.get_object()
         if obj.relatorio_diario.finalizado:
-            messages.error(request, "Este relatório já está finalizado e não pode ser editado.")
-            return redirect('ocorrencia_list')
+            messages.error(
+                request, "Este relatório já está finalizado e não pode ser editado."
+            )
+            return redirect("ocorrencia_list")
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
 
-        # Definição das fábricas de Formset
+        # Definição dos FormSets
         EnvolvidoFormSet = inlineformset_factory(
-            self.model, Envolvido, form=EnvolvidoForm, extra=1, can_delete=True
+            self.model, Envolvido, form=EnvolvidoForm, extra=0, can_delete=True
         )
         ApreensaoFormSet = inlineformset_factory(
             self.model, Apreensao, form=ApreensaoForm, extra=1, can_delete=True
@@ -563,7 +558,10 @@ class OcorrenciaUpdateView(LoginRequiredMixin, UpdateView):
 
         if self.request.POST:
             data["envolvido_formset"] = EnvolvidoFormSet(
-                self.request.POST, instance=self.object, prefix="envolvidos"
+                self.request.POST,
+                self.request.FILES,
+                instance=self.object,
+                prefix="envolvidos",
             )
             data["apreensao_formset"] = ApreensaoFormSet(
                 self.request.POST, instance=self.object, prefix="apreensoes"
@@ -584,42 +582,65 @@ class OcorrenciaUpdateView(LoginRequiredMixin, UpdateView):
             data["imagem_formset"] = OcorrenciaImagemFormSet(
                 instance=self.object, prefix="imagens"
             )
+
         return data
 
     def form_valid(self, form):
+        # TUDO AQUI DENTRO PRECISA DE 4 ESPAÇOS DE RECUO
         context = self.get_context_data()
         envolvido_formset = context["envolvido_formset"]
         apreensao_formset = context["apreensao_formset"]
         imagem_formset = context["imagem_formset"]
 
-        if (
-            form.is_valid()
-            and envolvido_formset.is_valid()
-            and apreensao_formset.is_valid()
-            and imagem_formset.is_valid()
-        ):
-            self.object = form.save()
-            envolvido_formset.save()
-            apreensao_formset.save()
-            imagem_formset.save()
+        # Validamos todos. Se UM falhar, nada é salvo.
+        if (form.is_valid() and envolvido_formset.is_valid() and 
+            apreensao_formset.is_valid() and imagem_formset.is_valid()):
+            
+            try:
+                with transaction.atomic():
+                    self.object = form.save()
+                    
+                    for fs in [envolvido_formset, apreensao_formset, imagem_formset]:
+                        fs.instance = self.object
+                        fs.save()
 
-            messages.success(self.request, "Ocorrência atualizada com sucesso!")
-            return redirect(self.get_success_url())
+                messages.success(self.request, "Ocorrência atualizada com sucesso!")
+                return redirect(self.get_success_url())
+            except Exception as e:
+                messages.error(self.request, f"Erro ao salvar no banco: {e}")
+                return self.form_invalid(form)
         else:
-            return self.render_to_response(self.get_context_data(form=form))
-
+            # Importante: se a validação falhar, imprimimos no terminal para você debugar
+            print("--- ERROS DETECTADOS ---")
+            print("Envolvidos:", envolvido_formset.errors)
+            print("Materiais:", apreensao_formset.errors)
+            print("Imagens:", imagem_formset.errors)
+            
+            # Retorna para a página mostrando os erros
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    envolvido_formset=envolvido_formset,
+                    apreensao_formset=apreensao_formset,
+                    imagem_formset=imagem_formset
+                )
+            )
 
 class OcorrenciaDeleteView(LoginRequiredMixin, DeleteView):
     """Permite excluir uma ocorrência."""
+
     model = Ocorrencia
     success_url = reverse_lazy("ocorrencia_list")
 
     def dispatch(self, request, *args, **kwargs):
-        """ Impede a exclusão se o relatório estiver finalizado """
+        """Impede a exclusão se o relatório estiver finalizado"""
         obj = self.get_object()
         if obj.relatorio_diario.finalizado:
-            messages.error(request, "Não é possível excluir ocorrências de um relatório finalizado.")
-            return redirect('ocorrencia_list')
+            messages.error(
+                request,
+                "Não é possível excluir ocorrências de um relatório finalizado.",
+            )
+            return redirect("ocorrencia_list")
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -628,11 +649,11 @@ class OcorrenciaDeleteView(LoginRequiredMixin, DeleteView):
         )
         return super().form_valid(form)
 
+
 def listar_materiais_apreendidos(request):
     # 1. Chama a função utilitária para resolver as datas
     plantao = calcular_janela_plantao(
-        request.GET.get("data_inicio"), 
-        request.GET.get("data_fim")
+        request.GET.get("data_inicio"), request.GET.get("data_fim")
     )
 
     # 2. Aplica os filtros usando o dicionário retornado (plantao)
@@ -652,12 +673,13 @@ def listar_materiais_apreendidos(request):
         "materiais": materiais.order_by("-ocorrencia__data_hora_fato"),
         "resumo_totais": resumo_totais,
         "data_inicio_full": plantao["dt_inicio"],  # Usado na legenda HTML
-        "data_fim_full": plantao["dt_fim"],        # Usado na legenda HTML
-        "data_inicio": plantao["data_inicio_str"], # Usado no valor do input date
-        "data_fim": plantao["data_fim_str"],       # Usado no valor do input date
+        "data_fim_full": plantao["dt_fim"],  # Usado na legenda HTML
+        "data_inicio": plantao["data_inicio_str"],  # Usado no valor do input date
+        "data_fim": plantao["data_fim_str"],  # Usado no valor do input date
     }
 
     return render(request, "rpi/lista_materiais_apreendidos.html", context)
+
 
 def deletar_materiais_apreendidos(request, apreensao_id):
     apreensao = get_object_or_404(Apreensao, id=apreensao_id)
@@ -668,20 +690,23 @@ def deletar_materiais_apreendidos(request, apreensao_id):
 
     return redirect("listar_materiais_apreendidos")
 
+
 def listar_prisoes(request):
     # 1. Resolve a lógica de datas em uma linha
-    plantao = calcular_janela_plantao(request.GET.get("data_inicio"), request.GET.get("data_fim"))
+    plantao = calcular_janela_plantao(
+        request.GET.get("data_inicio"), request.GET.get("data_fim")
+    )
 
     # 2. Filtra envolvidos pela janela do plantão
     envolvidos = Envolvido.objects.filter(
         tipo_participante__in=["P", "S", "M", "A"],
-        ocorrencia__data_hora_fato__range=(plantao["dt_inicio"], plantao["dt_fim"])
+        ocorrencia__data_hora_fato__range=(plantao["dt_inicio"], plantao["dt_fim"]),
     ).select_related("ocorrencia")
 
     # 3. Resumo totalizado
     resumo_totais = (
         envolvidos.values("tipo_participante")
-        .annotate(total=Count("id")) # annotate faz a contagem
+        .annotate(total=Count("id"))  # annotate faz a contagem
         .order_by("tipo_participante")
     )
 
@@ -698,17 +723,21 @@ def listar_prisoes(request):
 
 def listar_prisoes_por_opm(request):
     # 1. Resolve a lógica de datas
-    plantao = calcular_janela_plantao(request.GET.get("data_inicio"), request.GET.get("data_fim"))
+    plantao = calcular_janela_plantao(
+        request.GET.get("data_inicio"), request.GET.get("data_fim")
+    )
 
     # 2. Query principal usando o range do plantão
     envolvidos = Envolvido.objects.filter(
         tipo_participante__in=["P", "S", "M", "A"],
-        ocorrencia__data_hora_fato__range=(plantao["dt_inicio"], plantao["dt_fim"])
+        ocorrencia__data_hora_fato__range=(plantao["dt_inicio"], plantao["dt_fim"]),
     ).select_related("ocorrencia", "ocorrencia__opm")
 
     # 3. Lógica de Totais por OPM
-    totais_query = envolvidos.values("ocorrencia__opm__nome", "tipo_participante").annotate(total=Count("id"))
-    
+    totais_query = envolvidos.values(
+        "ocorrencia__opm__nome", "tipo_participante"
+    ).annotate(total=Count("id"))
+
     totais_opm = defaultdict(lambda: {"P": 0, "S": 0, "A": 0, "M": 0, "total": 0})
     for row in totais_query:
         opm_nome = row["ocorrencia__opm__nome"] or "OPM não informada"
@@ -718,7 +747,9 @@ def listar_prisoes_por_opm(request):
 
     # 4. Agrupamento para o Template
     envolvidos_por_opm = defaultdict(lambda: {"lista": [], "resumo": {}})
-    for envolvido in envolvidos.order_by("ocorrencia__opm__nome", "-ocorrencia__data_hora_fato"):
+    for envolvido in envolvidos.order_by(
+        "ocorrencia__opm__nome", "-ocorrencia__data_hora_fato"
+    ):
         opm_nome = getattr(envolvido.ocorrencia.opm, "nome", "OPM não informada")
         envolvidos_por_opm[opm_nome]["lista"].append(envolvido)
         envolvidos_por_opm[opm_nome]["resumo"] = totais_opm[opm_nome]
@@ -732,14 +763,11 @@ def listar_prisoes_por_opm(request):
     }
     return render(request, "rpi/lista_prisoes_por_opm.html", context)
 
+
 def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
     """
-    Gera o PDF do relatório diário utilizando WeasyPrint
+    Gera o PDF do relatório diário utilizando WeasyPrint com suporte a fotos de envolvidos
     """
-
-    # ============================================================
-    # FUNÇÕES AUXILIARES
-    # ============================================================
 
     def formatar_data_militar(data):
         if not data:
@@ -760,7 +788,6 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
         }
         return f"{data.strftime('%d%H%M')}{meses[data.month]}{data.strftime('%y')}"
 
-    # Crimes considerados CVLI (por enquanto, lista simples)
     CRIMES_CVLI = [
         "HOMICÍDIO DECORRENTE DE OPOSIÇÃO A INTERVENÇÃO POLICIAL",
         "HOMICÍDIO DOLOSO",
@@ -779,13 +806,9 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
         "ROUBO COM MORTE",
     ]
 
-    # ============================================================
-    # CONSULTA DAS OCORRÊNCIAS
-    # ============================================================
-
     ocorrencias_qs = (
-        relatorio_diario.ocorrencias.select_related("natureza", "opm") # municipio saiu daqui
-        .prefetch_related("envolvidos", "apreensoes", "imagens", "opm__municipios") # municipios (plural) entrou aqui
+        relatorio_diario.ocorrencias.select_related("natureza", "opm", "municipio")
+        .prefetch_related("envolvidos", "apreensoes", "imagens")
         .order_by("data_hora_fato")
     )
 
@@ -795,22 +818,40 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
     for ocorrencia in ocorrencias_qs:
         natureza_nome = ocorrencia.natureza.nome.upper()
 
-        imagens = []
+        # --- PROCESSAMENTO DE IMAGENS DA OCORRÊNCIA ---
+        imagens_list = []
         for img in ocorrencia.imagens.all():
-            if img.imagem and img.imagem.path:
-                imagens.append(
-                    {
-                        "uri": Path(img.imagem.path).as_uri(),
-                        "legenda": img.legenda,
-                    }
-                )
+            if img.imagem and hasattr(img.imagem, "path"):
+                try:
+                    imagens_list.append(
+                        {
+                            "uri": Path(img.imagem.path).as_uri(),
+                            "legenda": img.legenda,
+                        }
+                    )
+                except:
+                    continue
+
+        # --- NOVO: PROCESSAMENTO DE FOTOS DOS ENVOLVIDOS ---
+        # Criamos uma lista de envolvidos com a URI da foto já pronta para o WeasyPrint
+        envolvidos_processados = []
+        for env in ocorrencia.envolvidos.all():
+            foto_uri = None
+            if env.foto and hasattr(env.foto, "path"):
+                try:
+                    foto_uri = Path(env.foto.path).as_uri()
+                except:
+                    foto_uri = None
+
+            envolvidos_processados.append({"obj": env, "foto_uri": foto_uri})
 
         item = {
             "ocorrencia": ocorrencia,
             "sigla_opm_limpa": (
                 ocorrencia.opm.sigla.split(" - ")[0] if ocorrencia.opm else ""
             ),
-            "imagens": imagens,
+            "imagens": imagens_list,
+            "envolvidos_com_foto": envolvidos_processados,  # Passamos a nova lista processada
         }
 
         if natureza_nome in CRIMES_CVLI:
@@ -818,82 +859,39 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
         else:
             ocorrencias_normais.append(item)
 
-    # ============================================================
-    # NUMERAÇÃO DO RELATÓRIO
-    # ============================================================
-
+    # Numeração e Letras
     numero_cvli = len(ocorrencias_normais) + 1
-
-    # Letras a), b), c)...
     letras = "abcdefghijklmnopqrstuvwxyz"
     for idx, item in enumerate(ocorrencias_cvli):
         item["letra"] = letras[idx]
 
-    # ============================================================
-    # TABELA RESUMO CVLI
-    # ============================================================
-
+    # Tabela Resumo CVLI
     tabela_cvli = []
     contador_opm = Counter()
-
     for item in ocorrencias_cvli:
-        ocorrencia = item["ocorrencia"]
-        opm = item["sigla_opm_limpa"]
-
-        envolvidos_da_ocorrencia = ocorrencia.envolvidos.all()
-        n_vitimas = len(
-            [e for e in envolvidos_da_ocorrencia if e.tipo_participante == "V"]
-        )
-
-        # Caso não haja vítimas cadastradas, definimos 1 como padrão para não zerar a tabela
-        if n_vitimas == 0:
-            n_vitimas = 1
-
-        #municipio = ocorrencia.opm.municipio.nome if ocorrencia.opm else ""
-        municipio = ocorrencia.municipio.nome if ocorrencia.municipio else ""
-        opm = item["sigla_opm_limpa"]
-
-        contador_opm[opm] += n_vitimas
-
+        oc = item["ocorrencia"]
+        sigla = item["sigla_opm_limpa"]
+        n_vitimas = oc.envolvidos.filter(tipo_participante="V").count() or 1
+        contador_opm[sigla] += n_vitimas
         tabela_cvli.append(
             {
-                "municipio": municipio,
-                "opm": opm,
-                "vitimas": n_vitimas,  # por ora fixo
+                "municipio": oc.municipio.nome if oc.municipio else "",
+                "opm": sigla,
+                "vitimas": n_vitimas,
                 "instrumento": (
-                    ocorrencia.instrumento.nome
-                    if ocorrencia.instrumento
-                    else "NÃO INFORMADO"
-                ),  # placeholder
+                    oc.instrumento.nome if oc.instrumento else "NÃO INFORMADO"
+                ),
             }
         )
 
     total_cvli = sum(contador_opm.values())
-    # total_cvli = sum(linha["vitimas"] for linha in tabela_cvli)
-
     cvli_resumo_opm = ", ".join(f"{qtd} - {opm}" for opm, qtd in contador_opm.items())
 
-    # ============================================================
-    # LOGO E CSS
-    # ============================================================
-
+    # Logo e CSS
     logo_path = find("rpi/img/logo.png")
-    logo_uri = (
-        urllib.parse.urljoin("file:", urllib.request.pathname2url(logo_path))
-        if logo_path
-        else ""
-    )
-
+    logo_uri = Path(logo_path).as_uri() if logo_path else ""
     css_path = find("rpi/css/rpi.css")
-    css_uri = (
-        urllib.parse.urljoin("file:", urllib.request.pathname2url(css_path))
-        if css_path
-        else ""
-    )
-
-    # ============================================================
-    # CONTEXTO DO TEMPLATE
-    # ============================================================
+    css_uri = Path(css_path).as_uri() if css_path else ""
 
     context = {
         "relatorio": relatorio_diario,
@@ -903,24 +901,15 @@ def gerar_pdf_relatorio_weasyprint(relatorio_diario, request):
         "tabela_cvli": tabela_cvli,
         "total_cvli": total_cvli,
         "cvli_resumo_opm": cvli_resumo_opm,
-        "data_inicio_militar": formatar_data_militar(relatorio_diario.data_inicio),
-        "data_fim_militar": formatar_data_militar(relatorio_diario.data_fim),
         "logo_uri": logo_uri,
         "css_uri": css_uri,
-        "nr_relatorio": f"{numero_cvli:03d}/{relatorio_diario.ano_criacao}",
     }
 
-    # ============================================================
-    # RENDERIZAÇÃO DO PDF
-    # ============================================================
-
     html_string = render_to_string("rpi/relatorio_pdf.html", context)
-
-    pdf = HTML(string=html_string, base_url="file:///").write_pdf()
+    pdf = HTML(string=html_string, base_url=request.build_absolute_uri("/")).write_pdf()
 
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = "inline; filename=relatorio.pdf"
-
     return response
 
 
@@ -986,8 +975,8 @@ class RelatorioDetailView(LoginRequiredMixin, DetailView):
         )
 
         return context
-    
-    
+
+
 class InstrumentoCreateView(LoginRequiredMixin, CreateView):
     model = Instrumento
     form_class = InstrumentoForm
@@ -998,12 +987,14 @@ class InstrumentoCreateView(LoginRequiredMixin, CreateView):
         messages.success(self.request, "Instrumento cadastrado com sucesso!")
         return super().form_valid(form)
 
+
 class InstrumentoListView(LoginRequiredMixin, ListView):
     model = Instrumento
     template_name = "rpi/instrumento_list.html"
     context_object_name = "instrumentos"
     ordering = ["nome"]
-    
+
+
 class InstrumentoDeleteView(LoginRequiredMixin, DeleteView):
     model = Instrumento
     success_url = reverse_lazy("instrumento_list")
@@ -1011,7 +1002,8 @@ class InstrumentoDeleteView(LoginRequiredMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, "Instrumento excluído com sucesso.")
         return super().delete(request, *args, **kwargs)
-    
+
+
 class InstrumentoUpdateView(LoginRequiredMixin, UpdateView):
     model = Instrumento
     form_class = InstrumentoForm
@@ -1021,7 +1013,8 @@ class InstrumentoUpdateView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         messages.success(self.request, "Instrumento atualizado com sucesso!")
         return super().form_valid(form)
-    
+
+
 class InstrumentoDetailView(LoginRequiredMixin, DetailView):
     model = Instrumento
     template_name = "rpi/instrumento_detail.html"
@@ -1030,11 +1023,13 @@ class InstrumentoDetailView(LoginRequiredMixin, DetailView):
 
 def salvar_instrumento_ajax(request):
     if request.method == "POST":
-        nome = request.POST.get('nome')
+        nome = request.POST.get("nome")
         if nome:
             novo_inst = Instrumento.objects.create(nome=nome)
-            return JsonResponse({'id': novo_inst.id, 'nome': novo_inst.nome}, status=200)
-    return JsonResponse({'erro': 'Dados inválidos'}, status=400)
+            return JsonResponse(
+                {"id": novo_inst.id, "nome": novo_inst.nome}, status=200
+            )
+    return JsonResponse({"erro": "Dados inválidos"}, status=400)
 
 
 class MaterialApreendidoTipoCreateView(LoginRequiredMixin, CreateView):
@@ -1046,14 +1041,16 @@ class MaterialApreendidoTipoCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         messages.success(self.request, "Tipo de material cadastrado com sucesso!")
         return super().form_valid(form)
-    
+
+
 class MaterialApreendidoTipoListView(LoginRequiredMixin, ListView):
     model = MaterialApreendidoTipo
     template_name = "rpi/material_tipo_list.html"
     context_object_name = "materiais_tipos"
     ordering = ["nome"]
     paginate_by = 5
-    
+
+
 class MaterialApreendidoTipoDeleteView(LoginRequiredMixin, DeleteView):
     model = MaterialApreendidoTipo
     success_url = reverse_lazy("list_material_apreendido_tipo")
@@ -1068,15 +1065,17 @@ class MaterialApreendidoTipoDeleteView(LoginRequiredMixin, DeleteView):
         except ProtectedError:
             material = self.get_object()
             messages.error(
-                request, 
-                f"Não é possível excluir '{material.nome}'. Existem apreensões vinculadas."
+                request,
+                f"Não é possível excluir '{material.nome}'. Existem apreensões vinculadas.",
             )
         return redirect(self.success_url)
-    
+
+
 class MaterialApreendidoTipoDetailView(LoginRequiredMixin, DetailView):
     model = MaterialApreendidoTipo
     template_name = "rpi/material_tipo_detail.html"
     context_object_name = "material_tipo"
+
 
 class MaterialApreendidoTipoUpdateView(LoginRequiredMixin, UpdateView):
     model = MaterialApreendidoTipo
@@ -1095,137 +1094,145 @@ def salvar_material_apreendido_ajax(request):
     nome = request.POST.get("nome", "").strip()
 
     if not nome:
-        return JsonResponse(
-            {"error": "Nome não informado"},
-            status=400
-        )
+        return JsonResponse({"error": "Nome não informado"}, status=400)
 
     obj, created = MaterialApreendidoTipo.objects.get_or_create(
-        nome__iexact=nome,
-        defaults={"nome": nome}
+        nome__iexact=nome, defaults={"nome": nome}
     )
 
     return JsonResponse(
-        {
-            "id": obj.id,
-            "nome": obj.nome,
-            "created": created
-        },
-        status=200
+        {"id": obj.id, "nome": obj.nome, "created": created}, status=200
     )
-    
-    
-    
+
+
 @require_GET
 def buscar_naturezas_ajax(request):
     # 1. Obter o termo de busca (query)
-    query = request.GET.get('q', '').strip()
-    
+    query = request.GET.get("q", "").strip()
+
     # 2. Configura a filtragem
     if query:
         # Usa o Q object para realizar uma busca OR (nome OU tags_busca)
         # icontains: busca o termo em qualquer parte da string, sem distinção de caixa
         filtros = Q(nome__icontains=query) | Q(tags_busca__icontains=query)
-        naturezas = NaturezaOcorrencia.objects.filter(filtros).order_by('nome')[:30] # Limita a 30 resultados
+        naturezas = NaturezaOcorrencia.objects.filter(filtros).order_by("nome")[
+            :30
+        ]  # Limita a 30 resultados
     else:
         # Se não houver termo, mostra as 15 naturezas mais comuns (ou as primeiras)
         # Otimização: Ajuste este filtro para mostrar crimes frequentes
-        naturezas = NaturezaOcorrencia.objects.all().order_by('nome')[:15]
+        naturezas = NaturezaOcorrencia.objects.all().order_by("nome")[:15]
 
     # 3. Formatar os resultados para o Select2
     results = []
     for nat in naturezas:
-        results.append({
-            'id': nat.pk, # Select2 usa 'id' para o valor
-            'text': nat.nome, # Select2 usa 'text' para o que é exibido
-        })
+        results.append(
+            {
+                "id": nat.pk,  # Select2 usa 'id' para o valor
+                "text": nat.nome,  # Select2 usa 'text' para o que é exibido
+            }
+        )
 
     # 4. Retorna a resposta JSON
-    return JsonResponse({'results': results, 'pagination': {'more': False}})
+    return JsonResponse({"results": results, "pagination": {"more": False}})
 
 
-
-
-@csrf_exempt # OBS: Mantenha este decorador apenas se o token CSRF estiver falhando no JS. 
-             # A melhor prática é usá-lo no template com {% csrf_token %}.
+@csrf_exempt  # OBS: Mantenha este decorador apenas se o token CSRF estiver falhando no JS.
+# A melhor prática é usá-lo no template com {% csrf_token %}.
 @require_POST
 def cadastrar_natureza_rapida(request):
     """
     Processa a requisição AJAX para salvar rapidamente uma nova NaturezaOcorrencia.
     Retorna 200 (Sucesso), 400 (Erro de Validação) ou 500 (Erro de Servidor/Banco).
     """
-    
+
     form = NaturezaOcorrenciaForm(request.POST)
-    
+
     if form.is_valid():
         try:
             # 1. Tenta salvar no banco de dados
             nova_natureza = form.save()
-            
+
             # 2. Retorno de sucesso (Status 200 OK)
-            return JsonResponse({
-                'success': True,
-                'id': nova_natureza.pk,
-                'text': str(nova_natureza), 
-            }, status=200)
-        
+            return JsonResponse(
+                {
+                    "success": True,
+                    "id": nova_natureza.pk,
+                    "text": str(nova_natureza),
+                },
+                status=200,
+            )
+
         except Exception as e:
             # 3. Captura erros do banco (ex: Integridade/UNIQUE constraint)
             # Imprime o erro no console do servidor para debug
             print(f"Erro no banco ao salvar Natureza: {e}")
-            
+
             # Retorno de erro interno (Status 500)
-            return JsonResponse({
-                'success': False,
-                'errors': {'__all__': [f"Erro interno de servidor: Falha ao salvar a Natureza. ({e})"]}
-            }, status=500)
-            
+            return JsonResponse(
+                {
+                    "success": False,
+                    "errors": {
+                        "__all__": [
+                            f"Erro interno de servidor: Falha ao salvar a Natureza. ({e})"
+                        ]
+                    },
+                },
+                status=500,
+            )
+
     else:
         # 4. Erro de validação do formulário (campos obrigatórios ausentes/inválidos)
         # Retorno de erro de cliente (Status 400 Bad Request)
-        return JsonResponse({
-            'success': False,
-            'errors': form.errors, 
-        }, status=400)
-    
-    # OBS: O código NÃO PRECISA de um return final aqui, pois @require_POST 
+        return JsonResponse(
+            {
+                "success": False,
+                "errors": form.errors,
+            },
+            status=400,
+        )
+
+    # OBS: O código NÃO PRECISA de um return final aqui, pois @require_POST
     # já lida com métodos HTTP incorretos, e o if/else garante um retorno para POST.
-    
+
+
 @user_passes_test(lambda u: u.is_superuser)
 def lista_auditoria_objeto(request, pk):
     objeto = get_object_or_404(Ocorrencia, pk=pk)
-    
+
     # Busca histórico da Ocorrência e de todos os seus itens relacionados
-    h_ocorr = objeto.history.select_related('history_user').all()
-    h_env = Envolvido.history.select_related('history_user').filter(ocorrencia_id=pk)
-    h_apr = Apreensao.history.select_related('history_user').filter(ocorrencia_id=pk)
-    
+    h_ocorr = objeto.history.select_related("history_user").all()
+    h_env = Envolvido.history.select_related("history_user").filter(ocorrencia_id=pk)
+    h_apr = Apreensao.history.select_related("history_user").filter(ocorrencia_id=pk)
+
     historico_list = sorted(
-        chain(h_ocorr, h_env, h_apr),
-        key=lambda x: x.history_date,
-        reverse=True
+        chain(h_ocorr, h_env, h_apr), key=lambda x: x.history_date, reverse=True
     )
-    
+
     paginator = Paginator(historico_list, 15)
-    page = request.GET.get('page')
+    page = request.GET.get("page")
     try:
         historico = paginator.page(page)
     except (PageNotAnInteger, EmptyPage):
         historico = paginator.page(1)
-    
+
     # O loop de processamento é IDÊNTICO ao da view anterior
     for registro in historico:
         lista_final_mudancas = []
-        if registro.history_type == '~':
+        if registro.history_type == "~":
             try:
                 anterior = registro.prev_record
                 if anterior:
                     delta = registro.diff_against(anterior)
                     modelo_origem = registro.instance.__class__
-                    
+
                     for change in delta.changes:
                         field_name = change.field
-                        clean_field_name = field_name[:-3] if field_name.endswith('_id') else field_name
+                        clean_field_name = (
+                            field_name[:-3]
+                            if field_name.endswith("_id")
+                            else field_name
+                        )
                         try:
                             field_obj = modelo_origem._meta.get_field(clean_field_name)
                             nome_campo = field_obj.verbose_name.capitalize()
@@ -1235,7 +1242,11 @@ def lista_auditoria_objeto(request, pk):
 
                         v_antigo, v_novo = change.old, change.new
 
-                        if field_obj and hasattr(field_obj, 'choices') and field_obj.choices:
+                        if (
+                            field_obj
+                            and hasattr(field_obj, "choices")
+                            and field_obj.choices
+                        ):
                             choices_dict = dict(field_obj.choices)
                             v_antigo = choices_dict.get(v_antigo, v_antigo)
                             v_novo = choices_dict.get(v_novo, v_novo)
@@ -1248,34 +1259,41 @@ def lista_auditoria_objeto(request, pk):
                                 obj_nov = modelo_rel.objects.filter(pk=v_novo).first()
                                 v_novo = str(obj_nov) if obj_nov else f"ID {v_novo}"
 
-                        lista_final_mudancas.append({'campo': nome_campo, 'antigo': v_antigo, 'novo': v_novo})
-            except Exception: pass
+                        lista_final_mudancas.append(
+                            {"campo": nome_campo, "antigo": v_antigo, "novo": v_novo}
+                        )
+            except Exception:
+                pass
         registro.mudancas_processadas = lista_final_mudancas
-                
-    return render(request, 'auditoria/detalhe_historico.html', {
-        'objeto': objeto,
-        'historico': historico
-    })
-from django.apps import apps # Import necessário no topo do arquivo
+
+    return render(
+        request,
+        "auditoria/detalhe_historico.html",
+        {"objeto": objeto, "historico": historico},
+    )
+
+
+from django.apps import apps  # Import necessário no topo do arquivo
+
 
 @user_passes_test(lambda u: u.is_superuser)
 def auditoria_geral(request):
     # 1. Coleta o histórico de todos os modelos que possuem auditoria
-    h_ocorr = Ocorrencia.history.select_related('history_user').all()
-    h_env = Envolvido.history.select_related('history_user').all()
-    h_apr = Apreensao.history.select_related('history_user').all()
-    h_instrumento = Instrumento.history.select_related('history_user').all()
+    h_ocorr = Ocorrencia.history.select_related("history_user").all()
+    h_env = Envolvido.history.select_related("history_user").all()
+    h_apr = Apreensao.history.select_related("history_user").all()
+    h_instrumento = Instrumento.history.select_related("history_user").all()
 
     # 2. Une as listas e ordena pela data da modificação (mais recente primeiro)
     historico_list = sorted(
         chain(h_ocorr, h_env, h_apr, h_instrumento),
         key=lambda instance: instance.history_date,
-        reverse=True
+        reverse=True,
     )
 
     # 3. Paginação (20 itens por página)
     paginator = Paginator(historico_list, 20)
-    page = request.GET.get('page')
+    page = request.GET.get("page")
     try:
         historico = paginator.page(page)
     except (PageNotAnInteger, EmptyPage):
@@ -1284,48 +1302,66 @@ def auditoria_geral(request):
     # 4. Processamento de mudanças
     for registro in historico:
         lista_final_mudancas = []
-        if registro.history_type == '~': 
+        if registro.history_type == "~":
             try:
                 anterior = registro.prev_record
                 if anterior:
                     delta = registro.diff_against(anterior)
                     # Pegamos o modelo original dinamicamente para acessar verbose_name e choices
                     modelo_origem = registro.instance.__class__
-                    
+
                     for change in delta.changes:
                         field_name = change.field
-                        clean_field_name = field_name[:-3] if field_name.endswith('_id') else field_name
-                        
+                        clean_field_name = (
+                            field_name[:-3]
+                            if field_name.endswith("_id")
+                            else field_name
+                        )
+
                         try:
                             field_obj = modelo_origem._meta.get_field(clean_field_name)
                             nome_campo = field_obj.verbose_name.capitalize()
                         except:
-                            nome_campo = field_name.replace('_', ' ').capitalize()
+                            nome_campo = field_name.replace("_", " ").capitalize()
                             field_obj = None
 
                         v_antigo, v_novo = change.old, change.new
 
                         # Trata Choices
-                        if field_obj and hasattr(field_obj, 'choices') and field_obj.choices:
+                        if (
+                            field_obj
+                            and hasattr(field_obj, "choices")
+                            and field_obj.choices
+                        ):
                             choices_dict = dict(field_obj.choices)
                             v_antigo = choices_dict.get(v_antigo, v_antigo)
                             v_novo = choices_dict.get(v_novo, v_novo)
-                        
+
                         # Trata Relações (FKs)
                         elif field_obj and field_obj.is_relation:
                             modelo_rel = field_obj.related_model
                             try:
                                 if v_antigo:
-                                    obj_ant = modelo_rel.objects.filter(pk=v_antigo).first()
-                                    v_antigo = str(obj_ant) if obj_ant else f"ID {v_antigo}"
+                                    obj_ant = modelo_rel.objects.filter(
+                                        pk=v_antigo
+                                    ).first()
+                                    v_antigo = (
+                                        str(obj_ant) if obj_ant else f"ID {v_antigo}"
+                                    )
                                 if v_novo:
-                                    obj_nov = modelo_rel.objects.filter(pk=v_novo).first()
+                                    obj_nov = modelo_rel.objects.filter(
+                                        pk=v_novo
+                                    ).first()
                                     v_novo = str(obj_nov) if obj_nov else f"ID {v_novo}"
-                            except: pass
+                            except:
+                                pass
 
-                        lista_final_mudancas.append({'campo': nome_campo, 'antigo': v_antigo, 'novo': v_novo})
-            except Exception: pass
-        
+                        lista_final_mudancas.append(
+                            {"campo": nome_campo, "antigo": v_antigo, "novo": v_novo}
+                        )
+            except Exception:
+                pass
+
         registro.mudancas_processadas = lista_final_mudancas
-    
-    return render(request, 'auditoria/lista_geral.html', {'historico': historico})
+
+    return render(request, "auditoria/lista_geral.html", {"historico": historico})

@@ -114,25 +114,41 @@
     <a href="#inicio_sumario" class="voltar-link">(VOLTAR)</a>
 </p>
 
-{% if ocorrencia.envolvidos.all %}
-    <div class="detalhes-tecnicos"
-         style="margin-top: 10px; margin-left: 20px; font-size: 0.9em;">
-        <strong>Participante(s):</strong>
-        <ul style="list-style: none; padding: 0;">
-            {% for env in ocorrencia.envolvidos.all %}
-            <li>
-                * {{ env.nome|upper }},
-                {{ env.idade|default:"??" }} anos,
-                {{ env.get_tipo_documento_display|default:"-"}}
-                {{ env.nr_documento|default:"-" }} -
-                ({{ env.get_tipo_participante_display }}).
-                Antecedentes:
-                {% if env.antecedentes == 'S' %}SIM{% else %}NÃO{% endif %}.
+{% if item.envolvidos_com_foto %}
+<div class="detalhes-tecnicos" style="margin-top: 10px; margin-left: 20px;">
+    <strong>Participante(s):</strong>
+    
+    <ul style="list-style: none; padding: 0; margin-top: 5px; margin-bottom: 10px;">
+        {% for env_data in item.envolvidos_com_foto %}
+        {% with env=env_data.obj %}
+            <li style="margin-bottom: 4px; text-align: justify;">
+                * {{ env.nome|upper }}, 
+                {{ env.idade|default:"??" }} anos, 
+                {{ env.get_tipo_documento_display|default:"-" }} {{ env.nr_documento|default:"-" }} - 
+                ({{ env.get_tipo_participante_display }}). 
+                Antecedentes: {% if env.antecedentes == 'S' %}SIM{% else %}NÃO{% endif %}.
             </li>
-            {% endfor %}
-        </ul>
+        {% endwith %}
+        {% endfor %}
+    </ul>
+
+    <div class="galeria-participantes">
+        {% for env_data in item.envolvidos_com_foto %}
+        {% with env=env_data.obj %}
+            {% if env_data.foto_uri %}
+            <div class="bloco-foto-participante">
+                <img src="{{ env_data.foto_uri }}" class="foto-perfil">
+                <div class="legenda-nome">
+                    {# split.0 pega o primeiro nome; upper deixa em maiúsculo #}
+                    {{ env.nome.split.0|upper }}
+                </div>
+            </div>
+            {% endif %}
+        {% endwith %}
+        {% endfor %}
     </div>
-    {% endif %}
+</div>
+{% endif %}
 
 {% if ocorrencia.apreensoes.all %}
 <div class="detalhes-tecnicos" style="margin-top: 5px; margin-left: 20px; font-size: 0.9em;">
@@ -155,16 +171,14 @@
 </div>
 {% endif %}
 
-    <div class="galeria-imagens">
-        {% for imagem in item.imagens %}
-            <div class="bloco-imagem">
-                <img src="{{ imagem.uri }}" class="imagem-relatorio">
-                {% if imagem.legenda %}
-                    <p class="legenda-imagem">{{ imagem.legenda }}</p>
-                {% endif %}
-            </div>
-        {% endfor %}
+<div class="galeria-participantes">
+    {% for imagem in item.imagens %}
+    <div class="bloco-evidencia">
+        <img src="{{ imagem.uri }}" class="img-padronizada">
+        <div class="legenda-nome">{{ imagem.legenda|default:"EVIDÊNCIA"|upper }}</div>
     </div>
+    {% endfor %}
+</div>
 
 </div>
 {% endwith %}
@@ -233,26 +247,40 @@
     <a href="#inicio_sumario" class="voltar-link">(VOLTAR)</a>
 </p>
 
-{% if ocorrencia.envolvidos.all %}
-    <div class="detalhes-tecnicos"
-         style="margin-top: 10px; margin-left: 20px; font-size: 0.9em;">
+{% if item.envolvidos_com_foto %}
+    <div class="detalhes-tecnicos" style="margin-top: 10px; margin-left: 20px;">
         <strong>Participante(s):</strong>
-        <ul style="list-style: none; padding: 0;">
-            {% for env in ocorrencia.envolvidos.all %}
-            <li>
-                * {{ env.nome|upper }},
-                {{ env.idade|default:"??" }} anos,
-                {{ env.get_tipo_documento_display|default:"-"}}
-                {{ env.nr_documento|default:"-" }} -
-                ({{ env.get_tipo_participante_display }}).
-                Antecedentes:
-                {% if env.antecedentes == 'S' %}SIM{% else %}NÃO{% endif %}.
-            </li>
+        
+        <ul style="list-style: none; padding: 0; margin-top: 5px;">
+            {% for env_data in item.envolvidos_com_foto %}
+            {% with env=env_data.obj %}
+                <li style="margin-bottom: 3px;">
+                    * {{ env.nome|upper }}, {{ env.idade|default:"??" }} anos, 
+                    {{ env.get_tipo_documento_display|default:"-" }} {{ env.nr_documento|default:"-" }} - 
+                    ({{ env.get_tipo_participante_display }}). 
+                    Antecedentes: {% if env.antecedentes == 'S' %}SIM{% else %}NÃO{% endif %}.
+                </li>
+            {% endwith %}
             {% endfor %}
         </ul>
-    </div>
-    {% endif %}
 
+        <div class="galeria-participantes">
+            {% for env_data in item.envolvidos_com_foto %}
+            {% with env=env_data.obj %}
+                {% if env_data.foto_uri %}
+                <div class="bloco-foto-participante">
+                    <img src="{{ env_data.foto_uri }}" class="foto-perfil">
+                    <div class="legenda-nome">
+                        {# Pegamos apenas o primeiro nome para a legenda #}
+                        {{ env.nome.split.0|upper }}
+                    </div>
+                </div>
+                {% endif %}
+            {% endwith %}
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
     {% if ocorrencia.apreensoes.all %}
     <div class="detalhes-tecnicos"
          style="margin-top: 5px; margin-left: 20px; font-size: 0.9em;">
@@ -275,14 +303,12 @@
     </div>
     {% endif %}
     
-    <div class="galeria-imagens">
+    <div class="galeria-participantes">
         {% for imagem in item.imagens %}
-            <div class="bloco-imagem">
-                <img src="{{ imagem.uri }}" class="imagem-relatorio">
-                {% if imagem.legenda %}
-                    <p class="legenda-imagem">{{ imagem.legenda }}</p>
-                {% endif %}
-            </div>
+        <div class="bloco-evidencia">
+            <img src="{{ imagem.uri }}" class="img-padronizada">
+            <div class="legenda-nome">{{ imagem.legenda|default:"EVIDÊNCIA"|upper }}</div>
+        </div>
         {% endfor %}
     </div>
 {% endwith %}
