@@ -103,6 +103,9 @@ class ApreensaoForm(forms.ModelForm):
             "unidade_medida",
         ]
         widgets = {
+            "material_tipo": forms.Select(
+                attrs={"class": "form-control"}
+            ),
             "quantidade": forms.TextInput(
                 attrs={"placeholder": "1.00 ou 100", "class": "form-control"}
             ),
@@ -202,6 +205,9 @@ class OcorrenciaForm(forms.ModelForm):
             "rua": forms.TextInput(attrs={"placeholder": "Rua, Av. ..."}),
             "numero": forms.TextInput(),
             "bairro": forms.TextInput(),
+            "instrumento": forms.Select(
+                attrs={"class": "form-control"}
+            ),  # Ou form-control
         }
 
     def __init__(self, *args, **kwargs):

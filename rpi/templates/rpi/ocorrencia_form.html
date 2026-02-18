@@ -131,20 +131,20 @@
                                 {{ form.tipo_acao }}
                             </div>
 
-                            <div class="col-md-6 col-lg-7 mb-3" id="div_titulo_sumario">
+                            <div class="col-md-6 col-lg-6 mb-3" id="div_titulo_sumario">
                                 <label for="{{ form.resumo_cabecalho.id_for_label }}" class="form-label required">Título da Ocorrência</label>
                                 {{ form.resumo_cabecalho }}
                             </div>
 
-                            <div class="col-md-6 col-lg-3 mb-3" id="div_instrumento" style="display: none;">
+                            <div class="col-md-6 col-lg-4 mb-3" id="div_instrumento" style="display: none;">
                                 <label class="form-label fw-bold text-danger">
                                     <i class="bi bi-shield-fill-exclamation"></i> Instrumento Usado (CVLI)
                                 </label>
 
-                                <div class="input-group">
+                                <div class="d-flex gap-1"> 
                                     {{ form.instrumento }}
 
-                                    <button class="btn btn-outline-secondary" type="button" onclick="abrirModalInstrumento()" title="Cadastrar novo instrumento">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="abrirModalInstrumento()" title="Cadastrar novo instrumento" style="height: fit-content;">
                                         <i class="fas fa-plus"></i>
                                     </button>
                                 </div>
@@ -223,55 +223,75 @@
                         {{ envolvido_formset.management_form }}
                         <div id="envolvidos-container">
                             {% for form_envolvido in envolvido_formset %}
-                            <div class="envolvido-form border rounded p-3 mb-3 bg-light">
-                                {% for hidden in form_envolvido.hidden_fields %} {{ hidden }} {% endfor %} {# Linha 1: Dados do Participante #}
-                                <div class="row">
-                                    <div class="col-md-2">{{ form_envolvido.tipo_participante.label_tag }} {{ form_envolvido.tipo_participante }}</div>
-                                    <div class="col-md-4">{{ form_envolvido.nome.label_tag }} {{ form_envolvido.nome }}</div>
-                                    <div class="col-md-1">{{ form_envolvido.idade.label_tag }} {{ form_envolvido.idade }}</div>
-                                    <div class="col-md-1">{{ form_envolvido.tipo_documento.label_tag }} {{ form_envolvido.tipo_documento }}</div>
-                                    <div class="col-md-2">{{ form_envolvido.nr_documento.label_tag }} {{ form_envolvido.nr_documento }}</div>
-                                    <div class="col-md-1">{{ form_envolvido.antecedentes.label_tag }} {{ form_envolvido.antecedentes }}</div>
-
-                                    <div class="col-md-1 d-flex align-items-end justify-content-center">
-                                        <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                    <div class="d-none">{{ form_envolvido.DELETE }}</div>
-                                </div>
-
-                                {# Linha 2: Foto (Refatorada) #}
-                                <div class="row align-items-center mt-3 border-top pt-2">
-                                    <div class="col-auto">
-                                        <div class="foto-preview-container" style="width: 65px; height: 80px; border: 1px solid #ddd; background: #e9ecef; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;">
-                                            {% if form_envolvido.instance.foto %}
-                                            <img src="{{ form_envolvido.instance.foto.url }}" class="img-envolvido-preview" style="width: 100%; height: 100%; object-fit: cover;"> {% else %}
-                                            <i class="fas fa-user text-muted" style="font-size: 1.5rem;"></i> {% endif %}
-                                        </div>
-                                    </div>
-
-                                    <div class="col">
-                                        <div class="custom-file-upload">
+                                <div class="envolvido-form border rounded p-3 mb-3 bg-light shadow-sm">
+                                    {% for hidden in form_envolvido.hidden_fields %} {{ hidden }} {% endfor %}
+                                    
+                                    <div class="d-flex align-items-start gap-3">
+                                        {# COLUNA DA ESQUERDA: FOTO (Unificada) #}
+                                        <div class="flex-shrink-0 text-center">
+                                            <div class="foto-preview-container shadow-sm mb-2" style="width: 100px; height: 120px; border: 2px solid #dee2e6; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px;">
+                                                {% if form_envolvido.instance.foto %}
+                                                    <img src="{{ form_envolvido.instance.foto.url }}" class="img-envolvido-preview" style="width: 100%; height: 100%; object-fit: cover;">
+                                                {% else %}
+                                                    <i class="fas fa-user text-muted" style="font-size: 2.5rem;"></i>
+                                                {% endif %}
+                                            </div>
+                                            
                                             <div class="input-foto-oculto" style="display: none;">
                                                 {{ form_envolvido.foto }}
                                             </div>
-
-                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="$(this).siblings('.input-foto-oculto').find('input').click();">
-                                                <i class="fas fa-camera"></i> {% if form_envolvido.instance.foto %}Alterar Foto{% else %}Selecionar Foto{% endif %}
+                                            
+                                            <button type="button" class="btn btn-xs btn-primary w-100" onclick="$(this).siblings('.input-foto-oculto').find('input').click();" style="font-size: 0.75rem;">
+                                                <i class="fas fa-camera"></i> {% if form_envolvido.instance.foto %}Alterar{% else %}Foto{% endif %}
                                             </button>
+                                        </div>
 
-                                            <small class="text-muted d-block mt-1 filename-display">
-                                                    {% if form_envolvido.instance.foto %}
-                                                        <i class="fas fa-check-circle text-success"></i> Foto salva
-                                                    {% else %}
-                                                        <i class="fas fa-info-circle"></i> Nenhuma foto selecionada
-                                                    {% endif %}
-                                                </small>
+                                        {# COLUNA DA DIREITA: DADOS #}
+                                        <div class="flex-grow-1">
+                                            <div class="row g-2">
+                                                <div class="col-md-3">
+                                                    <label class="small fw-bold">{{ form_envolvido.tipo_participante.label }}</label>
+                                                    {{ form_envolvido.tipo_participante }}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="small fw-bold">{{ form_envolvido.nome.label }}</label>
+                                                    {{ form_envolvido.nome }}
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="small fw-bold">{{ form_envolvido.idade.label }}</label>
+                                                    {{ form_envolvido.idade }}
+                                                </div>
+                                                <div class="col-md-1 d-flex align-items-end justify-content-end">
+                                                    <button type="button" class="btn btn-outline-danger remove-formset-row border-0" data-prefix="envolvidos">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <label class="small fw-bold">{{ form_envolvido.tipo_documento.label }}</label>
+                                                    {{ form_envolvido.tipo_documento }}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="small fw-bold">{{ form_envolvido.nr_documento.label }}</label>
+                                                    {{ form_envolvido.nr_documento }}
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="small fw-bold">{{ form_envolvido.antecedentes.label }}</label>
+                                                    {{ form_envolvido.antecedentes }}
+                                                </div>
+                                            </div>
+                                            
+                                            <small class="text-muted mt-2 d-block filename-display">
+                                                {% if form_envolvido.instance.foto %}
+                                                    <i class="fas fa-check-circle text-success"></i> Foto identificada
+                                                {% else %}
+                                                    <i class="fas fa-info-circle"></i> Sem foto
+                                                {% endif %}
+                                            </small>
                                         </div>
                                     </div>
+                                    <div class="d-none">{{ form_envolvido.DELETE }}</div>
                                 </div>
-                            </div>
                             {% endfor %}
                         </div>
 
@@ -304,8 +324,10 @@
                                 <div class="row">
                                     <div class="col-md-3">
                                         <label class="form-label">Material</label>
-                                        <div class="input-group">
-                                            {{ form_apreensao.material_tipo }}
+                                        <div class="input-group d-flex">
+                                            <div style="flex-grow: 1;">
+                                                {{ form_apreensao.material_tipo }}
+                                            </div>
                                             <button type="button" class="btn btn-outline-secondary" onclick="abrirModalMaterial(this)">
                                                 <i class="fas fa-plus"></i>
                                             </button>
@@ -374,7 +396,7 @@
                 <div class="card mb-4 shadow-sm border-dark">
                     <div class="card-header bg-dark text-white d-flex align-items-center">
                         <i class="fas fa-camera me-2"></i>
-                        <h5 class="mb-0">Fotos e Finalização</h5>
+                        <h5 class="mb-0">Fotos (apreensões)</h5>
                     </div>
                     <div class="card-body bg-light">
                         {{ imagem_formset.management_form }}
@@ -461,66 +483,67 @@
 
 {# TEMPLATES PARA O JAVASCRIPT #}
 <template id="envolvido-template">
-    <div class="envolvido-form border rounded p-3 mb-3 bg-light">
-        <div class="row">
-            <div class="col-md-2">
-                <label class="form-label">Tipo</label>
-                {{ envolvido_formset.empty_form.tipo_participante }}
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Nome</label>
-                {{ envolvido_formset.empty_form.nome }}
-            </div>
-            <div class="col-md-1">
-                <label class="form-label">Idade</label>
-                {{ envolvido_formset.empty_form.idade }}
-            </div>
-            <div class="col-md-1">
-                <label class="form-label">Doc.</label>
-                {{ envolvido_formset.empty_form.tipo_documento }}
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Nr</label>
-                {{ envolvido_formset.empty_form.nr_documento }}
-            </div>
-            <div class="col-md-1">
-                <label class="form-label">Antec.</label>
-                {{ envolvido_formset.empty_form.antecedentes }}
-            </div>
-
-            <div class="col-md-1 d-flex align-items-end justify-content-center">
-                <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="envolvidos">
-                    <i class="fas fa-trash"></i>
+    <div class="envolvido-form border rounded p-3 mb-3 bg-light shadow-sm">
+        {# O management_form do Django cuidará dos prefixos __prefix__ aqui #}
+        
+        <div class="d-flex align-items-start gap-3">
+            {# COLUNA DA ESQUERDA: FOTO (Novo Participante) #}
+            <div class="flex-shrink-0 text-center">
+                <div class="foto-preview-container shadow-sm mb-2" style="width: 100px; height: 120px; border: 2px solid #dee2e6; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px;">
+                    {# Como é novo, sempre começa com o ícone #}
+                    <i class="fas fa-user text-muted" style="font-size: 2.5rem;"></i>
+                </div>
+                
+                <div class="input-foto-oculto" style="display: none;">
+                    {{ envolvido_formset.empty_form.foto }}
+                </div>
+                
+                <button type="button" class="btn btn-xs btn-primary w-100" onclick="$(this).siblings('.input-foto-oculto').find('input').click();" style="font-size: 0.75rem;">
+                    <i class="fas fa-camera"></i> Foto
                 </button>
             </div>
-            <div class="d-none">{{ envolvido_formset.empty_form.DELETE }}</div>
-        </div>
 
-        {# SEÇÃO DE FOTO PARA O NOVO PARTICIPANTE #}
-        <div class="row align-items-center mt-3 border-top pt-2">
-            <div class="col-auto">
-                <div class="foto-preview-container" style="width: 65px; height: 80px; border: 1px solid #ddd; background: #e9ecef; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;">
-                    {# Como é um formulário novo, sempre começa com o ícone de usuário #}
-                    <i class="fas fa-user text-muted" style="font-size: 1.5rem;"></i>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="custom-file-upload">
-                    <div class="input-foto-oculto" style="display: none;">
-                        {{ envolvido_formset.empty_form.foto }}
+            {# COLUNA DA DIREITA: DADOS #}
+            <div class="flex-grow-1">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="small fw-bold">Tipo</label>
+                        {{ envolvido_formset.empty_form.tipo_participante }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small fw-bold">Nome</label>
+                        {{ envolvido_formset.empty_form.nome }}
+                    </div>
+                    <div class="col-md-2">
+                        <label class="small fw-bold">Idade</label>
+                        {{ envolvido_formset.empty_form.idade }}
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end justify-content-end">
+                        <button type="button" class="btn btn-outline-danger remove-formset-row border-0" data-prefix="envolvidos">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
 
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="$(this).siblings('.input-foto-oculto').find('input').click();">
-                        <i class="fas fa-camera"></i> Selecionar Foto
-                    </button>
-
-                    <small class="text-muted d-block mt-1 filename-display">
-                        <i class="fas fa-info-circle"></i> Nenhuma foto selecionada
-                    </small>
+                    <div class="col-md-3">
+                        <label class="small fw-bold">Documeto</label>
+                        {{ envolvido_formset.empty_form.tipo_documento }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small fw-bold">Nr</label>
+                        {{ envolvido_formset.empty_form.nr_documento }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="small fw-bold">Antec.</label>
+                        {{ envolvido_formset.empty_form.antecedentes }}
+                    </div>
                 </div>
+                
+                <small class="text-muted mt-2 d-block filename-display">
+                    <i class="fas fa-info-circle"></i> Nenhuma foto selecionada
+                </small>
             </div>
         </div>
+        <div class="d-none">{{ envolvido_formset.empty_form.DELETE }}</div>
     </div>
 </template>
 
