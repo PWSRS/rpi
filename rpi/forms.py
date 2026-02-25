@@ -301,6 +301,7 @@ class MaterialApreendidoTipoForm(forms.ModelForm):
 
 
 class NaturezaOcorrenciaForm(forms.ModelForm):
+    tags_busca = forms.CharField(required=False, widget=forms.HiddenInput())
     class Meta:
         model = NaturezaOcorrencia
         # Incluir 'tags_busca' aqui está OK, se for necessário para a criação.
@@ -321,6 +322,7 @@ class NaturezaOcorrenciaForm(forms.ModelForm):
     # ✅ __init__ MOVIDO PARA FORA do Meta class
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['tags_busca'].required = False
 
         for field in self.fields.values():
             if "class" not in field.widget.attrs:

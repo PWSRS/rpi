@@ -1141,60 +1141,26 @@ def buscar_naturezas_ajax(request):
 # A melhor prática é usá-lo no template com {% csrf_token %}.
 @require_POST
 def cadastrar_natureza_rapida(request):
-    """
-    Processa a requisição AJAX para salvar rapidamente uma nova NaturezaOcorrencia.
-    Retorna 200 (Sucesso), 400 (Erro de Validação) ou 500 (Erro de Servidor/Banco).
-    """
+    # Pega os dados diretamente do POST usando os nomes que estão no seu HTML
+    nome = request.POST.get('nome')
+    tipo_impacto = request.POST.get('tipo_impacto')
 
-    form = NaturezaOcorrenciaForm(request.POST)
-
-    if form.is_valid():
+    if nome and tipo_impacto:
         try:
-            # 1. Tenta salvar no banco de dados
-            nova_natureza = form.save()
-
-            # 2. Retorno de sucesso (Status 200 OK)
-            return JsonResponse(
-                {
-                    "success": True,
-                    "id": nova_natureza.pk,
-                    "text": str(nova_natureza),
-                },
-                status=200,
+            # Cria o objeto diretamente no banco
+            nova_natureza = NaturezaOcorrencia.objects.create(
+                nome=nome,
+                tipo_impacto=tipo_impacto
             )
-
+            return JsonResponse({
+                "success": True,
+                "id": nova_natureza.pk,
+                "text": nova_natureza.nome, # Usando .nome para garantir o texto correto
+            }, status=200)
         except Exception as e:
-            # 3. Captura erros do banco (ex: Integridade/UNIQUE constraint)
-            # Imprime o erro no console do servidor para debug
-            print(f"Erro no banco ao salvar Natureza: {e}")
-
-            # Retorno de erro interno (Status 500)
-            return JsonResponse(
-                {
-                    "success": False,
-                    "errors": {
-                        "__all__": [
-                            f"Erro interno de servidor: Falha ao salvar a Natureza. ({e})"
-                        ]
-                    },
-                },
-                status=500,
-            )
-
-    else:
-        # 4. Erro de validação do formulário (campos obrigatórios ausentes/inválidos)
-        # Retorno de erro de cliente (Status 400 Bad Request)
-        return JsonResponse(
-            {
-                "success": False,
-                "errors": form.errors,
-            },
-            status=400,
-        )
-
-    # OBS: O código NÃO PRECISA de um return final aqui, pois @require_POST
-    # já lida com métodos HTTP incorretos, e o if/else garante um retorno para POST.
-
+            return JsonResponse({"success": False, "errors": str(e)}, status=500)
+    
+    return JsonResponse({"success": False, "errors": "Campos obrigatórios faltando."}, status=400)
 
 @user_passes_test(lambda u: u.is_superuser)
 def lista_auditoria_objeto(request, pk):

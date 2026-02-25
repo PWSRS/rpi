@@ -88,7 +88,11 @@
                                 <div class="input-group flex-nowrap">
                                     {{ form.natureza }}
 
-                                    <button class="btn btn-outline-secondary" type="button" id="btn-add-natureza" title="Cadastrar nova natureza de crime">
+                                    <button class="btn btn-outline-secondary"
+                                            type="button" id="btn-add-natureza"
+                                            title="Cadastrar nova natureza de crime"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalNatureza">
                                         <i class="fas fa-plus"></i> </button>
                                 </div>
                                 {% if form.natureza.errors %}
@@ -184,6 +188,7 @@
 
                         <form id="form-add-natureza" action="{% url 'cadastrar_natureza_rapida' %}" method="post">
                             {% csrf_token %}
+                            <input type="hidden" name="tags_busca" value="cadastro_rapido">
                             <div class="modal-body">
                                 <p class="text-muted small">Preencha apenas a tipo criminal e o aspecto para o cadastro rápido.</p>
 
@@ -794,27 +799,65 @@ function abrirModalNatureza() {
     new bootstrap.Modal(document.getElementById('modalNatureza')).show();
 }
 
+
 function salvarNaturezaRapida() {
-    const $form = $('#form-add-natureza');
-    const url = $form.attr('action') || $('#btn-salvar-natureza').data('url');
+    // 1. Pegar o botão e a URL que está nele
+    const btn = document.getElementById('btn-salvar-natureza');
+    const urlDestino = btn.getAttribute('data-url');
     
+    // 2. Pegar os valores dos campos manualmente
+    const nomeV = $('#id_natureza_nome_modal').val();
+    const impactoV = $('#id_natureza_aspecto_modal').val();
+    
+    // 3. Pegar o Token CSRF (essencial para evitar o erro 403)
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    if (!nomeV || !impactoV) {
+        alert("Por favor, preencha o nome e o aspecto.");
+        return;
+    }
+
+    console.log("Enviando para:", urlDestino);
+
     $.ajax({
         type: 'POST',
-        url: url,
-        data: $form.serialize(),
+        url: urlDestino,
+        data: {
+            'nome': nomeV,
+            'tipo_impacto': impactoV,
+            'tags_busca': 'cadastro_rapido', // Preenche o campo que o seu Form exige
+            'csrfmiddlewaretoken': csrfToken
+        },
         success: function (response) {
             if (response.success) {
-                const newOption = new Option(response.text, response.id, true, true);
+                // Criar a nova opção e adicionar ao Select2 (#id_natureza)
+                const newOption = new Option(response.text || response.nome, response.id, true, true);
                 $('#id_natureza').append(newOption).trigger('change');
-                $('#modalNatureza').modal('hide');
-                $form[0].reset();
-                alert('Natureza cadastrada!');
+
+                // Fechar o modal
+                const modalElt = document.getElementById('modalNatureza');
+                const modalInst = bootstrap.Modal.getInstance(modalElt) || new bootstrap.Modal(modalElt);
+                modalInst.hide();
+
+                // Limpar campos
+                $('#id_natureza_nome_modal').val('');
+                
+                alert('Natureza cadastrada com sucesso!');
             } else {
-                alert('Erro: ' + JSON.stringify(response.errors));
+                alert('Erro de validação: ' + JSON.stringify(response.errors));
+            }
+        },
+        error: function (xhr) {
+            if (xhr.status === 403) {
+                alert("Erro 403: O Django bloqueou o envio (Falta de Token CSRF).");
+            } else {
+                console.error("Detalhes do erro:", xhr.responseText);
+                alert("Erro ao salvar: Status " + xhr.status);
             }
         }
     });
 }
+
 
 // INSTRUMENTO
 function abrirModalInstrumento() {
