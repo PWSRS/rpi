@@ -445,7 +445,7 @@
                                     </div>
 
                                     <div class="col-md-1 d-flex align-items-end justify-content-center">
-                                        <button type="button" class="btn btn-outline-danger remove-formset-row">
+                                        <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="imagens">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                         <div class="d-none">{{ form.DELETE }}</div>
@@ -603,7 +603,7 @@
                 {{ imagem_formset.empty_form.legenda }}
             </div>
             <div class="col-md-1 d-flex align-items-end justify-content-center">
-                <button type="button" class="btn btn-outline-danger remove-formset-row">
+                <button type="button" class="btn btn-outline-danger remove-formset-row" data-prefix="imagens">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -732,26 +732,58 @@ $(document).ready(function () {
     $('#add-imagem-btn').click(() => addRow('imagens'));
 
     $(document).on('click', '.remove-formset-row', function () {
-    const row = $(this).closest('.envolvido-form');
+    const $btn = $(this);
+    const prefix = $btn.data('prefix'); 
+    
+    // Agora o código 'enxerga' os três tipos de blocos que você tem no HTML
+    const row = $btn.closest('.envolvido-form, .form-apreensao-item, .imagem-form-bloco');
+    
     const idField = row.find('input[name$="-id"]');
     const deleteCheckbox = row.find('input[name$="-DELETE"]');
-    const totalForms = $('#id_envolvidos-TOTAL_FORMS');
+    const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
 
-    if (idField.val()) {
-        // CASO 1: O participante já existe no banco de dados
-        // Não removemos a linha, apenas marcamos para o Django deletar no servidor
+    if (idField.length && idField.val()) {
+        // Se já existe no banco (tem ID), marca o checkbox DELETE do Django
         deleteCheckbox.prop('checked', true).val('on');
-        row.hide(); // Esconde para o usuário não ver mais
+        row.hide(); 
     } else {
-        // CASO 2: É a linha vazia (extra) ou uma linha nova que você criou agora
-        // Podemos remover totalmente do HTML
+        // Se for linha recém-criada, remove do DOM
         row.remove();
         
-        // CRÍTICO: Precisamos diminuir o contador, senão o Django espera os dados dessa linha!
+        // Atualiza o contador de formulários específico daquela aba
         const novoTotal = parseInt(totalForms.val()) - 1;
-        totalForms.val(novoTotal);
+        if (!isNaN(novoTotal) && novoTotal >= 0) {
+            totalForms.val(novoTotal);
+        }
+
+        // Função para organizar os índices [0], [1], [2]...
+        reindexarFormset(prefix);
     }
+});
+
+// Função auxiliar para garantir que os índices fiquem em ordem após remover uma linha nova
+function reindexarFormset(prefix) {
+    const containerId = { 
+        envolvidos: '#envolvidos-container', 
+        apreensoes: '#apreensoes-formset-container', 
+        imagens: '#imagens-container' 
+    }[prefix];
+
+    $(containerId).children().each(function(index) {
+        $(this).find('input, select, textarea').each(function() {
+            let name = $(this).attr('name');
+            if (name) {
+                let newName = name.replace(/-\d+-/, `-${index}-`);
+                $(this).attr('name', newName);
+            }
+            let id = $(this).attr('id');
+            if (id) {
+                let newId = id.replace(/-\d+-/, `-${index}-`);
+                $(this).attr('id', newId);
+            }
+        });
     });
+}
 
     /* ---------- 6. PREVIEWS DE IMAGENS E FOTOS ---------- */
     
