@@ -1,31 +1,76 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar Material{% else %}Novo Material{% endif %}
+{% endblock %}
+
 {% block content %}
-
-<div class="container mt-4">
-    <h1 class="mb-4">
-        {% if form.instance.pk %}
-            <i class="fas fa-edit"></i> Editar Material: {{ form.instance.nome }} - ID: {{ form.instance.pk }}
-        {% else %}
-            <i class="fas fa-plus-circle"></i> Registro de Material
-        {% endif %}
-    </h1>
-    
-    <form method="post">
-        {% csrf_token %}
-        
-        <div class="mb-3">
-            <label for="{{ form.nome.id_for_label }}" class="form-label">Tipo de Material</label>
-            {# O Django injeta o 'value' automaticamente aqui #}
-            {{ form.nome }} 
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
             
-            {% if form.nome.errors %}
-                <div class="text-danger small">{{ form.nome.errors }}</div>
-            {% endif %}
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h4 class="card-title mb-0 text-primary d-flex align-items-center">
+                        {% if form.instance.pk %}
+                            <i class="fas fa-edit me-2"></i> Editar Material
+                        {% else %}
+                            <i class="fas fa-plus-circle me-2"></i> Registro de Material
+                        {% endif %}
+                    </h4>
+                    {% if form.instance.pk %}
+                        <small class="text-muted">ID do Registro: #{{ form.instance.pk }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.nome.id_for_label }}" class="form-label fw-bold text-secondary">
+                                <i class="fas fa-tag me-1"></i> Tipo de Material
+                            </label>
+                            
+                            {# Renderiza o campo e garante que ele tenha a classe form-control via Widget no forms.py ou manualmente aqui #}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-box-open text-muted"></i></span>
+                                {{ form.nome }}
+                            </div>
+
+                            {% if form.nome.errors %}
+                                <div class="invalid-feedback d-block mt-2">
+                                    {% for error in form.nome.errors %}
+                                        <i class="fas fa-exclamation-triangle me-1"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text mt-2">Ex: "Arma de Fogo", "Entorpecente", "Veículo", etc.</div>
+                        </div>
+
+                        <hr class="my-4 opacity-25">
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'list_material_apreendido_tipo' %}" class="btn btn-link text-decoration-none text-muted">
+                                <i class="fas fa-arrow-left me-1"></i> Voltar para a lista
+                            </a>
+                            
+                            <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                                <i class="fas fa-save me-2"></i> 
+                                {% if form.instance.pk %}Salvar Alterações{% else %}Confirmar Registro{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-3 text-muted small">
+                <i class="fas fa-info-circle me-1"></i> 
+                Certifique-se de que a nomenclatura segue o padrão da instituição.
+            </div>
+
         </div>
-
-        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-        <a href="{% url 'list_material_apreendido_tipo' %}" class="btn btn-secondary">Cancelar</a>
-    </form>
+    </div>
 </div>
-
 {% endblock %}

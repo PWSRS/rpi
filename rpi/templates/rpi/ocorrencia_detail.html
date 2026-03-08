@@ -34,8 +34,15 @@
                 <div class="card-header bg-primary text-white font-weight-bold text-uppercase">Informações Principais</div>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item"><strong>Data/Hora:</strong> {{ ocorrencia.data_hora_bruta }}</li>
-                    <li class="list-group-item"><strong>Fato:</strong> {{ ocorrencia.natureza.nome }}</li>
-                    <li class="list-group-item"><strong>Tipo do Fato:</strong> {{ ocorrencia.get_tipo_acao_display }}</li>
+                    <li class="list-group-item"><strong>Fato:</strong> {{ ocorrencia.natureza.nome }}</span></li>
+                    <li class="list-group-item"><strong>Tipo do Fato:</strong>
+                        <span class="badge rounded-pill
+                         {% if ocorrencia.get_tipo_acao_display == 'Consumado' %} text-bg-danger
+                         {% else %} text-bg-warning
+                         {% endif %}">
+                            {{ ocorrencia.get_tipo_acao_display }}
+                        </span>
+                    </li>
                     <li class="list-group-item"><strong>OPM:</strong> {{ ocorrencia.opm.sigla }}</li>
                     <!--<li class="list-group-item"><strong>Sumário:</strong> {{ ocorrencia.resumo_cabecalho }}</li>-->
                 </ul>

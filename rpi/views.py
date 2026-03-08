@@ -1331,3 +1331,51 @@ def auditoria_geral(request):
         registro.mudancas_processadas = lista_final_mudancas
 
     return render(request, "auditoria/lista_geral.html", {"historico": historico})
+
+
+
+def lista_cvli(request):
+    # 1. Pegar datas do filtro ou usar hoje como padrão
+    data_inicio_str = request.GET.get('data_inicio')
+    data_fim_str = request.GET.get('data_fim')
+
+    hoje = timezone.localtime(timezone.now()).date()
+
+    if data_inicio_str:
+        data_inicio_dt = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+    else:
+        data_inicio_dt = hoje
+
+    if data_fim_str:
+        data_fim_dt = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+    else:
+        data_fim_dt = hoje
+
+    # 2. Ajustar horários para o padrão de plantão (07:00:00 até 06:59:59 do dia seguinte)
+    # Convertemos para datetime ciente do fuso horário (timezone aware)
+    dt_inicio_full = timezone.make_aware(datetime.combine(data_inicio_dt, time(7, 0, 0)))
+    dt_fim_full = timezone.make_aware(datetime.combine(data_fim_dt + timedelta(days=1), time(6, 59, 59)))
+
+    # 3. Filtragem Dinâmica por Tags CVLI
+    naturezas_cvli = NaturezaOcorrencia.objects.filter(tags_busca__icontains='CVLI')
+
+    # 4. Busca os Envolvidos dentro do período de data_hora_fato da Ocorrência
+    vitimas = Envolvido.objects.filter(
+        tipo_participante='V',
+        ocorrencia__natureza__in=naturezas_cvli,
+        ocorrencia__data_hora_fato__range=(dt_inicio_full, dt_fim_full) # Filtro de período
+    ).select_related(
+        'ocorrencia__natureza', 
+        'ocorrencia__municipio', 
+        'ocorrencia__instrumento'
+    ).order_by('-ocorrencia__data_hora_fato')
+
+    context = {
+        'vitimas': vitimas,
+        'data_inicio': data_inicio_dt.strftime('%Y-%m-%d'),
+        'data_fim': data_fim_dt.strftime('%Y-%m-%d'),
+        'data_inicio_full': dt_inicio_full,
+        'data_fim_full': dt_fim_full,
+    }
+
+    return render(request, 'rpi/lista_cvli.html', context)

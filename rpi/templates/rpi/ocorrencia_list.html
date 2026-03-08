@@ -6,163 +6,121 @@
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="fas fa-user-shield"></i>Ocorrências Policiais Registradas</h1>
+    <h1><i class="fas fa-user-shield me-2"></i>Ocorrências Policiais Registradas</h1>
     <a href="{% url 'ocorrencia_create' %}" class="btn btn-primary shadow-sm">
-        ➕ Nova Ocorrência
+        <i class="fas fa-plus"></i> Nova Ocorrência
     </a>
 </div>
 
 {% if relatorio_atual %}
-
-    {# ===================================================== #}
-    {# RELATÓRIO EM ANDAMENTO                                #}
-    {# ===================================================== #}
+    {# ... (Mantenha o seu código de alertas de relatório inalterado aqui) ... #}
     {% if not relatorio_atual.finalizado %}
         <div class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm border-warning mb-4">
-
             <div>
-                <h5 class="mb-0">📋 Relatório em andamento:
-                    <strong>{{ relatorio_atual.nr_relatorio }}/{{ relatorio_atual.ano_criacao }}</strong>
-                </h5>
-                <small class="text-muted">
-                    Iniciado em: {{ relatorio_atual.data_inicio|date:"d/m/Y H:i" }}
-                </small>
+                <h5 class="mb-0">📋 Relatório em andamento: <strong>{{ relatorio_atual.nr_relatorio }}/{{ relatorio_atual.ano_criacao }}</strong></h5>
+                <small class="text-muted">Iniciado em: {{ relatorio_atual.data_inicio|date:"d/m/Y H:i" }}</small>
             </div>
-
-            <form method="post"
-                  action="{% url 'finalizar_relatorio' relatorio_atual.pk %}"
-                  style="margin: 0;"
-                  onsubmit="return confirm('Deseja realmente finalizar este relatório?');">
+            <form method="post" action="{% url 'finalizar_relatorio' relatorio_atual.pk %}" onsubmit="return confirm('Deseja realmente finalizar este relatório?');">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger">
-                    🛑 Finalizar Relatório
-                </button>
+                <button type="submit" class="btn btn-danger">🛑 Finalizar Relatório</button>
             </form>
-
         </div>
-
-    {# ===================================================== #}
-    {# RELATÓRIO FINALIZADO                                  #}
-    {# ===================================================== #}
     {% else %}
         <div class="alert alert-success d-flex justify-content-between align-items-center shadow-sm border-success mb-4">
-
             <div>
-                <h5 class="mb-0">✅ Relatório FINALIZADO:
-                    <strong>{{ relatorio_atual.nr_relatorio }}/{{ relatorio_atual.ano_criacao }}</strong>
-                </h5>
-                <small class="text-muted">
-                    Finalizado em: {{ relatorio_atual.data_fim|date:"d/m/Y H:i" }}
-                </small>
+                <h5 class="mb-0">✅ Relatório FINALIZADO: <strong>{{ relatorio_atual.nr_relatorio }}/{{ relatorio_atual.ano_criacao }}</strong></h5>
+                <small class="text-muted">Finalizado em: {{ relatorio_atual.data_fim|date:"d/m/Y H:i" }}</small>
             </div>
-
-            <div class="btn-group" role="group">
-
-                <a href="{% url 'download_pdf_relatorio' relatorio_atual.pk %}"
-                   target="_blank"
-                   class="btn btn-outline-primary">
-                    📄 Exportar PDF
-                </a>
-
-                <form method="post"
-                      action="{% url 'reabrir_relatorio' relatorio_atual.pk %}"
-                      style="margin: 0;">
+            <div class="btn-group">
+                <a href="{% url 'download_pdf_relatorio' relatorio_atual.pk %}" target="_blank" class="btn btn-outline-primary">📄 Exportar PDF</a>
+                <form method="post" action="{% url 'reabrir_relatorio' relatorio_atual.pk %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-dark">
-                        🔓 Reabrir Relatório
-                    </button>
+                    <button type="submit" class="btn btn-outline-dark">🔓 Reabrir Relatório</button>
                 </form>
-
             </div>
-
         </div>
     {% endif %}
-
 {% endif %}
 
 <hr>
 
 {# ========================================================= #}
-{# LISTA DE OCORRÊNCIAS                                      #}
+{# TABELA DE OCORRÊNCIAS - VERSÃO PROFISSIONAL               #}
 {# ========================================================= #}
 
-<div class="row">
-{% for ocorrencia in ocorrencias %}
-    <div class="col-12">
-        <div class="card mb-3 shadow-sm border-start border-4
-            {% if ocorrencia.natureza.tipo_impacto == 'P' %}
-                border-success
-            {% else %}
-                border-danger
-            {% endif %}">
-
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-
-                    <div>
-                        <h5 class="card-title mb-1">
-                            <strong>{{ ocorrencia.natureza.nome }}</strong>
-                        </h5>
-
-                        <p class="card-text mb-0">
-                            <strong>Aspecto:</strong>
-                            <span class="badge
-                                {% if ocorrencia.natureza.tipo_impacto == 'P' %}
-                                    text-bg-success
-                                {% else %}
-                                    text-bg-danger
-                                {% endif %}">
-                                {{ ocorrencia.natureza.get_tipo_impacto_display }}
-                            </span>
-
-                            <span class="mx-2 text-muted">|</span>
-
-                            <strong>OPM:</strong> {{ ocorrencia.opm.sigla }}
-                            <small class="text-muted">
-                                ({{ ocorrencia.municipio }})
-                            </small>
-
-                            <span class="text-muted" style="font-size: 0.9rem;">
-                                | RPI Nº {{ relatorio_atual.nr_relatorio }}/{{ relatorio_atual.ano_criacao }}
-                                - Data: {{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}
-                            </span>
-                        </p>
-                    </div>
-
-                    <div class="btn-group btn-group-sm ms-3" role="group">
-                        <a href="{% url 'ocorrencia_detail' ocorrencia.pk %}"
-                           class="btn btn-outline-info"
-                           title="Visualizar Detalhes">
-                            <i class="fas fa-eye"></i>
-                        </a>
-
-                        {% if not relatorio_atual.finalizado %}
-                            <a href="{% url 'ocorrencia_update' ocorrencia.pk %}"
-                               class="btn btn-outline-warning"
-                               title="Editar Ocorrência">
-                                <i class="fas fa-edit"></i>
-                            </a>
-
-                            <button type="button"
-                                    class="btn btn-outline-danger btn-delete-modal"
-                                    title="Excluir Ocorrência"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#deleteConfirmModal"
-                                    data-nome="{{ ocorrencia.natureza.nome}}"  {# Adicione esta linha #}
-                                    data-delete-url="{% url 'ocorrencia_delete' ocorrencia.pk %}"
-                                    data-ocorrencia-id="{{ ocorrencia.pk }}">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        {% endif %}
-                    </div>
-
-                </div>
-            </div>
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4" style="width: 25%">Natureza / Aspecto</th>
+                        <th style="width: 20%">OPM / Município</th>
+                        <th style="width: 20%">Data / RPI</th>
+                        <th class="text-center" style="width: 15%">Impacto</th>
+                        <th class="text-end pe-4" style="width: 20%">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ocorrencia in ocorrencias %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">{{ ocorrencia.natureza.nome }}</div>
+                            <small class="text-muted text-uppercase" style="font-size: 0.75rem;">Cód: #{{ ocorrencia.pk }}</small>
+                        </td>
+                        <td>
+                            <div class="mb-0">{{ ocorrencia.opm.sigla }}</div>
+                            <small class="text-muted">{{ ocorrencia.municipio }}</small>
+                        </td>
+                        <td>
+                            <div>{{ ocorrencia.data_hora_fato|date:"d/m/Y H:i" }}</div>
+                            <small class="badge bg-light text-dark border">RPI {{ relatorio_atual.nr_relatorio }}/{{ relatorio_atual.ano_criacao }}</small>
+                        </td>
+                        <td class="text-center">
+                            {% if ocorrencia.natureza.tipo_impacto == 'P' %}
+                                <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3">
+                                    {{ ocorrencia.natureza.get_tipo_impacto_display }}
+                                </span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger px-3">
+                                    {{ ocorrencia.natureza.get_tipo_impacto_display }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group shadow-sm">
+                                <a href="{% url 'ocorrencia_detail' ocorrencia.pk %}" class="btn btn-sm btn-white border" title="Ver">
+                                    <i class="fas fa-eye text-info"></i>
+                                </a>
+                                {% if not relatorio_atual.finalizado %}
+                                    <a href="{% url 'ocorrencia_update' ocorrencia.pk %}" class="btn btn-sm btn-white border" title="Editar">
+                                        <i class="fas fa-edit text-warning"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-white border btn-delete-modal" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteConfirmModal"
+                                            data-nome="{{ ocorrencia.natureza.nome }}"
+                                            data-delete-url="{% url 'ocorrencia_delete' ocorrencia.pk %}"
+                                            data-ocorrencia-id="{{ ocorrencia.pk }}">
+                                        <i class="fas fa-trash-alt text-danger"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="fas fa-folder-open fa-3x mb-3 d-block"></i>
+                            Nenhuma ocorrência cadastrada.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-{% empty %}
-    <p class="text-muted">Nenhuma ocorrência cadastrada.</p>
-{% endfor %}
 </div>
 
 {# ========================================================= #}

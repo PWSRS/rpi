@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Monitoramento de CVLI{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="alert alert-custom d-flex align-items-center shadow-sm border-start border-danger border-4" role="alert" style="background-color: #fff5f5;">
+        <i class="fas fa-calendar-alt me-3 fs-4 text-danger"></i>
+        <div>
+            <span class="text-danger fw-bold">Período de Análise:</span> 
+            Das 07:00 de <strong>{{ data_inicio_full|date:"d/m/Y" }}</strong> 
+            até as 06:59 de <strong>{{ data_fim_full|date:"d/m/Y" }}</strong>.
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white py-2">
+            <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Refinar Busca por Data de Fato</h6>
+        </div>
+        <div class="card-body bg-light">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Data Inicial:</label>
+                    <input type="date" name="data_inicio" class="form-control form-control-sm" value="{{ data_inicio }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Data Final:</label>
+                    <input type="date" name="data_fim" class="form-control form-control-sm" value="{{ data_fim }}">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-danger btn-sm w-100">
+                        <i class="fas fa-search me-1"></i> Aplicar Filtro
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    {# Altere a URL abaixo para a sua view de CVLI para resetar o filtro #}
+                    <a href="{% url 'lista_cvli' %}" class="btn btn-outline-dark btn-sm w-100">
+                        <i class="fas fa-calendar-day me-1"></i> Plantão Atual
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+
+<div class="container-fluid py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-chart-line text-danger me-2"></i>Painel de CVLI
+            </h1>
+            <p class="text-muted mb-0">Monitoramento dinâmico de Crimes Violentos Letais Intencionais.</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-start border-danger border-4 shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Total de Vítimas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ vitimas.count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-injured fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark d-flex justify-content-between align-items-center py-3">
+            <h6 class="m-0 font-weight-bold text-white">Relação Nominal de Vítimas</h6>
+            <span class="badge bg-secondary">Atualizado em: {% now "d/m/Y H:i" %}</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary">
+                        <tr>
+                            <th class="ps-4" style="width: 150px;">
+                                Data do Fato<i class="fas fa-sort-amount-down text-danger ms-1"></i>
+                            </th>
+                            <th>Nome da Vítima / Documento</th>
+                            <th class="text-center">Idade</th>
+                            <th>Localidade (Município/Bairro)</th>
+                            <th>Natureza / Meio Empregado</th>
+                            <th class="text-end pe-4">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in vitimas %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">
+                                    {{ v.ocorrencia.data_hora_fato|date:"d/m/Y" }}
+                                </div>
+                                <small class="text-muted">
+                                    <i class="far fa-clock me-1"></i>{{ v.ocorrencia.data_hora_fato|date:"H:i" }}h
+                                </small>
+                            </td>
+
+                            <td>
+                                <div class="text-uppercase fw-bold text-primary mb-0" style="font-size: 0.95rem;">
+                                    {{ v.nome }}
+                                </div>
+                                <small class="text-muted d-block">
+                                    {{ v.get_tipo_documento_display }}: {{ v.nr_documento|default:"Não Informado" }}
+                                </small>
+                            </td>
+
+                            <td class="text-center">
+                                <span class="badge rounded-pill bg-light text-dark border fw-normal px-3">
+                                    {{ v.idade|default:"--" }} <small>anos</small>
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="fw-bold">{{ v.ocorrencia.municipio.nome }}</div>
+                                <small class="text-muted">
+                                    <i class="fas fa-map-signs"></i>
+                                    {{ v.ocorrencia.bairro|default:"Zona não especificada" }}
+                                </small>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-danger-subtle text-danger border border-danger mb-1 text-wrap text-start">
+                                    {{ v.ocorrencia.natureza.nome }}
+                                </span>
+                                <div class="small text-muted">
+                                    <strong>Meio:</strong> 
+                                    {% if v.ocorrencia.instrumento %}
+                                        {{ v.ocorrencia.instrumento.nome }}
+                                    {% else %}
+                                        <span class="fst-italic text-warning">Não informado</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <td class="text-end pe-4">
+                                <a href="{% url 'ocorrencia_detail' v.ocorrencia.pk %}" 
+                                   class="btn btn-sm btn-outline-dark shadow-sm"
+                                   title="Ver Ocorrência Completa">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-folder-open fa-3x mb-3 opacity-25"></i>
+                                    <p class="mb-0">Nenhum registro de CVLI identificado no banco de dados.</p>
+                                    <small>Verifique se as naturezas possuem a tag <strong>"CVLI"</strong>.</small>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white text-muted small py-3">
+            <i class="fas fa-info-circle me-1"></i>
+            Esta listagem é gerada automaticamente com base nas <strong>Tags de Busca</strong> das Naturezas de Ocorrência.
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilização Profissional Complementar */
+    .table thead th {
+        font-size: 0.75rem;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        border-top: none;
+    }
+    
+    .bg-danger-subtle {
+        background-color: #fff5f5 !important;
+        color: #dc3545 !important;
+    }
+
+    .text-xs {
+        font-size: .75rem;
+    }
+
+    .btn-white {
+        background-color: #fff;
+        color: #333;
+    }
+
+    .btn-white:hover {
+        background-color: #f8f9fa;
+    }
+
+    /* Efeito de destaque suave na linha */
+    .table-hover tbody tr:hover {
+        background-color: rgba(220, 53, 69, 0.02) !important;
+    }
+</style>
+{% endblock %}

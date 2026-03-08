@@ -20,19 +20,19 @@
                             </a>
                         </div>
                     {% else %}
-                        <p class="lead">Nenhum relatório aberto para o seu usuário nas últimas 24h.</p>
-                        <p>Para registrar novas ocorrências, você deve iniciar o relatório do dia.</p>
+                        <p class="lead">Nenhum relatório aberto para esse serviço nas últimas 24h.</p>
+                        <p>Para registrar novas ocorrências, você deve iniciar um novo RPI.</p>
                         
                         <form method="post">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-primary btn-lg px-5">
-                                🚀 Iniciar Relatório Diário
+                                🚀 Iniciar novo RPI
                             </button>
                         </form>
                     {% endif %}
                 </div>
                 <div class="card-footer text-muted text-center">
-                    Sistema RPI - {{ now|date:"d/m/Y" }}
+                    Sistema RPI - Relatório Periódico de Inteligência &copy; {{ current_year }}
                 </div>
             </div>
         </div>

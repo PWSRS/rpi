@@ -32,6 +32,7 @@ from .views import (
     lista_auditoria_objeto,
     auditoria_geral,
     listar_prisoes_por_opm,
+    lista_cvli,
 )
 
 urlpatterns = [
@@ -162,4 +163,5 @@ urlpatterns = [
         views.ajax_carregar_municipios,
         name="ajax_carregar_municipios",
     ),
+    path("lista_cvli/", views.lista_cvli, name="lista_cvli"),
 ]
