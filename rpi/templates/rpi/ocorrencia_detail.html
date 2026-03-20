@@ -37,8 +37,8 @@
                     <li class="list-group-item"><strong>Fato:</strong> {{ ocorrencia.natureza.nome }}</span></li>
                     <li class="list-group-item"><strong>Tipo do Fato:</strong>
                         <span class="badge rounded-pill
-                         {% if ocorrencia.get_tipo_acao_display == 'Consumado' %} text-bg-danger
-                         {% else %} text-bg-warning
+                         {% if ocorrencia.get_tipo_acao_display == 'Consumado' %} bg-danger-subtle text-danger border border-danger
+                         {% else %} bg-warning-subtle text-warning border border-warning
                          {% endif %}">
                             {{ ocorrencia.get_tipo_acao_display }}
                         </span>
@@ -84,14 +84,20 @@
                             {% for envolvido in envolvidos %}
                             <tr class="text-center">
                                 <td>
-                                    <span class="badge rounded-pill
-                                    {% if envolvido.get_tipo_participante_display == 'Vítima' %} text-bg-danger
-                                    {% elif envolvido.get_tipo_participante_display == 'Autor' %} text-bg-warning
-                                    {% elif envolvido.get_tipo_participante_display == 'Testemunha' %} text-bg-success
-                                    {% elif envolvido.get_tipo_participante_display == 'Preso' %} text-bg-dark
-                                    {% else %} text-bg-secondary
-                                    {% endif %}">
-                                    {{ envolvido.get_tipo_participante_display }}</span>
+                                    <span class="badge rounded-pill px-3 
+                                        {% if envolvido.get_tipo_participante_display == 'Vítima' %}
+                                            bg-danger-subtle text-danger border border-danger
+                                        {% elif envolvido.get_tipo_participante_display == 'Autor' %}
+                                            bg-warning-subtle text-warning border border-warning
+                                        {% elif envolvido.get_tipo_participante_display == 'Testemunha' %}
+                                            bg-success-subtle text-success border border-success
+                                        {% elif envolvido.get_tipo_participante_display == 'Preso' %}
+                                            bg-dark-subtle text-dark border border-dark
+                                        {% else %}
+                                            bg-secondary-subtle text-secondary border border-secondary
+                                        {% endif %}">
+                                        {{ envolvido.get_tipo_participante_display }}
+                                    </span>
                                 </td>
                                 <td class="font-weight-bold">{{ envolvido.nome }}</td>
                                 <td>{{ envolvido.idade|default:"-" }}</td>
