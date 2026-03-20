@@ -300,6 +300,8 @@ class Envolvido(models.Model):
 
     tipo_documento = models.CharField(
         max_length=1,
+        blank=True,
+        null=True,
         choices=TIPO_DOCUMENTO,
         verbose_name="Documento",
     )

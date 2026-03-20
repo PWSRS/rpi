@@ -14,7 +14,7 @@ SECRET_KEY = "django-insecure-_r(hk7kp^^z#-$580@ey&udji3digs1_1v(1#)_lw@(+i2k^-s
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["192.168.8.20", "127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -126,18 +126,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-#LOGIN_URL = "/admin/login/"  # Ou a URL da sua página de login customizada
-#LOGIN_REDIRECT_URL = "/"  # Para onde ir após logar
+# LOGIN_URL = "/admin/login/"  # Ou a URL da sua página de login customizada
+# LOGIN_REDIRECT_URL = "/"  # Para onde ir após logar
 
 
 # Redirecionamento após o login
 LOGIN_URL = "/contas/login/"
 
-LOGIN_REDIRECT_URL = 'ocorrencia_list'  # Redireciona para a página inicial após o login
+LOGIN_REDIRECT_URL = "ocorrencia_list"  # Redireciona para a página inicial após o login
 
 # Redirecionamento após o logout (Você definiu duas vezes, apenas a última vale)
 LOGOUT_REDIRECT_URL = (
-    'ocorrencia_list'  # Redireciona para a página de login após o logout
+    "ocorrencia_list"  # Redireciona para a página de login após o logout
 )
 
 # 🟢 NOVO: Redirecionamento após a alteração de senha!
@@ -145,12 +145,12 @@ LOGOUT_REDIRECT_URL = (
 PASSWORD_CHANGE_REDIRECT_URL = "/"
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend', # Mantém o padrão (opcional)
-    'rpi.views.EmailBackend',                # Adiciona o seu busca-por-email
+    "django.contrib.auth.backends.ModelBackend",  # Mantém o padrão (opcional)
+    "rpi.views.EmailBackend",  # Adiciona o seu busca-por-email
 ]
 
 # No settings.py
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Política de Retenção de Auditoria (em dias)
 AUDIT_LOG_RETENTION_DAYS = 1
